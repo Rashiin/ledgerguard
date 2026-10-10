@@ -1,21 +1,21 @@
-# Permission-tier policy. Loaded and validated at boot; a bad value stops startup.
-# Hard-coded invariants (ACCEPT_FINANCING_OFFER and INITIATE_PAYMENT are always T3,
-# BLOCK is never overridable) live in code, not here, so they cannot be configured away.
+# Permission policy. The app validates this file at startup and refuses to start
+# if a value is missing, unknown or out of range.
+#
+# Some invariants are in code so that this file cannot weaken them. Payments and
+# accepting a financing offer are always T3. A BLOCK is never overridden.
 version: 1
 currency: EUR
 
-# Money is always a quoted string. An amount above its tier's ceiling escalates
-# one tier; above the T3 ceiling the AmountCeiling rule blocks it.
-amount_ceilings:
-  T1: "50000.00"
-  T2: "75000.00"
-  T3: "150000.00"
+# Money leaving the business above this amount is blocked. Recording money
+# received has no ceiling. It is bounded by what the invoice still owes.
+# Amounts are quoted strings because YAML numbers are floats.
+outbound_ceiling: "150000.00"
 
 t3:
   cool_off_seconds: 60
   require_typed_confirmation: true
 
-# Minimum balance an outbound action may leave on each account (SufficientBalance).
+# The lowest balance an outbound payment may leave on each account.
 account_floors:
   acc_operating: "5000.00"
   acc_petty_cash: "100.00"
@@ -25,7 +25,7 @@ rules:
   payroll_lead_days: 5
   tax_reserve_horizon_days: 45
   concentration_warning_share: "0.30"
-  # Protection rules judge projected cash on contracted + order-book lines;
-  # the speculative seasonal fill never justifies a payment.
+  # The payroll and tax rules judge projected cash on contracted lines plus the
+  # order book. The speculative seasonal fill never justifies a payment.
   protection_band: with_expected
   payroll_margin_warning: "0.20"

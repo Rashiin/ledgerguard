@@ -19,7 +19,6 @@ from typing import Annotated, Any, Literal
 import yaml
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from ledgerguard.domain.enums import Tier
 from ledgerguard.money import to_money
 
 MoneyField = Annotated[Decimal, BeforeValidator(to_money)]
@@ -67,23 +66,12 @@ class RuleParameters(Strict):
 class Policy(Strict):
     version: int
     currency: str = Field(pattern=r"^[A-Z]{3}$")
-    # An action whose amount exceeds its tier's ceiling escalates one tier;
-    # above the T3 ceiling the AmountCeiling rule blocks it outright.
-    amount_ceilings: dict[Tier, MoneyField]
+    # Money leaving the business above this amount is blocked. Inbound records have
+    # no ceiling: they are bounded by what the invoice still owes.
+    outbound_ceiling: MoneyField
     t3: T3Gate
     account_floors: dict[str, MoneyField]
     rules: RuleParameters
-
-    @model_validator(mode="after")
-    def _ceilings_are_ordered(self) -> Policy:
-        required = {Tier.T1, Tier.T2, Tier.T3}
-        missing = required - set(self.amount_ceilings)
-        if missing:
-            raise ValueError(f"amount_ceilings missing tiers: {sorted(missing)}")
-        c = self.amount_ceilings
-        if not c[Tier.T1] <= c[Tier.T2] <= c[Tier.T3]:
-            raise ValueError("amount ceilings must be non-decreasing from T1 to T3")
-        return self
 
 
 class LLMClientKind(StrEnum):

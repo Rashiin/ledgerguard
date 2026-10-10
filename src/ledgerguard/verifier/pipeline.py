@@ -217,9 +217,7 @@ class Verifier:
 
         # ---- stage 6: tier
         needs_human = bool(flags & NEVER_AUTO_PASS)
-        tier = assign_tier(
-            intent.kind, resolution.amount, self._policy.amount_ceilings, needs_human
-        )
+        tier = assign_tier(intent.kind, needs_human)
         blocking = tuple(r.rule for r in rules if r.result is Outcome.BLOCK)
         violations = [p for p in policy_findings if p.result == "violation"]
         outcome = "blocked" if blocking or violations else "verified"

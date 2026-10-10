@@ -26,13 +26,12 @@ from ledgerguard.domain.enums import (
     Direction,
     InvoiceStatus,
     ObligationKind,
-    Tier,
 )
 from ledgerguard.money import format_eur
 from ledgerguard.verifier.intent import ActionIntent
 from ledgerguard.verifier.recompute import Resolution
 from ledgerguard.verifier.snapshot import Band, LedgerSnapshot
-from ledgerguard.verifier.tiers import ALWAYS_T3, BASE_TIER, NO_ESCALATION, escalate
+from ledgerguard.verifier.tiers import OUTBOUND
 
 ZERO = Decimal("0.00")
 
@@ -124,30 +123,20 @@ def sufficient_balance(ctx: RuleContext) -> RuleResult:
 
 
 def amount_ceiling(ctx: RuleContext) -> RuleResult:
+    """Caps money leaving the business. Inbound records are bounded by the invoice instead."""
     name = "AmountCeiling"
-    amount, kind = ctx.resolution.amount, ctx.intent.kind
-    if amount is None or kind in NO_ESCALATION:
-        return _pass(name, "no amount subject to a ceiling")
-    ceilings = ctx.policy.amount_ceilings
-    if amount > ceilings[Tier.T3]:
+    if ctx.intent.kind not in OUTBOUND or ctx.resolution.amount is None:
+        return _pass(name, "no money leaves the business in this action")
+    amount, ceiling = ctx.resolution.amount, ctx.policy.outbound_ceiling
+    if amount > ceiling:
         return RuleResult(
             name,
             Outcome.BLOCK,
-            f"{format_eur(amount)} is above the highest approval ceiling "
-            f"({format_eur(ceilings[Tier.T3])}); it cannot be approved here.",
-            ("ABOVE_MAX_CEILING",),
+            f"{format_eur(amount)} is above the {format_eur(ceiling)} ceiling for money "
+            "leaving the business. It cannot be approved here.",
+            ("ABOVE_OUTBOUND_CEILING",),
         )
-    base = BASE_TIER[kind]
-    tier = Tier.T3 if kind in ALWAYS_T3 else escalate(base, amount, ceilings)
-    if tier is not base:
-        return RuleResult(
-            name,
-            Outcome.WARN,
-            f"{format_eur(amount)} exceeds the {base.value} ceiling of "
-            f"{format_eur(ceilings[base])}; escalated to {tier.value}.",
-            ("AMOUNT_ESCALATED",),
-        )
-    return _pass(name, f"{format_eur(amount)} is within the {base.value} ceiling.")
+    return _pass(name, f"{format_eur(amount)} is within the {format_eur(ceiling)} ceiling.")
 
 
 def duplicate_payment(ctx: RuleContext) -> RuleResult:

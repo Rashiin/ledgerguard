@@ -398,3 +398,20 @@ def test_t1_draft_invoice_executes_automatically(copilot: CopilotService, fresh_
     draft = invoice(fresh_db, new_id)
     assert draft.status is InvoiceStatus.DRAFT
     assert (str(draft.net_amount), str(draft.tax_amount)) == ("1200.00", "276.00")
+
+
+def test_scenario_7_variant_large_receipt_is_t2_and_recordable(
+    copilot: CopilotService, fresh_db: Path
+) -> None:
+    """Brennan's €227,550 refit receipt is above the outbound ceiling and must still record."""
+    turn = copilot.submit(stub_proposer("RECORD_PAYMENT", {"invoice_id": "inv_0678"}), "conv")
+    assert (turn.outcome, turn.presented["tier"]) == ("verified", "T2")
+    copilot.approve(turn.intent_id, Actor.OPERATOR)
+    assert invoice(fresh_db, "inv_0678").status is InvoiceStatus.PAID
+
+
+def test_receipt_above_what_is_owed_is_rejected(copilot: CopilotService) -> None:
+    turn = copilot.submit(
+        stub_proposer("RECORD_PAYMENT", {"invoice_id": "inv_0412", "amount": "46854.01"}), "c"
+    )
+    assert turn.outcome == "rejected"

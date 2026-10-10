@@ -401,3 +401,13 @@ calculator.
 **Why.** The policy check belongs to Phase 3. The cost model belongs to the
 Financing Matcher. Until Phase 5, financing recommendations are blocked by
 design, which is the safe direction.
+
+## D-022 · One outbound ceiling replaces the per-tier ceilings (Phase 3)
+
+Spec 6.3 now says ceilings limit money leaving the business and apply only to outbound actions. The only outbound kinds are INITIATE_PAYMENT and ACCEPT_FINANCING_OFFER, and both are always T3. A ceiling can therefore never escalate a tier, and the old T1 and T2 ceilings had nothing left to do.
+
+We chose a single `outbound_ceiling` in `config/policy.yaml`. An outbound amount above it is blocked by AmountCeiling. Recording a receipt stays T2 with no ceiling and is bounded by what the invoice still owes, re-checked at execution.
+
+We gave up escalation for large drafts. A €900,000 draft invoice is now T1 like any other draft. That is acceptable because a draft moves no money and is not sent to anyone.
+
+This would change if drafts started leaving the system, for example by being emailed to customers. Then a draft would be an external effect and would need its own tier and ceiling.

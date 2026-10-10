@@ -104,40 +104,48 @@ def test_sufficient_balance_ignores_non_payments(snapshot: LedgerSnapshot, polic
 # ---- AmountCeiling
 
 
-def test_amount_ceiling_blocks_above_the_t3_ceiling(
+def test_amount_ceiling_blocks_outbound_money_above_the_ceiling(
     snapshot: LedgerSnapshot, policy: Policy
 ) -> None:
-    r = rules.amount_ceiling(ctx(snapshot, policy, "RECORD_PAYMENT", {"invoice_id": "inv_0678"}))
-    assert r.result is Outcome.BLOCK and "highest approval ceiling" in r.reason
+    policy = policy.model_copy(update={"outbound_ceiling": Decimal("100000.00")})
+    r = rules.amount_ceiling(ctx(snapshot, policy, *pay("inv_0665")))
+    assert r.result is Outcome.BLOCK and "ceiling for money leaving" in r.reason
 
 
-def test_amount_ceiling_escalates_and_says_so(snapshot: LedgerSnapshot, policy: Policy) -> None:
-    r = rules.amount_ceiling(
-        ctx(
-            snapshot,
-            policy,
-            "DRAFT_INVOICE",
-            {
-                "counterparty_id": "cp_brennan",
-                "net_amount": "60000.00",
-                "description": "x",
-                "due_in_days": 30,
-            },
-        )
+def test_outbound_ceiling_is_inclusive(snapshot: LedgerSnapshot, policy: Policy) -> None:
+    exact = policy.model_copy(update={"outbound_ceiling": Decimal("142500.00")})
+    assert rules.amount_ceiling(ctx(snapshot, exact, *pay("inv_0665"))).result is Outcome.PASS
+
+
+def test_large_receipt_is_not_capped(snapshot: LedgerSnapshot, policy: Policy) -> None:
+    """Recording money received moves nothing out, so no ceiling applies (spec 6.3)."""
+    receipt = ctx(snapshot, policy, "RECORD_PAYMENT", {"invoice_id": "inv_0678"})
+    assert receipt.resolution.amount == Decimal("227550.00")
+    assert receipt.resolution.amount > policy.outbound_ceiling
+    assert rules.amount_ceiling(receipt).result is Outcome.PASS
+    assert all(r.result is not Outcome.BLOCK for r in evaluate(receipt))
+
+
+def test_drafts_and_scenarios_are_not_capped(snapshot: LedgerSnapshot, policy: Policy) -> None:
+    draft = ctx(
+        snapshot,
+        policy,
+        "DRAFT_INVOICE",
+        {
+            "counterparty_id": "cp_brennan",
+            "net_amount": "900000.00",
+            "description": "x",
+            "due_in_days": 30,
+        },
     )
-    assert r.result is Outcome.WARN and "escalated to T2" in r.reason
-
-
-def test_scenarios_never_escalate(snapshot: LedgerSnapshot, policy: Policy) -> None:
-    r = rules.amount_ceiling(
-        ctx(
-            snapshot,
-            policy,
-            "RUN_SCENARIO",
-            {"scenario": {"type": "draw_credit_line", "amount": "90000.00", "on": "2026-11-20"}},
-        )
+    scenario = ctx(
+        snapshot,
+        policy,
+        "RUN_SCENARIO",
+        {"scenario": {"type": "draw_credit_line", "amount": "90000.00", "on": "2026-11-20"}},
     )
-    assert r.result is Outcome.PASS
+    for c in (draft, scenario):
+        assert rules.amount_ceiling(c).result is Outcome.PASS
 
 
 # ---- DuplicatePayment
@@ -164,7 +172,7 @@ def test_duplicate_within_one_batch(snapshot: LedgerSnapshot, policy: Policy) ->
 
 def test_duplicate_payment_forces_human_approval(snapshot: LedgerSnapshot) -> None:
     for kind in ActionKind:
-        assert assign_tier(kind, None, {}, needs_human=True) in (Tier.T2, Tier.T3)
+        assert assign_tier(kind, needs_human=True) in (Tier.T2, Tier.T3)
 
 
 def test_duplicate_payment_is_a_flag_not_a_block(snapshot: LedgerSnapshot, policy: Policy) -> None:
@@ -328,21 +336,13 @@ def test_rules_do_not_mutate_the_snapshot(snapshot: LedgerSnapshot, policy: Poli
 
 
 @pytest.mark.parametrize("kind", sorted(ALWAYS_T3))
-@pytest.mark.parametrize("amount", [None, "0.00", "0.01", "50000.00", "149999.99", "1e9"])
 @pytest.mark.parametrize("needs_human", [False, True])
-def test_payment_and_offer_acceptance_are_always_t3(
-    policy: Policy, kind: ActionKind, amount: str | None, needs_human: bool
-) -> None:
-    value = None if amount is None else Decimal(amount)
-    assert assign_tier(kind, value, policy.amount_ceilings, needs_human) is Tier.T3
+def test_payment_and_offer_acceptance_are_always_t3(kind: ActionKind, needs_human: bool) -> None:
+    assert assign_tier(kind, needs_human) is Tier.T3
 
 
-def test_tier_escalation_by_amount(policy: Policy) -> None:
-    c = policy.amount_ceilings
-    assert assign_tier(ActionKind.DRAFT_INVOICE, Decimal("100.00"), c, False) is Tier.T1
-    assert assign_tier(ActionKind.DRAFT_INVOICE, Decimal("50000.01"), c, False) is Tier.T2
-    assert assign_tier(ActionKind.DRAFT_INVOICE, Decimal("75000.01"), c, False) is Tier.T3
-    assert assign_tier(ActionKind.RECORD_PAYMENT, Decimal("75000.00"), c, False) is Tier.T2
-    assert assign_tier(ActionKind.RECORD_PAYMENT, Decimal("75000.01"), c, False) is Tier.T3
-    assert assign_tier(ActionKind.ANSWER_QUERY, None, c, False) is Tier.T0
-    assert assign_tier(ActionKind.RUN_SCENARIO, Decimal("1e9"), c, False) is Tier.T1
+def test_tier_depends_on_kind_not_amount() -> None:
+    assert assign_tier(ActionKind.ANSWER_QUERY, False) is Tier.T0
+    assert assign_tier(ActionKind.DRAFT_INVOICE, False) is Tier.T1
+    assert assign_tier(ActionKind.RECORD_PAYMENT, False) is Tier.T2
+    assert assign_tier(ActionKind.RUN_SCENARIO, True) is Tier.T2
