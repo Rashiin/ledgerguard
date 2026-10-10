@@ -106,3 +106,13 @@ class Actor(StrEnum):
     LLM = "llm"
     OPERATOR = "operator"
     OWNER = "owner"
+
+
+class Confidence(StrEnum):
+    """How firm a projected cash line is (BUILD_SPEC 7.1). Never merged into one number."""
+
+    CONTRACTED = (
+        "CONTRACTED"  # issued invoice, signed order, payroll, statutory or lease obligation
+    )
+    EXPECTED = "EXPECTED"  # forward-dated draft order from the order book, not yet invoiced
+    SPECULATIVE = "SPECULATIVE"  # modelled only: seasonal fill beyond the order book

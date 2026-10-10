@@ -13,3 +13,6 @@ dist/
 # The ledger is rebuilt by scripts/seed.py; only the manifest is committed.
 data/*.sqlite
 data/*.sqlite-*
+
+# Local working notes and the full build spec. Never committed.
+.ledgerguard/

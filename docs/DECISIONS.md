@@ -38,7 +38,10 @@ before the application exists, so it gets its own named, test-guarded door
 rather than borrowing the Executor's.
 
 **Cost.** Phase 2 adds a test that no module other than these two constructs
-a writable engine.
+a writable engine, and that the application never imports the provisioning
+or seed modules. This is the one write path outside the Executor. It is a
+deliberate, documented exception and will be listed in the security
+self-assessment.
 
 ## D-003 · Schema additions beyond spec 5.1 (Phase 1)
 
@@ -79,7 +82,8 @@ recurrence rule at query time would give claims nothing stable to point at.
 * **Already past due:** anything past due lands in week 1.
 * **Week 1** starts on the Monday after `data_as_of`.
 * **`draft` invoices are the confirmed order book:** confirmed sales orders
-  and confirmed purchase orders not yet invoiced.
+  and confirmed purchase orders not yet invoiced. They are projected as
+  `EXPECTED` (D-009), never as `CONTRACTED`.
 
 **Why.** Without forward-dated orders, any 13-week projection declines
 structurally, because supplier terms (45-60 days) are longer than customer
@@ -134,3 +138,38 @@ network. Development against a local model happens on the host.
 
 **Cost.** The Docker path is written in Phase 1 but only verified in Phase 7,
 when the Docker daemon is available.
+
+## D-009 · Every projected line has a confidence class; classes are never merged (Phase 1 addendum)
+
+**Decision.** Each `ExpectedFlow` carries one class:
+
+* **`CONTRACTED`:** issued invoices, scheduled payroll and obligations.
+* **`EXPECTED`:** draft invoices, i.e. the confirmed order book.
+* **`SPECULATIVE`:** a seasonal fill after the order book ends.
+
+The fill assumes each counterparty repeats what it invoiced in the same week
+last year (52 weeks earlier, same terms, usual lateness, no growth
+adjustment). Every fill line cites the historical invoice it repeats.
+
+Each projected week reports inflow and outflow per class, and three nested
+closing balances: contracted only, contracted plus expected, and all classes.
+The seeder's order book now reaches about five weeks ahead (to 2026-11-20).
+Further out, the projection is visibly speculative instead of silently
+complete.
+
+**Why.** D-005 counted the order book in the forecast, which is right but
+blended signed commitments with modelled run-rate into one number. That is
+the most common way a 13-week forecast misleads an owner, and the first thing
+a finance-literate reader checks. Separating the classes makes our biggest
+modelling assumption visible and checkable. For seed 42 the full model
+recovers from week 9, but contracted-only cash stays negative from week 6 to
+week 13. The UI and alerts must show both.
+
+**Cost.**
+* The fill is the crudest part of the model: no growth, no trend, and one-off
+  orders from last year are repeated.
+* Contracted-only means contracted lines on *both* sides. It answers "what do
+  signed commitments alone imply", not "worst case". A stress view (contracted
+  inflows against all outflows) could be added in Phase 5 if wanted.
+* Alerts (Phase 5) must name the classes that drive them, and the shortfall
+  headline must also be quoted on contracted-only cash.

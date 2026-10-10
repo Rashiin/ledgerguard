@@ -21,9 +21,9 @@ refit peaks), several large customers that pay late.
   supplier invoices, settlements, payroll, VAT returns, rent, loan repayments,
   utilities, fuel, insurance, bank fees, two dividends, a delivery van and a
   warehouse racking purchase paid on the as-of date;
-* forward rows up to the end of projection week 13 (2027-01-17): scheduled
-  payroll runs, obligations (rent, loan, software, VAT, corporation tax) and the
-  confirmed order book as `draft` invoices;
+* forward rows: scheduled payroll runs and obligations (rent, loan, software,
+  VAT, corporation tax) up to the end of projection week 13 (2027-01-17), and
+  the confirmed order book as `draft` invoices up to 2026-11-20;
 * the operating account, an undrawn €100,000 revolving credit facility and petty cash.
 
 The ledger's "today" is **Friday 2026-10-16** (`business.data_as_of`). Every
@@ -33,21 +33,46 @@ answer whenever it is run. Projection week 1 starts Monday 2026-10-19.
 The same seed gives a byte-identical SQLite file. All amounts are generated as
 integer cents; no floating-point arithmetic is involved.
 
-## Planted demo hooks (BUILD_SPEC 5.3)
+## Planted demo hooks
 
-These are built deliberately, not left to chance. Nothing else is hidden in the data.
+These are built deliberately, not left to chance. Nothing else is hidden in the
+data. Ids and amounts below are for seed 42; `manifest.json` has them for the
+last seed run.
 
 | Hook | Rows (seed 42) | Detail |
 |---|---|---|
-| Projected shortfall in weeks 6-8 | weeks 6, 7, 8 | Closing balances −€20,214.37, −€132,189.15 (worst), −€129,103.77. Every other week stays at least €18,000 above zero. |
-| Cause: refit stock paid before the customer pays | `inv_0663` → `inv_0677` | Nordvik pays Halvorsen Steelworks €142,500.00 for refit stock on 2026-12-01 (week 7). Brennan's refit milestone `inv_0677` (€194,340.00, issued 2026-10-16, due 2026-11-20) is expected 26 days late, on 2026-12-16 (week 9). |
-| Also in the window | `obl_0004`, `pay_0026` | VAT return €148,442.08 due 2026-11-23 and payroll €73,576.18 on 2026-11-27, both in week 6. |
+| Projected shortfall in weeks 6-8 | weeks 6, 7, 8 | All-classes closing balances: −€20,086.18, −€219,676.22 (worst), −€205,605.30. Every other week stays at least €18,000 above zero. |
+| Cause: refit stock paid before the customer pays | `inv_0665` → `inv_0678` | Nordvik pays Halvorsen Steelworks €142,500.00 for refit stock on 2026-12-01 (week 7). Brennan's refit milestone `inv_0678` (€227,550.00, issued 2026-10-16, due 2026-11-20) is expected 26 days late, on 2026-12-16 (week 9). |
+| Also in the window | `obl_0004`, `pay_0026` | VAT return €155,391.41 due 2026-11-23 and payroll €73,576.18 on 2026-11-27, both in week 6. |
 | Payroll run inside the shortfall window | `pay_0026` | November payroll, pay date 2026-11-27. |
 | Customer above 30% revenue concentration | `cp_brennan` | Brennan Hospitality Group, about 35% of trailing-12-month net revenue. No other customer is above 30%. |
-| Three overdue receivables | `inv_0412`, `inv_0623`, `inv_0649` | `inv_0412` is Brennan's €46,854.00 invoice due 2026-10-02 (the "invoice 0412" of scenario 7). |
+| Three overdue receivables | `inv_0412`, `inv_0625`, `inv_0654` | `inv_0412` is Brennan's €46,854.00 invoice due 2026-10-02 (the "invoice 0412" of scenario 7). |
 | One disputed receivable | `inv_0620` | Harbourview Hotels, €12,400.00, damaged door seal. Excluded from expected receipts. |
-| Duplicate-looking supplier invoice pair | `inv_0638` (legitimate, paid 2026-10-08) and `inv_0377` (true duplicate, unpaid) | Delmar Smallwares, both €4,312.50, issued 3 days apart, same vendor reference DSW-26-0918. Paying `inv_0377` (scenario 8) falls within 14 days of the payment of `inv_0638`. |
-| One anomalous transaction | `txn_0867` | Fuel-card charge of €1,054.15 on 2026-09-22, about 8 robust standard deviations (median/MAD) above the weekly fuel settlements. It is the only transaction above 5. |
+| Duplicate-looking supplier invoice pair | `inv_0641` (legitimate, paid 2026-10-08) and `inv_0377` (true duplicate, unpaid) | Delmar Smallwares, both €4,312.50, issued 3 days apart, same vendor reference DSW-26-0918. Paying `inv_0377` (scenario 8) falls within 14 days of the payment of `inv_0641`. |
+| One anomalous transaction | `txn_0869` | Fuel-card charge of €1,121.64 on 2026-09-22, about 8 robust standard deviations (median/MAD) above the weekly fuel settlements. It is the only transaction above 5. |
+
+## Confidence classes in the projection
+
+Every projected line is tagged with one class. Classes are reported separately
+and never merged into one number.
+
+| Class | What it is | Source rows |
+|---|---|---|
+| `CONTRACTED` | Amount and counterparty are fixed | Issued invoices (`sent`, `part_paid`, `overdue`), scheduled payroll runs, obligations |
+| `EXPECTED` | Confirmed order book, not yet invoiced | `draft` invoices, issued up to 2026-11-20 |
+| `SPECULATIVE` | Modelled only | Seasonal fill: after the order book ends, each counterparty is assumed to repeat what it invoiced in the same week last year. Each line cites the paid invoice it repeats. |
+
+Closing balances for seed 42, all in €k:
+
+| Week | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Contracted only | 182 | 145 | 134 | 107 | 159 | −47 | −239 | −256 | −13 | −13 | −101 | −102 | −102 |
+| + Expected | 182 | 145 | 106 | 79 | 180 | −20 | −220 | −206 | 88 | 138 | 10 | 9 | 70 |
+| + Speculative (full model) | 182 | 145 | 106 | 79 | 180 | −20 | −220 | −206 | 88 | 138 | 18 | 75 | 97 |
+
+On contracted lines alone, cash goes negative in week 6 and does not recover
+inside the 13 weeks. The recovery from week 9 depends on the order book and,
+from week 11, on the seasonal fill.
 
 ## How the shortfall is placed
 
@@ -57,7 +82,7 @@ weeks 6-8 close at least €20,000 below zero and every other week closes at
 least €18,000 above it:
 
 1. **Cash on hand at the as-of date.**
-2. **Brennan's refit milestone** (`inv_0677`, €158,000.00 net for seed 42).
+2. **Brennan's refit milestone** (`inv_0678`, €185,000.00 net for seed 42).
 3. **A first instalment on the Halvorsen refit stock, due in week 6.** It is
    only created when the noise in a seed's early weeks needs it. Seed 42 does
    not.
@@ -78,8 +103,8 @@ range of other seeds also calibrate.
   onto the planted rows after sequential numbering.
 * **`draft` invoices are the confirmed order book.** A `draft` receivable is a
   confirmed sales order scheduled for billing. A `draft` payable is a confirmed
-  purchase order not yet invoiced by the supplier. Both are counted in the
-  projection.
+  purchase order not yet invoiced by the supplier. Both are projected as
+  `EXPECTED`, never as `CONTRACTED`.
 * **Late payments never cross the as-of date unless planted.** Only the four
   planted receivables are past due at 2026-10-16. A historical late payment
   that would have crossed that date is settled at a random business day before

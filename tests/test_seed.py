@@ -12,8 +12,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ledgerguard.analytics.cashflow import mean_lateness_days, project
-from ledgerguard.analytics.sources import expected_flows, paid_receivable_history
+from ledgerguard.analytics.cashflow import project
+from ledgerguard.analytics.sources import projection_flows
 from ledgerguard.db.engine import make_readonly_sessionmaker
 from ledgerguard.db.models import (
     Account,
@@ -27,6 +27,7 @@ from ledgerguard.db.models import (
 )
 from ledgerguard.domain.enums import (
     AccountType,
+    Confidence,
     Direction,
     InvoiceStatus,
     InvoiceType,
@@ -48,7 +49,6 @@ def _all(session: Session, model: type) -> list:  # type: ignore[type-arg]
 
 def _projection(session: Session) -> list:  # type: ignore[type-arg]
     business = session.scalars(select(Business)).one()
-    invoices = _all(session, Invoice)
     txns = _all(session, Transaction)
     cash = Decimal("0.00")
     for acc in _all(session, Account):
@@ -58,8 +58,14 @@ def _projection(session: Session) -> list:  # type: ignore[type-arg]
         for t in txns:
             if t.account_id == acc.id and t.booked_on <= business.data_as_of:
                 cash += t.amount if t.direction is Direction.IN else -t.amount
-    lateness = mean_lateness_days(paid_receivable_history(invoices, txns))
-    flows = expected_flows(invoices, _all(session, PayrollRun), _all(session, Obligation), lateness)
+    flows = projection_flows(
+        business.data_as_of,
+        13,
+        _all(session, Invoice),
+        txns,
+        _all(session, PayrollRun),
+        _all(session, Obligation),
+    )
     return project(business.data_as_of, cash, flows)
 
 
@@ -108,7 +114,33 @@ def test_shortfall_in_weeks_6_to_8_only(session: Session) -> None:
 
 def test_projection_matches_manifest(session: Session, seed_result: SeedResult) -> None:
     weeks = _projection(session)
-    assert [str(w.closing) for w in weeks] == seed_result.manifest.weekly_closing
+    m = seed_result.manifest
+    assert [str(w.closing) for w in weeks] == m.weekly_closing
+    assert [str(w.closing_with_expected) for w in weeks] == m.weekly_closing_with_expected
+    assert [str(w.closing_contracted) for w in weeks] == m.weekly_closing_contracted
+
+
+def test_all_three_confidence_bands_are_present_and_separate(session: Session) -> None:
+    weeks = _projection(session)
+    classes = {f.confidence for w in weeks for f in w.flows}
+    assert classes == set(Confidence)
+    for w in weeks:
+        for f in w.flows:
+            assert f.amount > 0
+        assert w.total_inflow == sum(
+            (f.amount for f in w.flows if f.direction is Direction.IN), Decimal(0)
+        )
+    # The nested balances only coincide when a week has no lines of the outer class.
+    assert any(w.closing_contracted != w.closing for w in weeks)
+
+
+def test_speculative_lines_cite_last_years_invoice(session: Session) -> None:
+    for w in _projection(session):
+        for f in w.flows:
+            if f.confidence is Confidence.SPECULATIVE:
+                source = session.get(Invoice, f.source_id)
+                assert source is not None and source.status is InvoiceStatus.PAID
+                assert (f.on - source.due_on).days >= 364
 
 
 def test_payroll_run_inside_shortfall_window(session: Session, seed_result: SeedResult) -> None:

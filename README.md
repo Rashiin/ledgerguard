@@ -58,8 +58,10 @@ uv run mypy
 docker compose up
 ```
 
-The image builds the seeded ledger in and starts with `LLM_CLIENT=replay`. No
-model server is started and no network access is needed. *(Verified in Phase 7.)*
+Then open http://localhost:8080/api/health. Set `LEDGERGUARD_HOST_PORT` to use
+a different host port. The image builds the seeded ledger in and starts with
+`LLM_CLIENT=replay`. No model server is started and no network access is
+needed. *(Verified in Phase 7.)*
 
 ## The sandbox ledger
 

@@ -2,18 +2,30 @@
 
 Works on any objects with the model attributes (ORM rows or unsaved
 instances), so the seeder and the API share exactly one definition of what
-an "expected flow" is.
+an "expected flow" is, and of its confidence class:
+
+* CONTRACTED: issued invoices (sent, part paid, overdue), scheduled payroll,
+  and obligations (tax, loan, lease, subscription);
+* EXPECTED: draft invoices, i.e. the confirmed order book not yet invoiced;
+* SPECULATIVE: the seasonal fill beyond the order book (``seasonal_fill``).
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Protocol
 
-from ledgerguard.analytics.cashflow import ExpectedFlow, PaidInvoice, expected_receipt_date
+from ledgerguard.analytics.cashflow import (
+    ExpectedFlow,
+    PaidInvoice,
+    expected_receipt_date,
+    horizon_end,
+    mean_lateness_days,
+)
 from ledgerguard.domain.enums import (
+    Confidence,
     Direction,
     InvoiceStatus,
     InvoiceType,
@@ -21,24 +33,16 @@ from ledgerguard.domain.enums import (
     TransactionSource,
 )
 
-OPEN_RECEIVABLE = {
-    InvoiceStatus.DRAFT,
-    InvoiceStatus.SENT,
-    InvoiceStatus.PART_PAID,
-    InvoiceStatus.OVERDUE,
-}
-OPEN_PAYABLE = {
-    InvoiceStatus.DRAFT,
-    InvoiceStatus.SENT,
-    InvoiceStatus.PART_PAID,
-    InvoiceStatus.OVERDUE,
-}
+ISSUED_OPEN = {InvoiceStatus.SENT, InvoiceStatus.PART_PAID, InvoiceStatus.OVERDUE}
+# 52 weeks, so a fill line falls on the same weekday as the invoice it repeats.
+SAME_WEEK_LAST_YEAR = timedelta(days=364)
 
 
 class InvoiceLike(Protocol):
     id: str
     type: InvoiceType
     counterparty_id: str
+    issued_on: date
     due_on: date
     gross_amount: Decimal
     paid_amount: Decimal
@@ -84,40 +88,50 @@ def paid_receivable_history(
     ]
 
 
+def _cash_date(inv: InvoiceLike, due_on: date, lateness: Mapping[str, int]) -> date:
+    if inv.type is InvoiceType.RECEIVABLE:
+        return expected_receipt_date(due_on, lateness.get(inv.counterparty_id, 0))
+    return due_on
+
+
+def _invoice_label(inv: InvoiceLike, lateness: Mapping[str, int]) -> str:
+    if inv.type is InvoiceType.RECEIVABLE:
+        late = lateness.get(inv.counterparty_id, 0)
+        kind = "Order book receivable" if inv.status is InvoiceStatus.DRAFT else "Receivable"
+        return f"{kind} {inv.id} (due {inv.due_on}, +{late}d typical lateness)"
+    kind = "Order book payable" if inv.status is InvoiceStatus.DRAFT else "Payable"
+    return f"{kind} {inv.id} (due {inv.due_on})"
+
+
 def expected_flows(
     invoices: Iterable[InvoiceLike],
     payroll_runs: Iterable[PayrollLike],
     obligations: Iterable[ObligationLike],
     lateness: Mapping[str, int],
 ) -> list[ExpectedFlow]:
+    """CONTRACTED and EXPECTED lines from ledger rows. Disputed invoices are excluded."""
     flows: list[ExpectedFlow] = []
     for inv in invoices:
         outstanding = inv.gross_amount - inv.paid_amount
         if outstanding <= 0:
             continue
-        if inv.type is InvoiceType.RECEIVABLE and inv.status in OPEN_RECEIVABLE:
-            late = lateness.get(inv.counterparty_id, 0)
-            flows.append(
-                ExpectedFlow(
-                    on=expected_receipt_date(inv.due_on, late),
-                    amount=outstanding,
-                    direction=Direction.IN,
-                    source_table="invoice",
-                    source_id=inv.id,
-                    label=f"Receivable {inv.id} (due {inv.due_on}, +{late}d typical lateness)",
-                )
+        if inv.status in ISSUED_OPEN:
+            confidence = Confidence.CONTRACTED
+        elif inv.status is InvoiceStatus.DRAFT:
+            confidence = Confidence.EXPECTED
+        else:
+            continue
+        flows.append(
+            ExpectedFlow(
+                on=_cash_date(inv, inv.due_on, lateness),
+                amount=outstanding,
+                direction=Direction.IN if inv.type is InvoiceType.RECEIVABLE else Direction.OUT,
+                confidence=confidence,
+                source_table="invoice",
+                source_id=inv.id,
+                label=_invoice_label(inv, lateness),
             )
-        elif inv.type is InvoiceType.PAYABLE and inv.status in OPEN_PAYABLE:
-            flows.append(
-                ExpectedFlow(
-                    on=inv.due_on,
-                    amount=outstanding,
-                    direction=Direction.OUT,
-                    source_table="invoice",
-                    source_id=inv.id,
-                    label=f"Payable {inv.id} (due {inv.due_on})",
-                )
-            )
+        )
     for run in payroll_runs:
         if run.status is PayrollStatus.SCHEDULED:
             flows.append(
@@ -125,6 +139,7 @@ def expected_flows(
                     on=run.pay_date,
                     amount=run.employer_cost_total,
                     direction=Direction.OUT,
+                    confidence=Confidence.CONTRACTED,
                     source_table="payroll_run",
                     source_id=run.id,
                     label=f"Payroll {run.id}",
@@ -136,9 +151,70 @@ def expected_flows(
                 on=ob.due_on,
                 amount=ob.amount,
                 direction=Direction.OUT,
+                confidence=Confidence.CONTRACTED,
                 source_table="obligation",
                 source_id=ob.id,
                 label=ob.description,
             )
         )
     return flows
+
+
+def seasonal_fill(
+    as_of: date,
+    until: date,
+    invoices: Iterable[InvoiceLike],
+    lateness: Mapping[str, int],
+) -> list[ExpectedFlow]:
+    """SPECULATIVE lines for issue dates beyond the order book.
+
+    The rule an owner can check by hand: after the last order-book (draft)
+    invoice of each side, assume every counterparty repeats what it invoiced
+    in the same week last year, on the same terms, paid with its usual
+    lateness. Each line cites the historical invoice it repeats. No growth
+    or trend adjustment is applied.
+    """
+    rows = list(invoices)
+    flows: list[ExpectedFlow] = []
+    for side in (InvoiceType.RECEIVABLE, InvoiceType.PAYABLE):
+        drafts = [i.issued_on for i in rows if i.type is side and i.status is InvoiceStatus.DRAFT]
+        fill_from = max(drafts) + timedelta(days=1) if drafts else as_of + timedelta(days=1)
+        for inv in rows:
+            if inv.type is not side or inv.status is not InvoiceStatus.PAID:
+                continue
+            issued = inv.issued_on + SAME_WEEK_LAST_YEAR
+            if not fill_from <= issued <= until:
+                continue
+            on = _cash_date(inv, inv.due_on + SAME_WEEK_LAST_YEAR, lateness)
+            if on > until:
+                continue
+            flows.append(
+                ExpectedFlow(
+                    on=on,
+                    amount=inv.gross_amount,
+                    direction=Direction.IN if side is InvoiceType.RECEIVABLE else Direction.OUT,
+                    confidence=Confidence.SPECULATIVE,
+                    source_table="invoice",
+                    source_id=inv.id,
+                    label=f"Seasonal fill: repeats {inv.id} from {inv.issued_on} (same week "
+                    "last year)",
+                )
+            )
+    return flows
+
+
+def projection_flows(
+    as_of: date,
+    weeks: int,
+    invoices: Iterable[InvoiceLike],
+    transactions: Iterable[TransactionLike],
+    payroll_runs: Iterable[PayrollLike],
+    obligations: Iterable[ObligationLike],
+) -> list[ExpectedFlow]:
+    """Every projected line, all three confidence classes, from ledger rows."""
+    invoice_rows = list(invoices)
+    lateness = mean_lateness_days(paid_receivable_history(invoice_rows, transactions))
+    return [
+        *expected_flows(invoice_rows, payroll_runs, obligations, lateness),
+        *seasonal_fill(as_of, horizon_end(as_of, weeks), invoice_rows, lateness),
+    ]

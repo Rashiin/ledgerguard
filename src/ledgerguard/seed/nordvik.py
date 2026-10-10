@@ -27,7 +27,7 @@ from ledgerguard.analytics.cashflow import (
     mean_lateness_days,
     project,
 )
-from ledgerguard.analytics.sources import expected_flows, paid_receivable_history
+from ledgerguard.analytics.sources import projection_flows
 from ledgerguard.db.models import (
     Account,
     Base,
@@ -56,6 +56,9 @@ from ledgerguard.money import from_cents, to_cents, to_money
 AS_OF = date(2026, 10, 16)  # a Friday; projection week 1 starts Monday 2026-10-19
 HISTORY_START = date(2024, 10, 17)  # 24 months of history
 HORIZON_END = date(2027, 1, 17)  # end of projection week 13; forward rows stop here
+# Confirmed sales and purchase orders reach this far ahead. Beyond it the
+# projection uses the SPECULATIVE seasonal fill instead of draft invoices.
+ORDER_BOOK_END = date(2026, 11, 20)
 VAT_PERCENT = 23
 SHORTFALL_WEEKS = (6, 7, 8)
 
@@ -274,7 +277,9 @@ class Manifest:
     vat_obligation: str = ""
     opening_balance: str = ""
     as_of_balance: str = ""
-    weekly_closing: list[str] = field(default_factory=list)
+    weekly_closing: list[str] = field(default_factory=list)  # all confidence classes
+    weekly_closing_with_expected: list[str] = field(default_factory=list)
+    weekly_closing_contracted: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -348,7 +353,7 @@ class NordvikBuilder:
             brennan = total - others
             for i in range(3):
                 issued = self._business_day_in(first, last)
-                if HISTORY_START <= issued <= HORIZON_END:
+                if HISTORY_START <= issued <= ORDER_BOOK_END:
                     self._receivable(
                         BRENNAN,
                         issued,
@@ -360,7 +365,7 @@ class NordvikBuilder:
                 for i in range(count):
                     issued = self._business_day_in(first, last)
                     net = jitter(self.rng, others * spec.weight // 100 // count, 15)
-                    if HISTORY_START <= issued <= HORIZON_END:
+                    if HISTORY_START <= issued <= ORDER_BOOK_END:
                         self._receivable(
                             spec, issued, net, f"equipment order {first:%b %Y} #{i + 1}"
                         )
@@ -419,7 +424,7 @@ class NordvikBuilder:
                 for _ in range(spec.invoices_per_month):
                     issued = self._business_day_in(first, last)
                     net = jitter(self.rng, per_invoice, 12)
-                    if HISTORY_START <= issued <= HORIZON_END:
+                    if HISTORY_START <= issued <= ORDER_BOOK_END:
                         self._payable(spec, issued, net, f"{spec.name} - {spec.blurb}")
 
     # ---- recurring cash movements without invoices
@@ -1038,12 +1043,7 @@ def _assemble(seed: int, cal: Calibration) -> _Assembly:
         )
         for t in b.txns
     ]
-    flows = expected_flows(
-        invoices,
-        b.payroll,
-        b.obligations,
-        mean_lateness_days(paid_receivable_history(invoices, transactions)),
-    )
+    flows = projection_flows(AS_OF, 13, invoices, transactions, b.payroll, b.obligations)
     return _Assembly(
         b,
         invoices,
@@ -1158,6 +1158,10 @@ def build(seed: int, financing_catalogue: Path) -> SeedResult:
         opening_balance=str(opening),
         as_of_balance=str(as_of_balance),
         weekly_closing=[str(c) for c in closings],
+        weekly_closing_with_expected=[
+            str(as_of_balance + w.closing_with_expected) for w in a.weeks
+        ],
+        weekly_closing_contracted=[str(as_of_balance + w.closing_contracted) for w in a.weeks],
     )
 
     rows: list[Base] = [
