@@ -45,7 +45,7 @@ last seed run.
 | Cause: refit stock paid before the customer pays | `inv_0665` → `inv_0678` | Nordvik pays Halvorsen Steelworks €142,500.00 for refit stock on 2026-12-01 (week 7). Brennan's refit milestone `inv_0678` (€227,550.00, issued 2026-10-16, due 2026-11-20) is expected 26 days late, on 2026-12-16 (week 9). |
 | Also in the window | `obl_0004`, `pay_0026` | VAT return €155,391.41 due 2026-11-23 and payroll €73,576.18 on 2026-11-27, both in week 6. |
 | Payroll run inside the shortfall window | `pay_0026` | November payroll, pay date 2026-11-27. |
-| Customer above 30% revenue concentration | `cp_brennan` | Brennan Hospitality Group, about 35% of trailing-12-month net revenue. No other customer is above 30%. |
+| Customer above 30% revenue concentration | `cp_brennan` | Brennan Hospitality Group, about 37% of trailing-12-month net revenue. No other customer is above 30%. |
 | Three overdue receivables | `inv_0412`, `inv_0625`, `inv_0654` | `inv_0412` is Brennan's €46,854.00 invoice due 2026-10-02 (the "invoice 0412" of scenario 7). |
 | One disputed receivable | `inv_0620` | Harbourview Hotels, €12,400.00, damaged door seal. Excluded from expected receipts. |
 | Duplicate-looking supplier invoice pair | `inv_0641` (legitimate, paid 2026-10-08) and `inv_0377` (true duplicate, unpaid) | Delmar Smallwares, both €4,312.50, issued 3 days apart, same vendor reference DSW-26-0918. Paying `inv_0377` (scenario 8) falls within 14 days of the payment of `inv_0641`. |

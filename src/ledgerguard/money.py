@@ -60,5 +60,7 @@ def from_cents(cents: int) -> Decimal:
 
 
 def format_eur(amount: Decimal) -> str:
-    """Human-readable euro string, e.g. ``€-3,180.00``."""
-    return f"€{to_money(amount):,.2f}"
+    """Human-readable euro string, e.g. ``€3,180.00`` or ``-€3,180.00``."""
+    value = to_money(amount)
+    sign = "-" if value < 0 else ""
+    return f"{sign}€{abs(value):,.2f}"

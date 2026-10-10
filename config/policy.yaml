@@ -25,3 +25,7 @@ rules:
   payroll_lead_days: 5
   tax_reserve_horizon_days: 45
   concentration_warning_share: "0.30"
+  # Protection rules judge projected cash on contracted + order-book lines;
+  # the speculative seasonal fill never justifies a payment.
+  protection_band: with_expected
+  payroll_margin_warning: "0.20"

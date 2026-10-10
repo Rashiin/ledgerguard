@@ -33,4 +33,5 @@ def test_round_money_rounds_half_up() -> None:
 
 
 def test_format() -> None:
-    assert format_eur(Decimal("-3180.00")) == "€-3,180.00"
+    assert format_eur(Decimal("-3180.00")) == "-€3,180.00"
+    assert format_eur(Decimal("46854")) == "€46,854.00"

@@ -74,7 +74,10 @@ types are not coerced, and the action kind is a closed enumeration.
 | `rationale` | Natural-language explanation for the human |
 
 A malformed intent is rejected and the rejection is shown to the user. It is
-never repaired. The local model client may retry at most twice, feeding the
+never repaired. Money must be a quoted decimal string; a bare JSON number is
+refused. Payment payloads name invoices only: the verifier computes what is
+owed and seals it into the action, so the model has no field through which
+to name a sum. The local model client may retry at most twice, feeding the
 schema error back verbatim. After that, the turn fails visibly with "the
 agent could not produce a valid action".
 
@@ -90,6 +93,11 @@ agent could not produce a valid action".
 | 4 | **Provenance** | Every claim must cite existing rows of a type that can support it | Unsupported claims are replaced by a visible "unsupported, removed by verifier" marker, never deleted silently |
 | 5 | **Policy** | Financing output must show total cost of capital over the real term and carry a non-removable "informational, not regulated advice" disclosure. Guaranteed-outcome language is refused | Rejected or rewritten with the disclosure attached |
 | 6 | **Tier assignment** | A deterministic function of action kind and amount | Any tier the model supplies is ignored |
+
+**Numbers in prose.** Every money-like number in the model's sentences must
+equal a figure the verifier computed. A number the verifier corrected is
+replaced with the recomputed value; anything else is masked visibly. A wrong
+amount cannot survive inside a sentence.
 
 ### Business rules
 
@@ -114,6 +122,14 @@ agent could not produce a valid action".
 | **T1** | Draft or simulate: reversible, no external effect | draft invoice, scenario, rank financing | automatic |
 | **T2** | Change internal records | record a payment received, mark disputed | operator approval, with a before/after diff of the ledger change |
 | **T3** | External or irreversible | initiate payment, accept a financing offer | operator approval, plus a typed second confirmation, an amount ceiling and a 60-second cool-off |
+
+The payroll and tax rules judge projected cash on contracted plus order-book
+lines. The speculative fill never justifies a payment.
+
+**Approval re-check.** When a pending action is approved, every rule runs
+again on the ledger as it is now. Two payments that are safe alone cannot be
+approved one after the other into a breach. Each sealed action runs at most
+once.
 
 Ceilings, the cool-off and rule parameters live in `config/policy.yaml`, which
 is validated strictly when the application starts. Three invariants are
@@ -293,7 +309,7 @@ The fourth layer does not depend on the first three working.
 |---|---|
 | Money, configuration, data model, migrations, seeder, projection with confidence classes | done |
 | Ledger read API, Executor (sealed actions, tier gates), audit chain with tamper detection | done |
-| Verifier plane, rules, tiers, Trust Receipt | planned |
+| Verifier plane (six stages), eight rules, tiers, Trust Receipt, approval queue with re-check | done |
 | Proposer plane and LLM clients | planned |
 | Capabilities (radar, financing matcher, analysis), alerts, scenarios | planned |
 | Web UI | planned |

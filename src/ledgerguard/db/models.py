@@ -196,10 +196,18 @@ class ActionIntentRecord(Base):
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     conversation_id: Mapped[str] = mapped_column(String(40), index=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
-    kind: Mapped[ActionKind] = mapped_column(enum_column(ActionKind, "action_kind"))
-    payload: Mapped[dict[str, Any]] = mapped_column(CanonicalJSON)
+    # NULL when the proposer's output was rejected before its kind could be read.
+    kind: Mapped[ActionKind | None] = mapped_column(
+        enum_column(ActionKind, "action_kind"), nullable=True
+    )
+    payload: Mapped[dict[str, Any] | None] = mapped_column(CanonicalJSON, nullable=True)
     proposer_rationale: Mapped[str] = mapped_column(Text)
     status: Mapped[IntentStatus] = mapped_column(enum_column(IntentStatus, "intent_status"))
+    # added: the proposer's raw output, kept verbatim (truncated) for rejected intents.
+    raw_output: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # added: the sealed VerifiedAction awaiting approval (content + seal). The
+    # Executor re-checks the seal when it is approved, so edits here are caught.
+    sealed_action: Mapped[dict[str, Any] | None] = mapped_column(CanonicalJSON, nullable=True)
 
 
 class TrustReceiptRecord(Base):
@@ -210,10 +218,17 @@ class TrustReceiptRecord(Base):
     rows_read: Mapped[list[Any]] = mapped_column(CanonicalJSON)
     recomputations: Mapped[list[Any]] = mapped_column(CanonicalJSON)
     rules_evaluated: Mapped[list[Any]] = mapped_column(CanonicalJSON)
-    tier: Mapped[Tier] = mapped_column(enum_column(Tier, "tier"))
+    # NULL for intents rejected before a tier could be assigned.
+    tier: Mapped[Tier | None] = mapped_column(enum_column(Tier, "tier"), nullable=True)
     risk_flags: Mapped[list[Any]] = mapped_column(CanonicalJSON)
     verifier_version: Mapped[str] = mapped_column(String(16))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    # added: verified | blocked | rejected
+    outcome: Mapped[str] = mapped_column(String(16))
+    # added: the complete receipt document, exactly as served and exported.
+    body: Mapped[dict[str, Any]] = mapped_column(CanonicalJSON)
+    # added: the audit event that recorded this receipt.
+    audit_seq: Mapped[int | None] = mapped_column(nullable=True)
 
 
 class AuditEvent(Base):

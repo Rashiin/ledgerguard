@@ -21,6 +21,8 @@ from ledgerguard.executor.executor import (
     Executor,
     t3_confirmation_phrase,
 )
+from ledgerguard.verifier.receipt import Approval as ReceiptApproval
+from ledgerguard.verifier.receipt import TrustReceipt
 from ledgerguard.verifier.seal import Sealer, VerifiedAction, load_or_create_key
 
 KEY = bytes(range(32))
@@ -69,6 +71,45 @@ def action(
 
 
 OPERATOR = Approval(Actor.OPERATOR, T0)
+
+
+def register(executor: Executor, act: VerifiedAction) -> VerifiedAction:
+    """Put the action on record as the verifier would, so the Executor will consider it."""
+    needs = act.tier in (Tier.T2, Tier.T3)
+    receipt = TrustReceipt(
+        receipt_id=act.receipt_id,
+        action_intent_id=act.intent_id,
+        outcome="verified",
+        kind=act.kind.value,
+        tier=act.tier.value,
+        rows_read=[],
+        schema_errors=[],
+        recomputations=[],
+        provenance=[],
+        rules_evaluated=[],
+        policy=[],
+        text_corrections=[],
+        payload_figures={},
+        risk_flags=[],
+        disclosures=[],
+        approval=ReceiptApproval(
+            required=needs,
+            by="operator" if needs else None,
+            status="pending" if needs else "not_required",
+        ),
+        verifier_version="stub",
+        created_at=T0.isoformat(),
+    )
+    executor.store_verification(
+        receipt=receipt,
+        conversation_id="conv_test",
+        kind=act.kind,
+        payload=act.payload,
+        rationale="stub",
+        raw_output=None,
+        action=act,
+    )
+    return act
 
 
 def refusals(db: Path) -> list[dict[str, Any]]:
@@ -195,7 +236,8 @@ def test_t2_executes_through_the_executor_with_diff_and_audit(
     executor: Executor, fresh_db: Path
 ) -> None:
     result = executor.execute(
-        action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": "inv_0412"}), OPERATOR
+        register(executor, action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": "inv_0412"})),
+        OPERATOR,
     )
     assert result.changes == [
         {
@@ -220,14 +262,17 @@ def test_t2_executes_through_the_executor_with_diff_and_audit(
 def test_failed_handler_changes_nothing(executor: Executor, fresh_db: Path) -> None:
     paid = "inv_0641"  # the legitimate, already-paid Delmar invoice
     with pytest.raises(ExecutionRefused, match="is not a receivable"):
-        executor.execute(action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": paid}), OPERATOR)
+        executor.execute(
+            register(executor, action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": paid})),
+            OPERATOR,
+        )
     with make_readonly_sessionmaker(fresh_db)() as s:
         events = load_events(s)
-    assert [e.event_type for e in events] == ["action.refused"]
+    assert [e.event_type for e in events] == ["intent.verified", "action.refused", "intent.failed"]
 
 
 def test_t0_runs_without_approval_and_changes_nothing(executor: Executor) -> None:
-    result = executor.execute(action(ActionKind.DRAFT_FORECAST, Tier.T0))
+    result = executor.execute(register(executor, action(ActionKind.DRAFT_FORECAST, Tier.T0)))
     assert result.changes == []
 
 
@@ -255,7 +300,7 @@ def test_t3_cool_off_is_enforced(executor: Executor, clock: Clock, policy: Polic
     clock.now = ready
     with pytest.raises(ExecutionRefused, match="no executor handler"):
         # Every gate passed; the handler for accepting offers arrives with Phase 5.
-        executor.execute(_t3(), Approval(Actor.OPERATOR, ready, phrase))
+        executor.execute(register(executor, _t3()), Approval(Actor.OPERATOR, ready, phrase))
 
 
 def test_every_refusal_is_audited_and_chain_stays_intact(
@@ -279,3 +324,38 @@ def test_sealing_key_file(tmp_path: Path) -> None:
     path.write_text("abcd")
     with pytest.raises(ValueError):
         load_or_create_key(path)
+
+
+def test_a_sealed_action_runs_at_most_once(executor: Executor, fresh_db: Path) -> None:
+    sealed = register(
+        executor, action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": "inv_0412"})
+    )
+    executor.execute(sealed, OPERATOR)
+    with pytest.raises(ExecutionRefused, match="at most once"):
+        executor.execute(sealed, OPERATOR)
+
+
+def test_an_action_without_a_verification_record_is_refused(executor: Executor) -> None:
+    with pytest.raises(ExecutionRefused, match="no verification record"):
+        executor.execute(
+            action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": "inv_0412"}), OPERATOR
+        )
+
+
+def test_declined_action_cannot_then_be_executed(executor: Executor) -> None:
+    sealed = register(
+        executor, action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": "inv_0412"})
+    )
+    with pytest.raises(ExecutionRefused, match="cannot decline"):
+        executor.decline(sealed.intent_id, Actor.LLM, "no")
+    executor.decline(sealed.intent_id, Actor.OPERATOR, "not today")
+    with pytest.raises(ExecutionRefused, match="declined"):
+        executor.execute(sealed, OPERATOR)
+    with pytest.raises(ExecutionRefused, match="not awaiting approval"):
+        executor.decline(sealed.intent_id, Actor.OPERATOR, "again")
+
+
+def test_storing_a_forged_action_is_refused(executor: Executor) -> None:
+    forged = action(ActionKind.MARK_DISPUTED, Tier.T2, {"invoice_id": "inv_0412"}, key=bytes(32))
+    with pytest.raises(ExecutionRefused, match="invalid seal"):
+        register(executor, forged)

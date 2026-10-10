@@ -8,11 +8,12 @@ or routed to a human for approval.
 
 FinTechathon 2026 · International Track · Topic E.
 
-> **Status: Phase 2.** The data model, the synthetic ledger and the cash-flow
-> projection (with confidence classes) are in place, along with the Executor
-> and the tamper-evident audit log. The verifier, proposer, capabilities and
-> UI arrive in later phases. Sections marked *(later phase)* describe what is
-> coming.
+> **Status: Phase 3.** The data model, the synthetic ledger, the cash-flow
+> projection (with confidence classes), the tamper-evident audit log, the
+> Executor and the full verifier plane are in place: six stages, eight rules,
+> permission tiers, Trust Receipts and the approval queue. The LLM proposer,
+> capabilities and UI arrive in later phases. Sections marked *(later phase)*
+> describe what is coming.
 
 ## Runs offline, on your own hardware
 
@@ -51,6 +52,10 @@ different port. Other endpoints so far:
 | `GET /api/ledger/rows/{table}/{id}` | One source row, for drill-down |
 | `GET /api/audit?from_seq=&limit=` | Audit events |
 | `GET /api/audit/verify` | `{"intact": true, "events": N, "head_hash": ...}` |
+| `GET /api/receipts/{id}` | A Trust Receipt |
+| `GET /api/approvals` | Pending T2/T3 actions, with rules, flags and figures |
+| `POST /api/approvals/{id}/approve` | `{"approver": "operator", "confirmation": "CONFIRM int_…"}` (the phrase is required for T3) |
+| `POST /api/approvals/{id}/decline` | `{"by": "operator", "reason": "…"}` |
 
 On first start the app creates `data/verifier.key`, the sealing key for
 verified actions (owner-readable only, never committed).
@@ -111,7 +116,10 @@ src/ledgerguard/
   analytics/        13-week projection with confidence classes, pure functions
   ledger/           read-only ledger queries
   audit/            hash chain: hashing, verification, reading
-  verifier/seal.py  VerifiedAction and its HMAC seal
+  verifier/         the six stages: intent schema, recomputation, provenance,
+                    policy, prose figures, tiers, Trust Receipt, seal, pipeline
+  rules/            the eight business rules, pure functions
+  service.py        turn handling and the approval queue (with re-check)
   executor/         the only runtime writer: tier gates, handlers, audit appends
   seed/nordvik.py   synthetic ledger generator
   api/app.py        FastAPI app (reads only; writes go through the Executor)

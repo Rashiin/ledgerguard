@@ -80,3 +80,52 @@ def test_row_drill_down(client: TestClient) -> None:
 def test_audit_paging(client: TestClient) -> None:
     assert client.get("/api/audit?from_seq=2").json()["events"] == []
     assert client.get("/api/audit?limit=0").status_code == 422
+
+
+def _submit(client: TestClient, raw: str) -> dict:  # type: ignore[type-arg]
+    """Phases 1-3 have no chat endpoint yet; submit through the app's service directly."""
+    service = client.app.state.copilot  # type: ignore[attr-defined]
+    return service.submit(raw, "conv_api").presented  # type: ignore[no-any-return]
+
+
+def test_approval_queue_endpoints(client: TestClient) -> None:
+    from .conftest import intent_json
+
+    turn = _submit(
+        client, intent_json("MARK_DISPUTED", {"invoice_id": "inv_0412", "reason": "damaged"})
+    )
+    pending = client.get("/api/approvals").json()["pending"]
+    assert [p["intent_id"] for p in pending] == [turn["intent_id"]]
+    assert pending[0]["tier"] == "T2"
+    assert (
+        client.post(
+            f"/api/approvals/{turn['intent_id']}/approve", json={"approver": "llm"}
+        ).status_code
+        == 422
+    )
+    done = client.post(
+        f"/api/approvals/{turn['intent_id']}/approve", json={"approver": "operator"}
+    ).json()
+    assert done["status"] == "executed"
+    assert done["changes"][0]["after"] == "disputed"
+    again = client.post(
+        f"/api/approvals/{turn['intent_id']}/approve", json={"approver": "operator"}
+    )
+    assert again.status_code == 409 and "at most once" in again.json()["detail"]
+    assert client.get("/api/audit/verify").json()["intact"] is True
+
+
+def test_decline_and_receipt_endpoints(client: TestClient) -> None:
+    from .conftest import intent_json
+
+    turn = _submit(client, intent_json("INITIATE_PAYMENT", {"invoice_ids": ["inv_0377"]}))
+    receipt = client.get(f"/api/receipts/{turn['receipt_id']}").json()
+    assert receipt["tier"] == "T3" and "DUPLICATE_PAYMENT" in receipt["risk_flags"]
+    assert client.get("/api/receipts/rcp_missing").status_code == 404
+    t3 = client.post(f"/api/approvals/{turn['intent_id']}/approve", json={"approver": "owner"})
+    assert t3.status_code == 409 and "confirmation" in t3.json()["detail"]
+    declined = client.post(
+        f"/api/approvals/{turn['intent_id']}/decline", json={"by": "owner", "reason": "duplicate"}
+    ).json()
+    assert declined["status"] == "declined"
+    assert client.get("/api/approvals").json()["pending"] == []

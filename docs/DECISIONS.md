@@ -267,3 +267,137 @@ allow-listed table. Decimals are returned as strings, never floats.
 **Why.** Spec 7.3 requires every figure to drill down to its source rows in
 one click. The Trust Receipt cites `{table, id}` pairs, and this endpoint
 resolves them. It is an addition to the endpoint list in spec 8.1.
+
+## D-014 · Stage 1 parses JSON text only; money must be quoted (Phase 3)
+
+**Decision.** `parse_intent` accepts only JSON text. A bare JSON number with
+a fraction is refused before Pydantic sees it, and money fields refuse ints,
+so `"46854.00"` is the only accepted form. Unknown fields anywhere reject the
+intent.
+
+The one exception is a top-level `tier`. It is removed and recorded as
+`MODEL_TIER_IGNORED` rather than failing the whole action. The spec says the
+model's tier is ignored, which is different from treating it as malformed.
+
+The payload is validated against the model for its `kind` in a second step,
+so error locations stay exact (`payload.amount`).
+
+**Why.** A JSON number has already passed through binary floating point by
+the time it is parsed. Strictness here is what makes "never repair" possible.
+
+## D-015 · Payment payloads carry no amounts (Phase 3)
+
+**Decision.** `INITIATE_PAYMENT` names invoices only. The verifier computes
+what is owed (gross minus paid) and seals it into `payload.resolved`.
+`RECORD_PAYMENT` takes an optional amount, which must be between €0.01 and
+the outstanding balance; leaving it out means paid in full.
+
+At execution, the Executor re-checks that each invoice still owes exactly the
+sealed amount, and refuses with "changed since verification" if not.
+
+**Why.** Spec 5.2: the model is never asked for a final monetary figure. The
+model has no field through which it could name a sum to pay.
+
+## D-016 · Claims: a closed formula registry; uncited claims are stripped, not rejected (Phase 3)
+
+**Decision.**
+* A claimed figure needs a `derivation`: one of nine named formulas, with
+  operand row ids. The verifier recomputes it, and the recomputed value
+  always replaces the model's. A difference raises `FIGURE_MISMATCH` and both
+  values go on the receipt.
+* A figure without a derivation, or one that cannot be recomputed, is
+  removed (`UNVERIFIED_FIGURE`); its statement stays.
+* Claims with no citations pass the schema. The provenance stage replaces
+  them with a visible "[unsupported claim removed by verifier: …]" marker.
+* Cited rows must come from a table that can support the formula.
+
+**Why.** Spec 6.1 says `source_row_ids` "MUST be non-empty", and stage 4
+says uncited assertions are stripped visibly. Rejecting the whole intent for
+one uncited sentence would hide the verifier's work instead of showing it.
+
+**Cost.** New capabilities (Phase 5: total cost of capital, DSO and so on)
+must add formulas before the model can make claims about them.
+
+## D-017 · Numbers inside prose must match a verified figure (Phase 3)
+
+**Decision.** After recomputation, every money-like number in claim
+statements and the rationale is checked against the verified figures: the
+recomputed claim figures and the verifier's payload figures. "Money-like"
+means it has a currency mark, a %, decimals, thousands separators, a k or m
+suffix, or is at least 1,000 and not a year.
+
+* A number equal to a corrected model figure is replaced with the recomputed
+  value.
+* Any other unmatched number becomes "[figure removed: not verified]".
+
+Matching respects the precision the text shows ("€46.9k" matches €46,854.00).
+Row ids, dates, years and small counts are ignored.
+
+**Why.** Otherwise a model could put a wrong amount in a sentence while
+giving the right figure in its claim. "Recomputes every number" has to cover
+the sentence too.
+
+**Cost / residual risk.** Detection is a pattern match. Numbers written in
+words ("forty thousand") are not caught (risk register R-09).
+
+## D-018 · Protection rules judge projected cash on contracted + order-book lines (Phase 3)
+
+**Decision.** PayrollProtection and TaxReserveFloor evaluate projected cash
+on the policy's `protection_band`, which defaults to `with_expected`
+(CONTRACTED + EXPECTED). The speculative seasonal fill can never justify a
+payment.
+
+* **PayrollProtection** blocks an outbound action that leaves less than the
+  next payroll's employer cost, at the lower of its lead-day check point and
+  the eve of payday. It warns when the margin is under 20%.
+* **TaxReserveFloor** blocks an outbound action that leaves less cash on the
+  eve of any tax due within 45 days than that tax. Paying a not-yet-due
+  invoice early can trip it, by moving cash ahead of the VAT date.
+
+**Why.** Judged on contracted-only cash, which goes negative within 13 weeks
+for any real SME (D-009), the rules would block almost every payment. Judged
+on the full model, they would lean on numbers that are only modelled.
+
+**Cost.** If the order book does not convert, the protection is weaker than
+it looks (R-12). The band is configurable, and `contracted` is the stricter
+setting.
+
+## D-019 · Approval re-checks the rules against the current ledger; actions run once (Phase 3)
+
+**Decision.**
+* When a pending T2 or T3 action is approved, the service re-runs payload
+  resolution and every rule against a fresh snapshot. If anything now
+  blocks, the intent is closed as `rejected` with the reasons, and nothing
+  executes.
+* The Executor runs a sealed action only if its intent is on record with
+  status `verified` or `pending_approval`. It then marks it `executed`, so
+  replaying the same sealed action is refused.
+* A handler refusal marks the intent `failed`.
+
+**Why.** Without the re-check, two payments that each pass PayrollProtection
+when verified could be approved one after the other and jointly starve
+payroll. That would be a way to reach a BLOCK through approvals. A test
+proves it is closed.
+
+## D-020 · Migration 0003 rebuilds tables from explicit definitions (Phase 3)
+
+**Decision.** Making `action_intent.kind` and `trust_receipt.tier` nullable
+requires a table rebuild on SQLite. Migration 0003 writes the new tables out
+in full (create, copy, drop, rename) instead of using Alembic batch mode.
+
+**Why.** Batch mode reflects the existing table, and reflected constraint
+order differed between the first and later runs in one process. That broke
+the byte-identical seed. The test now provisions three times in one process.
+
+## D-021 · Financing policy hook ahead of the financing maths (Phase 3)
+
+**Decision.** Any financing content (RANK_FINANCING, ACCEPT_FINANCING_OFFER,
+or a claim citing a `financing_product`) gets the non-removable disclosure.
+It is blocked unless every product it discusses has a verified
+total-cost-of-capital claim. The formulas that qualify are listed in
+`TOTAL_COST_FORMULAS`, which is empty until Phase 5 adds the cost
+calculator.
+
+**Why.** The policy check belongs to Phase 3. The cost model belongs to the
+Financing Matcher. Until Phase 5, financing recommendations are blocked by
+design, which is the safe direction.

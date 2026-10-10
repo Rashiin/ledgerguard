@@ -72,8 +72,10 @@ def _projection(session: Session) -> list:  # type: ignore[type-arg]
 def test_seed_is_byte_identical(tmp_path: Path) -> None:
     from scripts.seed import main
 
+    # Three runs in one process: the second run is where reflection-order bugs in
+    # migrations used to show up.
     digests = []
-    for run in ("a", "b"):
+    for run in ("a", "b", "c"):
         db = tmp_path / run / "ledger.sqlite"
         assert (
             main(
@@ -89,7 +91,7 @@ def test_seed_is_byte_identical(tmp_path: Path) -> None:
             == 0
         )
         digests.append(hashlib.sha256(db.read_bytes()).hexdigest())
-    assert digests[0] == digests[1]
+    assert digests[0] == digests[1] == digests[2]
 
 
 def test_different_seed_gives_different_ledger(tmp_path: Path) -> None:

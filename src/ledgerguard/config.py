@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import yaml
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
@@ -57,6 +57,11 @@ class RuleParameters(Strict):
     payroll_lead_days: int = Field(ge=0, le=30)
     tax_reserve_horizon_days: int = Field(ge=1, le=180)
     concentration_warning_share: RatioField
+    # Which projected cash the protection rules (payroll, tax) judge an action
+    # against. Speculative cash is never allowed to justify a payment.
+    protection_band: Literal["contracted", "with_expected"]
+    # A payroll margin thinner than this fraction of the run raises a warning.
+    payroll_margin_warning: RatioField
 
 
 class Policy(Strict):
