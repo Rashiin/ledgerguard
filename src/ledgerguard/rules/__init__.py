@@ -1,4 +1,4 @@
-"""Deterministic business rules: pure functions of (intent, ledger snapshot)."""
+"""The business rules. Each one is a pure function of the intent and a ledger snapshot."""
 
 from ledgerguard.rules.core import (
     ADVISORY,

@@ -1,19 +1,21 @@
-"""BUILD_SPEC 9.3: invariants that must hold, and where each one is proven.
+"""The required invariants, and where each one is proven.
 
-* The Executor rejects anything that is not a verifier-sealed VerifiedAction:
-  test_executor.py (not an action, unsealed, forged, tampered, mutated payload).
-* No runtime ledger write outside the Executor: test_write_paths.py (the
-  read-only session refuses writes; engines exist only in named files; the
-  running app never loads provisioning).
-* A BLOCK can never be overridden by any approval:
-  test_executor.py::test_block_cannot_be_overridden_by_any_approval and
-  test_pipeline.py (scenario 9, forged queue entry).
-* INITIATE_PAYMENT and ACCEPT_FINANCING_OFFER are always T3:
+* The Executor rejects anything that is not a verifier-sealed VerifiedAction.
+  test_executor.py covers non-actions, unsealed and forged actions, and
+  actions changed after sealing.
+* Nothing writes to the ledger at runtime except the Executor.
+  test_write_paths.py shows the read-only session refusing writes, engines
+  existing only in named files, and the running app never loading
+  provisioning code.
+* No approval can override a BLOCK.
+  test_executor.py::test_block_cannot_be_overridden_by_any_approval and the
+  scenario 9 and forged-queue tests in test_pipeline.py.
+* INITIATE_PAYMENT and ACCEPT_FINANCING_OFFER are always T3.
   test_rules.py::test_payment_and_offer_acceptance_are_always_t3 and
   test_executor.py::test_payment_and_financing_acceptance_must_be_t3.
-* Audit verification fails if any event is mutated:
+* Audit verification fails if any event is changed.
   test_audit.py::test_tampering_breaks_the_chain.
-* No float in any monetary code path: this file.
+* No float appears in any monetary code path. This file proves it.
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ SRC = ROOT / "src" / "ledgerguard"
 
 def _float_uses(path: Path) -> list[str]:
     tree = ast.parse(path.read_text(), filename=str(path))
-    # ``isinstance(x, float)`` is how floats are refused; that use is allowed.
+    # ``isinstance(x, float)`` is how floats are refused, so that use is allowed.
     refusals = {
         id(arg)
         for call in ast.walk(tree)

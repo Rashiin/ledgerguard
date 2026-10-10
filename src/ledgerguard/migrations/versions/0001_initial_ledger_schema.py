@@ -1,10 +1,11 @@
 """initial ledger schema
 
 Revision ID: 0001
-Revises: (none)
+Revises: nothing
 
-Hand-normalised: plain SQL column types only (money is integer cents,
-JSON is canonical text) so this migration never depends on application code.
+This migration was normalised by hand to use plain SQL column types. Money is
+integer cents and JSON is canonical text, so the migration never depends on
+application code.
 """
 
 from __future__ import annotations

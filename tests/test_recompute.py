@@ -1,4 +1,4 @@
-"""Stage 2 (recomputation) and stage 4 (provenance)."""
+"""Stage 2, recomputation, and stage 4, provenance."""
 
 from __future__ import annotations
 

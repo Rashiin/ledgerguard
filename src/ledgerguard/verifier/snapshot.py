@@ -1,7 +1,8 @@
 """A read-only, in-memory view of the ledger for one verification.
 
-Loaded once from the read-only session, so every stage and every rule sees
-the same state, and rules stay pure functions of (intent, snapshot).
+It is loaded once from the read-only session. Every stage and every rule then
+sees the same state, and each rule stays a pure function of the intent and
+this snapshot.
 """
 
 from __future__ import annotations
@@ -57,7 +58,7 @@ def table_of(row_id: str) -> str | None:
 
 
 class Band:
-    """Which confidence classes a balance counts (DECISIONS D-009)."""
+    """Which confidence classes a balance counts. See DECISIONS D-009."""
 
     CONTRACTED = (Confidence.CONTRACTED,)
     WITH_EXPECTED = (Confidence.CONTRACTED, Confidence.EXPECTED)
@@ -128,7 +129,7 @@ class LedgerSnapshot:
         """Cash at the end of ``day``: on hand now plus every banded flow up to that day.
 
         ``extra`` adds the flows an action would create; ``removed`` drops the
-        projected flows it replaces (paying an invoice now removes its due-date line).
+        projected flows it replaces. Paying an invoice now removes its due-date line.
         """
         total = self.cash_on_hand()
         for f in [*(f for f in self.flows if f.source_id not in removed), *(extra or [])]:

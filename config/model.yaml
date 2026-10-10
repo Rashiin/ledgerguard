@@ -1,11 +1,11 @@
-# LLM client selection. The environment variable LLM_CLIENT overrides `client`.
-# local             -> Ollama on this machine (default; no network egress)
-# openai_compatible -> any OpenAI-shaped endpoint (optional, never required)
-# replay            -> recorded cassettes; no model server, no network
+# Chooses the model client. The LLM_CLIENT environment variable overrides `client`.
+#   local              Ollama on this machine. The default. Nothing leaves the machine.
+#   openai_compatible  Any OpenAI-style endpoint. Optional and never required.
+#   replay             Recorded responses. No model server and no network.
 client: local
 
-# A malformed ActionIntent is retried at most twice with the schema error fed
-# back verbatim, then the turn fails visibly. It is never repaired by hand.
+# A malformed ActionIntent is retried at most twice, with the schema error sent
+# back unchanged. After that the turn fails visibly. Output is never repaired.
 max_intent_retries: 2
 
 local:

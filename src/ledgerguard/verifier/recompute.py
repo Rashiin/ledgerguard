@@ -1,14 +1,15 @@
-"""Stage 2: recompute every figure from source rows (BUILD_SPEC 6.2).
+"""Stage 2: recompute every figure from source rows.
 
-Two jobs:
+This stage has two jobs.
 
-* **Claims.** Each claimed figure is re-derived with its declared formula over
-  its cited operand rows, in plain Python. The recomputed value always wins.
-  A figure that cannot be recomputed (no derivation, unknown rows, wrong
-  operand types, bad parameters) is not shown to the user at all.
-* **Payloads.** Amounts the action would move are computed here from the
-  ledger (what an invoice still owes), never taken from the model. References
-  in the payload must name existing rows of the right kind, or the intent is
+* **Claims.** Each claimed figure is derived again with its declared formula
+  over its cited rows, in plain Python. The recomputed value always wins. A
+  figure that cannot be recomputed is not shown to the user at all. That
+  covers a missing derivation, unknown rows, rows of the wrong kind and bad
+  parameters.
+* **Payloads.** The amounts an action would move come from the ledger, such
+  as what an invoice still owes, and never from the model. Every reference in
+  the payload must name an existing row of the right kind, or the intent is
   rejected.
 """
 
@@ -149,7 +150,7 @@ FORMULAS: dict[I.Formula, FormulaSpec] = {
     ),
     I.Formula.CASH_ON_HAND: FormulaSpec(frozenset({"account"}), "Σ bank and cash balances", _cash),
     I.Formula.PROJECTED_CLOSING: FormulaSpec(
-        PROJECTION_TABLES, "opening + Σin − Σout (banded)", _closing
+        PROJECTION_TABLES, "opening + Σin − Σout for the chosen band", _closing
     ),
     I.Formula.PROJECTED_INFLOW: FormulaSpec(
         PROJECTION_TABLES, "Σ expected inflows in week", _class_total(Direction.IN)

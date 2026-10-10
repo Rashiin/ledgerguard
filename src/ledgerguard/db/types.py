@@ -34,7 +34,7 @@ class Money(TypeDecorator[Decimal]):
 
 
 class DecimalText(TypeDecorator[Decimal]):
-    """Non-money decimals (rates, ratios) stored as exact text, never REAL."""
+    """Decimals that are not money, such as rates, stored as exact text and never as REAL."""
 
     impl = String(32)
     cache_ok = True

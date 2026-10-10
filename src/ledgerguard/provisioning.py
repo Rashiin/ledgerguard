@@ -1,8 +1,8 @@
 """Offline provisioning: create the ledger file, run migrations, load seed rows.
 
-This is one of the two places allowed to open a writable connection (the
-other is the Executor). It runs before the application starts and is never
-imported by the API, the proposer or the verifier.
+This module and the Executor are the only places that open a writable
+connection. Provisioning runs before the application starts. The API, the
+proposer and the verifier never import it.
 """
 
 from __future__ import annotations

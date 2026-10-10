@@ -4,16 +4,16 @@ A ``VerifiedAction`` carries an HMAC-SHA256 seal over its canonical content,
 keyed with a secret held on the owner's machine. The Executor recomputes the
 seal and refuses the action on any mismatch. So it refuses:
 
-* any object that is not a ``VerifiedAction`` (a raw ``ActionIntent``, a dict,
-  JSON from the model);
+* any object that is not a ``VerifiedAction``, such as a raw ``ActionIntent``,
+  a dict or JSON from the model;
 * a ``VerifiedAction`` built without the key;
 * a sealed action whose amount, target, tier or rule outcome was changed
   after verification, for example while it waited in the approval queue.
 
-This is a guard against bypass by mistake and against tampering with stored
-pending actions. It is not a defence against arbitrary code running inside
-the application process, which could read the key; that is listed as a
-residual risk.
+The seal guards against bypass by mistake and against tampering with stored
+pending actions. It does not defend against arbitrary code running inside the
+application process, which could read the key. The risk register lists that
+as R-02.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ KEY_BYTES = 32
 
 
 def load_or_create_key(path: Path) -> bytes:
-    """Read the sealing key, creating it (owner-readable only) on first use."""
+    """Read the sealing key. On first use, create it readable by its owner only."""
     if path.exists():
         key = bytes.fromhex(path.read_text(encoding="ascii").strip())
         if len(key) != KEY_BYTES:
@@ -61,7 +61,7 @@ class VerifiedAction:
     verifier_version: str
     verified_at: datetime  # start of the T3 cool-off
     # Names of rules that returned BLOCK. The verifier should never seal a blocked
-    # action; the Executor refuses one anyway (defence in depth).
+    # action, and the Executor refuses one anyway as a second line of defence.
     blocking_rules: tuple[str, ...] = ()
     seal: str = field(default="", compare=False)
 

@@ -7,11 +7,11 @@ Writes that pass through here:
   approval its tier requires. The change, the intent's new status and the
   audit event commit in one transaction, or none of them do. A sealed action
   runs at most once.
-* ``store_verification``: the verifier's records (the intent, its Trust
-  Receipt and an audit event), written together.
-* ``decline``: an operator refuses a pending action.
-* ``record``: an append to the audit log. The log is append-only, and the
-  database itself refuses UPDATE and DELETE on it (migration 0002).
+* ``store_verification``: the intent, its Trust Receipt and an audit event,
+  written together.
+* ``decline`` and ``close``: a pending action ends without running.
+* ``record``: an append to the audit log. The log is append-only, and
+  migration 0002 makes the database refuse UPDATE and DELETE on it.
 
 Every refusal is itself written to the audit log.
 """
@@ -190,7 +190,7 @@ def _settle(
             counterparty_id=invoice.counterparty_id,
             category=category,
             description=f"{'Receipt' if direction is Direction.IN else 'Payment'} - "
-            f"{invoice.id} (sandbox, via LedgerGuard)",
+            f"{invoice.id}, recorded in the LedgerGuard sandbox",
             source=TransactionSource.MANUAL,
             reconciled=False,
             invoice_id=invoice.id,
@@ -484,7 +484,7 @@ class Executor:
         return ExecutionResult(checked.intent_id, changes, seq)
 
     def close(self, intent_id: str, status: IntentStatus, reason: str) -> None:
-        """Move an open intent to a final state (failed, or rejected on re-check)."""
+        """Move an open intent to failed, or to rejected after an approval-time re-check."""
         if status not in (IntentStatus.FAILED, IntentStatus.REJECTED):
             raise ValueError("close() only records failure or rejection")
         with Session(self._engine) as session, session.begin():

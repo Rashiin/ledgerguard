@@ -46,7 +46,7 @@ ROW_TABLES: dict[str, type[Base]] = {
 
 
 def jsonable(value: Any) -> Any:
-    """Decimals become strings (never floats), dates ISO strings, enums their values."""
+    """Decimals become strings and never floats. Dates become ISO strings and enums their values."""
     if isinstance(value, Decimal):
         return str(value)
     if isinstance(value, date):

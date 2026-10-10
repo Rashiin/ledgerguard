@@ -1,8 +1,8 @@
-"""Stage 4: provenance (BUILD_SPEC 6.2).
+"""Stage 4: provenance.
 
-Every claim must cite at least one existing row, of a table that can support
-it. A claim that fails is not deleted silently: it is replaced, in what the
-user sees, by a visible marker saying the verifier removed it and why. A
+Every claim must cite at least one existing row from a table that can
+support it. A claim that fails is never deleted silently. What the user sees
+is a marker saying the verifier removed it and why. A
 claim whose figure could not be recomputed keeps its statement but loses the
 figure.
 """

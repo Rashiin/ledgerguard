@@ -1,13 +1,13 @@
 """Synthetic ledger for "Nordvik Supply Co.", a B2B kitchen-equipment distributor.
 
 Everything here is invented. Amounts are generated as integer cents from a
-seeded ``random.Random`` (no floats anywhere), so the same seed always yields
-the same rows in the same order.
+seeded ``random.Random`` without any floating-point arithmetic, so the same
+seed always yields the same rows in the same order.
 
-The planted demo hooks (BUILD_SPEC 5.3) are built explicitly rather than hoped
-for, and the operating account's opening balance is calibrated so that the
-13-week projection is negative in weeks 6-8 and nowhere else. Every hook is
-listed in ``Manifest`` and documented in fixtures/README.md.
+The situations the demo needs are built on purpose. The seeder then solves for
+the cash and a few planted amounts so that the 13-week projection is negative
+in weeks 6 to 8 and nowhere else. Every planted row is listed in ``Manifest``
+and documented in fixtures/README.md.
 """
 
 from __future__ import annotations
@@ -268,7 +268,7 @@ class Manifest:
     concentration_customer: str
     overdue_receivables: list[str] = field(default_factory=list)
     disputed_receivable: str = ""
-    duplicate_pair: tuple[str, str] = ("", "")  # (legitimate, true duplicate)
+    duplicate_pair: tuple[str, str] = ("", "")  # the legitimate invoice, then the duplicate
     anomalous_transaction: str = ""
     payroll_in_shortfall: str = ""
     brennan_overdue_invoice: str = RECEIVABLE_INVOICE_ID
@@ -627,7 +627,7 @@ class NordvikBuilder:
                     pay, cents, Direction.OUT, "vat", "vat", f"VAT return {start:%b}-{end:%b %Y}"
                 )
 
-    # ---- planted demo hooks (BUILD_SPEC 5.3)
+    # ---- planted demo situations
 
     def _planted(
         self,
@@ -786,7 +786,7 @@ class NordvikBuilder:
         )
 
     def plant_anomaly(self) -> DraftTxn:
-        """One fuel-card charge about 8 robust standard deviations above the norm."""
+        """One fuel-card charge about 8 median absolute deviations above the usual amount."""
         fuel = sorted(t.cents for t in self.txns if t.category == "fuel")
         median = _median(fuel)
         mad = _median(sorted(abs(Decimal(c) - median) for c in fuel))
@@ -848,7 +848,8 @@ class NordvikBuilder:
                         self.vat_due_cents(start, end),
                         "FREQ=MONTHLY;INTERVAL=2;BYMONTHDAY=23",
                         "vat",
-                        f"VAT return {start:%b}-{end:%b %Y} (from invoices issued in the period)",
+                        f"VAT return {start:%b}-{end:%b %Y}, "
+                        "estimated from invoices issued in the period",
                     )
                 )
         due, cents = CORP_TAX_FORWARD
@@ -1059,7 +1060,7 @@ def _ceil_to(cents: int, step: int) -> int:
 
 
 def solve_calibration(weeks: list[ProjectedWeek], seed: int) -> tuple[int, Calibration]:
-    """Solve for as-of cash ``A``, refit milestone net ``N`` and stock deposit ``Q`` (cents).
+    """Solve for as-of cash ``A``, refit milestone net ``N`` and stock deposit ``Q``, in cents.
 
     ``weeks`` is the projection from a zero opening with no milestone and no
     deposit; ``C_k`` is its week-k closing. The milestone's gross (1.23N) is

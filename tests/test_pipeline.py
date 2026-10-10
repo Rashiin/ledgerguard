@@ -1,6 +1,6 @@
-"""The verifier plane end to end, with a stubbed proposer (BUILD_SPEC 9.3, Phase 3).
+"""The verifier plane end to end, with a stubbed proposer.
 
-The stub proposer is just a function returning raw JSON text; everything after
+The stub proposer is a function that returns raw JSON text. Everything after
 it is the real verifier, the real Executor and a private copy of the ledger.
 """
 
@@ -148,7 +148,7 @@ def test_invalid_payload_reference_is_rejected(copilot: CopilotService, fresh_db
     assert "INVALID_PAYLOAD_REFERENCE" in turn.receipt["risk_flags"]
 
 
-# ---- scenario 7: record a receipt (T2, approval with diff)
+# ---- scenario 7: record a receipt, T2 with an approval diff
 
 
 def test_scenario_7_record_payment_needs_approval_then_applies(
@@ -183,7 +183,7 @@ def test_scenario_7_record_payment_needs_approval_then_applies(
     assert chain(fresh_db) == (True, ["intent.verified", "action.refused", "action.executed"])
 
 
-# ---- scenario 8: duplicate supplier invoice (T3 + DuplicatePayment)
+# ---- scenario 8: duplicate supplier invoice, T3 with DuplicatePayment
 
 
 def test_scenario_8_duplicate_payment_is_t3_and_gated(

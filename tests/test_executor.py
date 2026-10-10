@@ -56,7 +56,7 @@ def action(
     blocking: tuple[str, ...] = (),
     key: bytes = KEY,
 ) -> VerifiedAction:
-    """What the verifier (Phase 3) will hand over; here sealed by a stub."""
+    """What the verifier hands the Executor. Here a stub seals it."""
     unsealed = VerifiedAction(
         intent_id="int_test",
         kind=kind,

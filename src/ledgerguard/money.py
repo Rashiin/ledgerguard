@@ -1,8 +1,8 @@
 """Money handling.
 
 Every monetary value in LedgerGuard is a ``Decimal`` with exactly two decimal
-places. Storage is integer minor units (cents). ``float`` is rejected at every
-entry point: there is no code path that turns a float into money.
+places, stored as integer cents. Every entry point rejects ``float``, so no
+code path can turn a float into money.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def to_money(value: object) -> Decimal:
 
 
 def round_money(amount: Decimal) -> Decimal:
-    """Round a computed Decimal (for example a tax or interest result) to cents."""
+    """Round a computed Decimal, such as a tax or interest result, to cents."""
     if not isinstance(amount, Decimal):
         raise MoneyError(f"round_money takes Decimal, got {type(amount).__name__}")
     return amount.quantize(CENT, rounding=ROUND_HALF_UP)

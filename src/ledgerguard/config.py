@@ -1,10 +1,10 @@
 """Configuration loading.
 
-Two YAML files live in ``config/``: ``policy.yaml`` (permission tiers,
-ceilings, rule parameters) and ``model.yaml`` (LLM client selection). Both
-are parsed into strict Pydantic models at boot; an unknown key, a float where
-money is expected, or an out-of-range value stops the application from
-starting rather than being ignored.
+Two YAML files live in ``config/``. ``policy.yaml`` holds the outbound
+ceiling, the T3 gate, account floors and rule parameters. ``model.yaml``
+chooses the model client. Both are parsed into strict Pydantic models at
+startup. An unknown key, a float where money is expected or an out-of-range
+value stops the application instead of being ignored.
 """
 
 from __future__ import annotations
@@ -56,8 +56,8 @@ class RuleParameters(Strict):
     payroll_lead_days: int = Field(ge=0, le=30)
     tax_reserve_horizon_days: int = Field(ge=1, le=180)
     concentration_warning_share: RatioField
-    # Which projected cash the protection rules (payroll, tax) judge an action
-    # against. Speculative cash is never allowed to justify a payment.
+    # The projected cash that the payroll and tax rules judge an action against.
+    # Speculative cash never justifies a payment.
     protection_band: Literal["contracted", "with_expected"]
     # A payroll margin thinner than this fraction of the run raises a warning.
     payroll_margin_warning: RatioField
@@ -129,7 +129,7 @@ class Settings:
     config_dir: Path
     policy: Policy
     model: ModelConfig
-    key_path: Path  # the verifier's sealing key (created on first start, mode 0600)
+    key_path: Path  # the verifier's sealing key, created on first start with mode 0600
 
 
 def load_settings() -> Settings:

@@ -4,10 +4,10 @@ Revision ID: 0003
 Revises: 0002
 
 SQLite cannot alter column nullability in place, so both tables are rebuilt.
-The new definitions are written out explicitly (create, copy, drop, rename)
-rather than with Alembic batch mode: batch mode reflects the old table, and
-reflected constraint order is not stable between runs. That would break the
-byte-identical seed.
+The new definitions are written out in full. Each table is created, filled
+from the old one, and renamed after the old one is dropped. Alembic batch mode
+would reflect the old table instead, and reflected constraint order is not
+stable between runs. That would break the byte-identical seed.
 """
 
 from __future__ import annotations

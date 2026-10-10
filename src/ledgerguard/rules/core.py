@@ -1,12 +1,12 @@
-"""The business-rule engine (BUILD_SPEC 6.2, stage 3).
+"""The business-rule engine, stage 3 of the verifier.
 
-Each rule is a pure function of a ``RuleContext`` (the parsed intent, the
-verifier's own resolution of what it would do, the ledger snapshot and the
-policy). It returns PASS, WARN or BLOCK with a reason a business owner can
-read. Rules never read the prompt, so text injected into the prompt cannot
-reach them.
+Each rule is a pure function of a ``RuleContext``. The context holds the
+parsed intent, the verifier's own working-out of what the action would do,
+the ledger snapshot and the policy. A rule returns PASS, WARN or BLOCK with a
+reason a business owner can read. Rules never read the prompt, so text
+injected into the prompt cannot reach them.
 
-A BLOCK is absolute: the verifier will not seal a blocked action, and the
+A BLOCK is final. The verifier will not seal a blocked action, and the
 Executor refuses one even if it is somehow sealed.
 """
 
@@ -111,14 +111,15 @@ def sufficient_balance(ctx: RuleContext) -> RuleResult:
         return RuleResult(
             name,
             Outcome.BLOCK,
-            f"Paying {format_eur(total)} from {account.name} (balance {format_eur(balance)}) "
-            f"would leave {format_eur(after)}, below its {format_eur(floor)} floor.",
+            f"Paying {format_eur(total)} from {account.name} would leave {format_eur(after)}. "
+            f"The account holds {format_eur(balance)} and its floor is {format_eur(floor)}.",
             ("INSUFFICIENT_BALANCE",),
             (account.id,),
         )
     return _pass(
         name,
-        f"{account.name} keeps {format_eur(after)} after this payment (floor {format_eur(floor)}).",
+        f"{account.name} keeps {format_eur(after)} after this payment. Its floor is "
+        f"{format_eur(floor)}.",
     )
 
 
@@ -156,11 +157,11 @@ def duplicate_payment(ctx: RuleContext) -> RuleResult:
                 and txn.amount == pay.amount
                 and 0 <= (pay_on - txn.booked_on).days <= window
             ):
-                settled = f" (settling {txn.invoice_id})" if txn.invoice_id else ""
+                settled = f" That payment settled {txn.invoice_id}." if txn.invoice_id else ""
                 findings.append(
-                    f"{pay.invoice_id}: {format_eur(pay.amount)} to the same supplier was "
-                    f"already paid on {txn.booked_on}{settled}, "
-                    f"{(pay_on - txn.booked_on).days} days earlier."
+                    f"The same supplier was already paid {format_eur(pay.amount)} for "
+                    f"{pay.invoice_id}'s amount on {txn.booked_on}, "
+                    f"{(pay_on - txn.booked_on).days} days earlier.{settled}"
                 )
                 rows += [pay.invoice_id, txn.id, *([txn.invoice_id] if txn.invoice_id else [])]
         for other in payments[i + 1 :]:
@@ -224,13 +225,17 @@ def payroll_protection(ctx: RuleContext) -> RuleResult:
     after = min(ctx.cash_on(d) for d in days)
     pay_on = ctx.resolution.pay_on
     outbound = ctx.resolution.outbound_total > 0 and pay_on is not None and pay_on < run.pay_date
-    where = f"payroll {run.id} on {run.pay_date} ({format_eur(need)}, needed {lead} days ahead)"
+    where = (
+        f"payroll {run.id} on {run.pay_date}, which needs {format_eur(need)} in the "
+        f"account {lead} days ahead"
+    )
     if outbound and after < need:
         return RuleResult(
             name,
             Outcome.BLOCK,
             f"Paying {format_eur(ctx.resolution.outbound_total)} now would leave projected "
-            f"cash of {format_eur(after)} before {where}: short by {format_eur(need - after)}.",
+            f"cash of {format_eur(after)} before {where}. That is short by "
+            f"{format_eur(need - after)}.",
             ("PAYROLL_PROTECTION",),
             (run.id,),
         )
@@ -272,14 +277,14 @@ def tax_reserve_floor(ctx: RuleContext) -> RuleResult:
         after = ctx.cash_on(eve)
         if after < tax.amount:
             text = (
-                f"{tax.description} ({format_eur(tax.amount)}, due {tax.due_on}) is "
-                f"ring-fenced; projected cash the day before would be "
+                f"{tax.description}: {format_eur(tax.amount)} is due on {tax.due_on} and "
+                f"is ring-fenced. Projected cash the day before would be "
                 f"{format_eur(after)}."
             )
             if outbound:
                 return RuleResult(name, Outcome.BLOCK, text, ("TAX_RESERVE",), (tax.id,))
             return RuleResult(name, Outcome.WARN, text, ("TAX_RESERVE_PRESSURE",), (tax.id,))
-    return _pass(name, f"cash covers {len(taxes)} tax payment(s) due by {until}")
+    return _pass(name, f"cash covers each tax payment due by {until}")
 
 
 def disputed_invoice_lock(ctx: RuleContext) -> RuleResult:
@@ -325,13 +330,13 @@ def concentration_warning(ctx: RuleContext) -> RuleResult:
     if heavy:
         parts = [
             f"{snap.counterparties[c].name} is {(shares[c] * 100):.1f}% of trailing "
-            "12-month revenue"
+            f"12-month revenue, above the {threshold * 100:.0f}% threshold."
             for c in heavy
         ]
         return RuleResult(
             name,
             Outcome.WARN,
-            "; ".join(parts) + f" (above {threshold * 100:.0f}%). Advisory.",
+            " ".join(parts) + " This is advisory.",
             ("CONCENTRATION_RISK",),
             tuple(heavy),
         )

@@ -1,4 +1,4 @@
-"""The Trust Receipt (BUILD_SPEC 6.5): what the verifier did, so nobody has to trust the model."""
+"""The Trust Receipt records what the verifier did, so nobody has to trust the model."""
 
 from __future__ import annotations
 

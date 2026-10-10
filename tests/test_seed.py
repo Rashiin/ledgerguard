@@ -1,4 +1,4 @@
-"""The planted demo hooks of BUILD_SPEC 5.3, checked against the seeded database."""
+"""The planted demo situations, checked against the seeded database."""
 
 from __future__ import annotations
 
@@ -217,7 +217,7 @@ def test_duplicate_supplier_invoice_pair(session: Session, seed_result: SeedResu
     assert others == []
 
 
-def _robust_z(values: list[Decimal], x: Decimal) -> Decimal:
+def _mad_z(values: list[Decimal], x: Decimal) -> Decimal:
     ordered = sorted(values)
     n = len(ordered)
     median = (ordered[(n - 1) // 2] + ordered[n // 2]) / 2
@@ -238,9 +238,9 @@ def test_single_anomalous_transaction_near_eight_sigma(
             continue
         amounts = [t.amount for t in txns]
         if len(set(amounts)) < len(amounts) // 2:
-            continue  # fixed contractual amounts (rent, loan): nothing to score
+            continue  # fixed contract amounts such as rent and the loan have nothing to score
         for t in txns:
-            z = _robust_z(amounts, t.amount)
+            z = _mad_z(amounts, t.amount)
             if abs(z) > 5:
                 flagged.append((t.id, z))
     assert [f[0] for f in flagged] == [seed_result.manifest.anomalous_transaction]

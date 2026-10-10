@@ -109,7 +109,7 @@ class Actor(StrEnum):
 
 
 class Confidence(StrEnum):
-    """How firm a projected cash line is (BUILD_SPEC 7.1). Never merged into one number."""
+    """How firm a projected cash line is. Classes are never merged into one number."""
 
     CONTRACTED = (
         "CONTRACTED"  # issued invoice, signed order, payroll, statutory or lease obligation

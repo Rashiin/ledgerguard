@@ -1,21 +1,20 @@
-"""The ActionIntent contract: the proposer's only output channel (BUILD_SPEC 6.1).
+"""The ActionIntent contract, the proposer's only way to make anything happen.
 
 Parsing is strict:
 
 * input must be JSON text;
 * unknown fields are errors;
 * types are not coerced;
-* money must be a quoted decimal string (a JSON number for money is
-  refused, because it has already passed through binary floating point);
-* the action kind and the derivation formula are closed sets.
+* money must be a quoted decimal string. A JSON number is refused, because
+  it has already passed through binary floating point;
+* the action kind and the derivation formula come from closed sets.
 
 A ``tier`` key at the top level is removed before parsing and recorded. The
-model does not get to choose a tier, and its attempt to do so is not an
-error worth rejecting the whole action for. Every other unknown key rejects
-the intent.
+model does not choose tiers, and trying to is not a reason to reject the
+whole action. Any other unknown key rejects the intent.
 
-Monetary amounts are deliberately absent from payment payloads: the
-verifier computes what is owed from the ledger.
+Payment payloads carry no amounts. The verifier computes what is owed from
+the ledger.
 """
 
 from __future__ import annotations
@@ -74,7 +73,7 @@ class Formula(StrEnum):
     """Closed set of derivations the verifier knows how to recompute."""
 
     ROW_FIELD = "ROW_FIELD"  # one row's monetary field, params.field
-    INVOICE_OUTSTANDING = "INVOICE_OUTSTANDING"  # sum of (gross - paid) over invoices
+    INVOICE_OUTSTANDING = "INVOICE_OUTSTANDING"  # sum of gross minus paid over invoices
     SUM_TRANSACTIONS = "SUM_TRANSACTIONS"  # sum of transaction amounts
     ACCOUNT_BALANCE = "ACCOUNT_BALANCE"  # one account's balance at the as-of date
     CASH_ON_HAND = "CASH_ON_HAND"  # sum of cited bank/cash account balances

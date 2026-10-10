@@ -1,13 +1,13 @@
 """Turn ledger rows into projection inputs.
 
-Works on any objects with the model attributes (ORM rows or unsaved
-instances), so the seeder and the API share exactly one definition of what
-an "expected flow" is, and of its confidence class:
+These functions accept any objects with the model's attributes, whether ORM
+rows or unsaved instances. The seeder and the API therefore share one
+definition of an expected flow and of its confidence class:
 
-* CONTRACTED: issued invoices (sent, part paid, overdue), scheduled payroll,
-  and obligations (tax, loan, lease, subscription);
-* EXPECTED: draft invoices, i.e. the confirmed order book not yet invoiced;
-* SPECULATIVE: the seasonal fill beyond the order book (``seasonal_fill``).
+* CONTRACTED: invoices that are sent, part paid or overdue, scheduled payroll,
+  and tax, loan, lease and subscription obligations;
+* EXPECTED: draft invoices, which are the confirmed order book;
+* SPECULATIVE: the seasonal fill after the order book, from ``seasonal_fill``.
 """
 
 from __future__ import annotations
@@ -98,9 +98,9 @@ def _invoice_label(inv: InvoiceLike, lateness: Mapping[str, int]) -> str:
     if inv.type is InvoiceType.RECEIVABLE:
         late = lateness.get(inv.counterparty_id, 0)
         kind = "Order book receivable" if inv.status is InvoiceStatus.DRAFT else "Receivable"
-        return f"{kind} {inv.id} (due {inv.due_on}, +{late}d typical lateness)"
+        return f"{kind} {inv.id}, due {inv.due_on}, usually paid {late} days late"
     kind = "Order book payable" if inv.status is InvoiceStatus.DRAFT else "Payable"
-    return f"{kind} {inv.id} (due {inv.due_on})"
+    return f"{kind} {inv.id}, due {inv.due_on}"
 
 
 def expected_flows(
@@ -168,8 +168,8 @@ def seasonal_fill(
 ) -> list[ExpectedFlow]:
     """SPECULATIVE lines for issue dates beyond the order book.
 
-    The rule an owner can check by hand: after the last order-book (draft)
-    invoice of each side, assume every counterparty repeats what it invoiced
+    The rule is one an owner can check by hand. After the last draft invoice
+    on each side, assume every counterparty repeats what it invoiced
     in the same week last year, on the same terms, paid with its usual
     lateness. Each line cites the historical invoice it repeats. No growth
     or trend adjustment is applied.
@@ -196,8 +196,10 @@ def seasonal_fill(
                     confidence=Confidence.SPECULATIVE,
                     source_table="invoice",
                     source_id=inv.id,
-                    label=f"Seasonal fill: repeats {inv.id} from {inv.issued_on} (same week "
-                    "last year)",
+                    label=(
+                        f"Seasonal fill repeating {inv.id} from {inv.issued_on}, "
+                        "the same week last year"
+                    ),
                 )
             )
     return flows

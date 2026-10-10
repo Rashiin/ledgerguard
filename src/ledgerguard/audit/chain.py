@@ -2,8 +2,8 @@
 
     hash = sha256(prev_hash || canonical_json(event))
 
-``event`` is the event's own content: id, seq, timestamp, actor, type and
-payload. The stored ``prev_hash`` and ``hash`` are not part of it. The first
+Here the event is its own content: id, sequence number, timestamp, actor,
+type and payload. The stored ``prev_hash`` and ``hash`` are not part of it. The first
 event links to ``GENESIS``. Changing, removing, inserting or reordering any
 event breaks the chain from that point on.
 """

@@ -1,13 +1,13 @@
 """Turns and approvals: the path from a proposer's output to the ledger.
 
-    raw proposer output ─► Verifier (six stages, read-only snapshot)
-                       ─► Executor.store_verification (intent + receipt + audit)
+    raw proposer output ─► Verifier: six stages over a read-only snapshot
+                       ─► Executor.store_verification: intent, receipt, audit event
                        ─► T0/T1 verified: Executor.execute now
                           T2/T3 verified: wait in the approval queue
-                          blocked/rejected: stop; the receipt says why
+                          blocked or rejected: stop, and the receipt says why
 
-The proposer is any callable that returns raw text. In Phases 1-3 it is a
-stub; Phase 4 plugs in the LLM clients. Nothing here trusts that text.
+The proposer is anything that returns raw text. Until Phase 4 it is a stub,
+and Phase 4 plugs in the model clients. Nothing here trusts that text.
 """
 
 from __future__ import annotations

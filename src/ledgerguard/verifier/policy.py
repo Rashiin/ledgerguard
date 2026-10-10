@@ -1,9 +1,9 @@
-"""Stage 5: policy (BUILD_SPEC 6.2).
+"""Stage 5: policy.
 
-* **Financing.** Any financing content carries a non-removable disclosure. A
-  financing product may only be discussed alongside its total cost of
-  capital in currency over the real term, recomputed by the verifier;
-  otherwise the action is blocked.
+* **Financing.** Any financing content carries a fixed disclosure that the
+  model cannot remove. A financing product may only be discussed alongside
+  its total cost of capital in currency over the real term, recomputed by the
+  verifier. Otherwise the action is blocked.
 * **No guaranteed outcomes.** Guarantee-shaped phrases are masked visibly, and
   for advisory kinds the intent is flagged.
 * **Accepting a financing offer** is always T3 and never auto-executed. That
@@ -31,7 +31,7 @@ FINANCING_KINDS = frozenset({ActionKind.RANK_FINANCING, ActionKind.ACCEPT_FINANC
 ADVISORY_KINDS = frozenset(
     {ActionKind.ANSWER_QUERY, ActionKind.DRAFT_FORECAST, ActionKind.RUN_SCENARIO, *FINANCING_KINDS}
 )
-# Formulas that state a product's total cost of capital in currency (Phase 5).
+# Formulas that state a product's total cost of capital in currency. Phase 5 adds them.
 TOTAL_COST_FORMULAS: frozenset[str] = frozenset()
 
 # One alternation, applied in a single pass, so a replacement is never re-scanned.

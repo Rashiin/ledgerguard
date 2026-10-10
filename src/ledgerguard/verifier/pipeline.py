@@ -134,7 +134,7 @@ class Verifier:
         intent = parsed.intent
         reads: set[str] = set()
 
-        # ---- stage 2: recomputation (claims, then what the payload would move)
+        # ---- stage 2: recompute the claims, then what the payload would move
         recomps = [recompute_claim(snapshot, i, c, reads) for i, c in enumerate(intent.claims)]
         resolution = resolve_payload(snapshot, intent, reads)
 
@@ -282,9 +282,10 @@ class Verifier:
     def recheck(self, kind: str, payload: dict[str, Any], snapshot: LedgerSnapshot) -> list[str]:
         """Re-run payload resolution and the rules against the ledger as it is now.
 
-        Used at approval time: an action verified earlier may no longer be safe,
-        for example once another approved payment has drained the payroll cover.
-        Returns the reasons it must now be refused (empty if it is still fine).
+        This runs at approval time. An action verified earlier may no longer be
+        safe, for example once another approved payment has used up the payroll
+        cover. It returns the reasons the action must now be refused, and an
+        empty list if it is still fine.
         """
         payload = {k: v for k, v in payload.items() if k != "resolved"}
         parsed = I.parse_intent(

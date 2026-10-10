@@ -1,4 +1,4 @@
-"""Stage 3: every rule, with its BLOCK case proven (standing rule 6)."""
+"""Stage 3: every rule, with a test proving its BLOCK case."""
 
 from __future__ import annotations
 
@@ -118,7 +118,7 @@ def test_outbound_ceiling_is_inclusive(snapshot: LedgerSnapshot, policy: Policy)
 
 
 def test_large_receipt_is_not_capped(snapshot: LedgerSnapshot, policy: Policy) -> None:
-    """Recording money received moves nothing out, so no ceiling applies (spec 6.3)."""
+    """Recording money received moves nothing out, so no ceiling applies."""
     receipt = ctx(snapshot, policy, "RECORD_PAYMENT", {"invoice_id": "inv_0678"})
     assert receipt.resolution.amount == Decimal("227550.00")
     assert receipt.resolution.amount > policy.outbound_ceiling

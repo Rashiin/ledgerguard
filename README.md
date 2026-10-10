@@ -1,41 +1,24 @@
 # LedgerGuard
 
-An AI finance copilot for small and medium businesses in which **the language
-model is never allowed to act directly**. The model proposes a typed action.
-A deterministic verifier recomputes every figure from source rows, enforces
-business rules and assigns a permission tier. Only then is anything executed,
-or routed to a human for approval.
+LedgerGuard is a finance copilot for small and medium businesses in which the language model is never allowed to act directly. The model proposes a typed action. Deterministic code recomputes every figure from the ledger, applies business rules and assigns a permission tier. Only then does anything run or go to a person for approval.
 
-FinTechathon 2026 · International Track · Topic E.
+It was built for FinTechathon 2026, International Track, Topic E.
 
-> **Status: Phase 3.** The data model, the synthetic ledger, the cash-flow
-> projection (with confidence classes), the tamper-evident audit log, the
-> Executor and the full verifier plane are in place: six stages, eight rules,
-> permission tiers, Trust Receipts and the approval queue. The LLM proposer,
-> capabilities and UI arrive in later phases. Sections marked *(later phase)*
-> describe what is coming.
+> **Status: Phase 3 of 8.** The synthetic ledger, the 13-week cash projection, the audit log, the Executor and the full verifier are working. The language-model proposer, the three capabilities and the web UI come next. Lines marked *later phase* describe parts that are not built yet.
 
 ## Runs offline, on your own hardware
 
-LedgerGuard is built to run on the business owner's own machine, against a
-local open-weight model served by [Ollama](https://ollama.com). No invoices,
-bank transactions or payroll figures are sent to a third-party model
-provider. Correctness lives in the deterministic verifier, not in the model,
-so a smaller local model affects how helpful the copilot is, never what it is
-allowed to do. The default model is pulled with:
+LedgerGuard runs on the business owner's machine against an open-weight model served locally by [Ollama](https://ollama.com). Invoices, bank transactions and payroll figures are never sent to a model provider. Every figure and every decision is checked by deterministic code, so a smaller local model can make the copilot less helpful but cannot let it do something unsafe. Pull the default model with:
 
 ```bash
 ollama pull qwen2.5:7b-instruct
 ```
 
-The model is only needed for live local runs *(from Phase 4)*. The demo, the
-tests and the Docker image use recorded responses (`LLM_CLIENT=replay`) and
-need no model server, no API key and no network.
+The model is needed only for live local runs, from Phase 4. The tests, the demo and the Docker image replay recorded model responses with `LLM_CLIENT=replay`. They need no model server, no API key and no network.
 
-## Quickstart (local)
+## Quickstart on your machine
 
-Requires [uv](https://docs.astral.sh/uv/). uv installs and pins Python 3.11
-itself.
+You need [uv](https://docs.astral.sh/uv/). It installs and pins Python 3.11 by itself.
 
 ```bash
 uv sync
@@ -43,24 +26,22 @@ uv run python scripts/seed.py --profile nordvik --seed 42
 uv run ledgerguard-api
 ```
 
-Then open http://127.0.0.1:8000/api/health. Set `LEDGERGUARD_PORT` to use a
-different port. Other endpoints so far:
+Open http://127.0.0.1:8000/api/health to check it is running. `LEDGERGUARD_PORT` changes the port.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/ledger/summary` | Cash, accounts, open invoices by status, next payroll |
-| `GET /api/ledger/rows/{table}/{id}` | One source row, for drill-down |
+| `GET /api/ledger/summary` | Cash, accounts, open invoices by status and the next payroll run |
+| `GET /api/ledger/rows/{table}/{id}` | One source row, so any figure can be traced to what it came from |
 | `GET /api/audit?from_seq=&limit=` | Audit events |
-| `GET /api/audit/verify` | `{"intact": true, "events": N, "head_hash": ...}` |
-| `GET /api/receipts/{id}` | A Trust Receipt |
-| `GET /api/approvals` | Pending T2/T3 actions, with rules, flags and figures |
-| `POST /api/approvals/{id}/approve` | `{"approver": "operator", "confirmation": "CONFIRM int_…"}` (the phrase is required for T3) |
-| `POST /api/approvals/{id}/decline` | `{"by": "operator", "reason": "…"}` |
+| `GET /api/audit/verify` | Whether the audit chain is intact, its length and its head hash |
+| `GET /api/receipts/{id}` | One Trust Receipt |
+| `GET /api/approvals` | Actions waiting for approval, with their rules, flags and figures |
+| `POST /api/approvals/{id}/approve` | Body `{"approver": "operator", "confirmation": "CONFIRM int_…"}`. The confirmation is required for T3. |
+| `POST /api/approvals/{id}/decline` | Body `{"by": "operator", "reason": "…"}` |
 
-On first start the app creates `data/verifier.key`, the sealing key for
-verified actions (owner-readable only, never committed).
+On first start the app creates `data/verifier.key`. That key seals verified actions. Only the owner can read it and it is never committed.
 
-Run the checks:
+Run the checks with:
 
 ```bash
 uv run pytest
@@ -68,68 +49,59 @@ uv run ruff check src tests scripts
 uv run mypy
 ```
 
-## Quickstart (Docker, for judges)
+## Quickstart with Docker
 
 ```bash
 docker compose up
 ```
 
-Then open http://localhost:8080/api/health. Set `LEDGERGUARD_HOST_PORT` to use
-a different host port. The image builds the seeded ledger in and starts with
-`LLM_CLIENT=replay`. No model server is started and no network access is
-needed. *(Verified in Phase 7.)*
+Open http://localhost:8080/api/health. `LEDGERGUARD_HOST_PORT` changes the host port. The image contains the seeded ledger and starts with `LLM_CLIENT=replay`, so it needs no model server and no network. The Docker path is verified in Phase 7.
 
 ## The sandbox ledger
 
-All data is synthetic. **Nordvik Supply Co.** is an invented B2B
-kitchen-equipment distributor: about €4M revenue, 18 employees, and seasonal,
-late-paying customers. The seeder is deterministic: the same seed produces a
-byte-identical database. The planted demo situations are listed openly in
-[fixtures/README.md](fixtures/README.md):
+All data is synthetic. Nordvik Supply Co. is an invented kitchen-equipment distributor with about €4M revenue, 18 employees, seasonal demand and customers who pay late. The same seed always produces a byte-identical database.
 
-* a cash shortfall in weeks 6-8;
-* a customer above 30% revenue concentration;
-* overdue and disputed invoices;
+The situations the demo relies on are planted on purpose and listed in [fixtures/README.md](fixtures/README.md):
+
+* a cash shortfall in weeks 6 to 8;
+* one customer above 30% of revenue;
+* three overdue invoices and one disputed;
 * a duplicate supplier invoice;
-* an anomalous transaction;
+* one anomalous transaction;
 * a payroll run inside the shortfall.
 
 ## Configuration
 
-* `config/policy.yaml`: permission-tier ceilings, the T3 cool-off,
-  account floors and rule parameters. It is validated strictly at boot.
-  Invariants such as "accepting a financing offer is always T3" are in code
-  and cannot be configured away.
-* `config/model.yaml`: LLM client selection (`local`, `openai_compatible`,
-  `replay`). The `LLM_CLIENT` environment variable overrides it.
+`config/policy.yaml` holds the outbound ceiling, the T3 cool-off, account floors and rule parameters. The app refuses to start if the file has an unknown key or a bad value. Some invariants live in code so that this file cannot weaken them. Payments and accepting a financing offer are always T3, and a block is never overridden.
+
+`config/model.yaml` chooses the model client: `local`, `openai_compatible` or `replay`. The `LLM_CLIENT` environment variable overrides it.
 
 ## Project layout
 
 ```
 src/ledgerguard/
-  money.py          Decimal-only money; floats are refused
-  config.py         strict policy and model configuration
-  domain/enums.py   closed vocabularies (action kinds, tiers, statuses)
-  db/               models, column types, read-only engine
-  migrations/       Alembic migrations
-  provisioning.py   offline: migrate + seed (the only writer besides the Executor)
-  analytics/        13-week projection with confidence classes, pure functions
-  ledger/           read-only ledger queries
-  audit/            hash chain: hashing, verification, reading
-  verifier/         the six stages: intent schema, recomputation, provenance,
-                    policy, prose figures, tiers, Trust Receipt, seal, pipeline
-  rules/            the eight business rules, pure functions
-  service.py        turn handling and the approval queue (with re-check)
-  executor/         the only runtime writer: tier gates, handlers, audit appends
-  seed/nordvik.py   synthetic ledger generator
-  api/app.py        FastAPI app (reads only; writes go through the Executor)
-scripts/seed.py     builds data/ledger.sqlite and fixtures/manifest.json
-docs/ARCHITECTURE.md  design: two planes, verification stages, tiers, data model
-docs/DECISIONS.md   architecture decisions and their reasons
-THIRD_PARTY.md      every dependency and its licence
+  money.py              money as Decimal; floats are refused
+  config.py             policy and model configuration, validated at startup
+  domain/               closed vocabularies and the VAT rate
+  db/                   models, column types, the read-only engine
+  migrations/           Alembic migrations
+  provisioning.py       offline migrate and seed, the one writer besides the Executor
+  analytics/            the 13-week projection, as pure functions
+  ledger/               read-only ledger queries
+  audit/                the hash chain
+  verifier/             the six verification stages, the Trust Receipt and the seal
+  rules/                the eight business rules
+  service.py            turns and the approval queue
+  executor/             the only runtime writer
+  seed/nordvik.py       the synthetic ledger generator
+  api/app.py            the HTTP API
+scripts/seed.py         builds data/ledger.sqlite and fixtures/manifest.json
+docs/ARCHITECTURE.md    how the system is designed
+docs/DECISIONS.md       the judgement calls behind it
+docs/RISK_REGISTER.md   known residual risks
+THIRD_PARTY.md          every dependency and its licence
 ```
 
 ## Licences
 
-See [THIRD_PARTY.md](THIRD_PARTY.md). All of the code in this repository was
-written for this competition.
+Every dependency and its licence is listed in [THIRD_PARTY.md](THIRD_PARTY.md). All code in this repository was written for this competition.

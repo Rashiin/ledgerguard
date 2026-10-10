@@ -1,18 +1,18 @@
 """13-week cash-flow projection, as pure functions over plain rows.
 
-The model is deliberately simple enough for a business owner to follow:
+The model is kept simple enough for a business owner to follow:
 
-* opening = cash on bank and cash accounts at the ledger's as-of date
-  (credit lines are financing headroom, not cash);
+* opening cash is the balance of the bank and cash accounts on the ledger
+  date. Credit lines are headroom, not cash;
 * each open receivable is expected on its due date plus that customer's
-  historical mean lateness;
+  mean lateness in the past;
 * payables, payroll and obligations are expected on their due dates;
 * anything already past due lands in week 1.
 
-Every line carries a confidence class (CONTRACTED, EXPECTED, SPECULATIVE).
-Classes are never merged: each week reports inflow and outflow per class, and
-three nested closing balances. Contracted-only is the floor an owner can rely
-on; the all-classes figure is the full model.
+Every line carries a confidence class: CONTRACTED, EXPECTED or SPECULATIVE.
+Classes are never merged. Each week reports inflow and outflow per class and
+three running balances. Contracted-only is what an owner can rely on. The
+all-classes balance is the full model.
 
 Week 1 starts on the Monday after the as-of date.
 """

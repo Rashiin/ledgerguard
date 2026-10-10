@@ -1,13 +1,12 @@
 """Database connections.
 
-This module only ever hands out *read-only* connections. SQLite is opened
-with ``mode=ro`` and every connection additionally sets ``PRAGMA
-query_only=ON``, so a write through this engine fails inside SQLite itself,
-not because of a convention in our code.
+This module hands out read-only connections and nothing else. SQLite is
+opened with ``mode=ro`` and every connection also sets ``PRAGMA
+query_only=ON``, so a write through this engine fails inside SQLite.
 
-Writable connections are built in exactly two places: the Executor (runtime
-ledger mutations, Phase 2) and ``ledgerguard.provisioning`` (migrations and
-seeding, which run before the application starts).
+Writable connections are built in two places. The Executor makes ledger
+changes while the app runs. ``ledgerguard.provisioning`` runs migrations and
+the seeder before the app starts.
 """
 
 from __future__ import annotations

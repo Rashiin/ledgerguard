@@ -1,10 +1,10 @@
-# LedgerGuard judge image.
+# The image judges run.
 #
-# Defaults to LLM_CLIENT=replay: the full demo runs from recorded cassettes with
-# no model server, no API key and no network. Ollama is deliberately not part
-# of this image; local-model development happens on the host.
+# It starts with LLM_CLIENT=replay, so the whole demo runs from recorded model
+# responses with no model server, no API key and no network. Ollama is not in
+# the image. Development against a local model happens on the host.
 #
-# The frontend build stage is added in Phase 6.
+# Phase 6 adds a stage that builds the frontend.
 
 FROM python:3.11-slim AS app
 

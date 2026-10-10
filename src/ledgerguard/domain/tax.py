@@ -1,4 +1,4 @@
-"""VAT for the sandbox business (Ireland, standard rate)."""
+"""VAT for the sandbox business, which is Irish and charges the standard rate."""
 
 from __future__ import annotations
 

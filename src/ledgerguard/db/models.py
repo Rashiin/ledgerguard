@@ -1,6 +1,6 @@
 """SQLAlchemy models for the sandbox ledger, the verifier records and the audit log.
 
-Columns follow BUILD_SPEC section 5.1. Additions beyond the spec are marked
+Columns follow the required schema. Additions beyond it are marked
 ``# added:`` and explained in docs/DECISIONS.md.
 """
 
@@ -203,9 +203,9 @@ class ActionIntentRecord(Base):
     payload: Mapped[dict[str, Any] | None] = mapped_column(CanonicalJSON, nullable=True)
     proposer_rationale: Mapped[str] = mapped_column(Text)
     status: Mapped[IntentStatus] = mapped_column(enum_column(IntentStatus, "intent_status"))
-    # added: the proposer's raw output, kept verbatim (truncated) for rejected intents.
+    # added: the proposer's raw output, kept verbatim up to 8,000 characters.
     raw_output: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # added: the sealed VerifiedAction awaiting approval (content + seal). The
+    # added: the sealed VerifiedAction awaiting approval, with its seal. The
     # Executor re-checks the seal when it is approved, so edits here are caught.
     sealed_action: Mapped[dict[str, Any] | None] = mapped_column(CanonicalJSON, nullable=True)
 

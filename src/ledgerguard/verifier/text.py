@@ -1,6 +1,6 @@
 """Figures inside free text.
 
-The model writes prose (claim statements, the rationale) and prose can carry
+The model writes claim statements and a rationale, and that prose can carry
 numbers. Every money-like number in that prose must equal a figure the
 verifier has itself computed:
 
@@ -9,11 +9,11 @@ verifier has itself computed:
 * a number that matches a verified figure is left alone;
 * anything else is masked with a visible marker.
 
-So no unchecked amount reaches the user, even inside a sentence.
+No unchecked amount reaches the user, even inside a sentence.
 
-Matching respects the precision the text shows: "€46.9k" matches 46,854.00,
-"34.8%" matches 34.81. Dates, row ids ("inv_0412"), years and small counts
-("week 7", "26 days") are not treated as figures.
+Matching respects the precision the text shows. "€46.9k" matches 46,854.00
+and "34.8%" matches 34.81. Dates, row ids such as inv_0412, years and small
+counts such as "week 7" or "26 days" are not treated as figures.
 """
 
 from __future__ import annotations
@@ -107,7 +107,8 @@ class Verified:
 
     money: tuple[Decimal, ...]
     percents: tuple[Decimal, ...]
-    corrections: tuple[tuple[Decimal, Decimal, bool], ...]  # (model, recomputed, percent)
+    # Each correction is the model's figure, the recomputed figure and whether it is a percent.
+    corrections: tuple[tuple[Decimal, Decimal, bool], ...]
 
 
 def _render(value: Decimal, percent: bool) -> str:

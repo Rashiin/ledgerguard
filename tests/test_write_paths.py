@@ -1,7 +1,7 @@
 """Structural invariants: who can write to the database, and what the app imports.
 
-BUILD_SPEC 9.3: at runtime only the Executor writes. The offline provisioning
-step (migrations + seeder) is the one documented exception, and the running
+At runtime only the Executor writes. Provisioning, which runs migrations and
+the seeder offline, is the one documented exception, and the running
 application must never import it.
 """
 

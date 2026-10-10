@@ -1,9 +1,9 @@
-# One-command run for judges:  docker compose up
-# Then open http://localhost:8080/api/health
-# (host port 8080 by default; set LEDGERGUARD_HOST_PORT to change it)
+# Run the demo with: docker compose up
+# Then open http://localhost:8080/api/health. LEDGERGUARD_HOST_PORT changes the
+# host port.
 #
-# No model server is started. The default LLM_CLIENT=replay serves recorded
-# model responses, so nothing leaves the machine and no API key is needed.
+# No model server starts. LLM_CLIENT=replay serves recorded model responses, so
+# nothing leaves the machine and no API key is needed.
 services:
   ledgerguard:
     build: .
