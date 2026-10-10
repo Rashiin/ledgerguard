@@ -152,10 +152,17 @@ hash = sha256(prev_hash ‖ canonical_json(event))
 ```
 
 where `canonical_json` sorts keys, strips whitespace, writes decimals as
-strings and refuses floats. `GET /api/audit/verify` walks the whole chain and
+strings and refuses floats. The database refuses UPDATE and DELETE on the log
+through triggers. The hash chain detects tampering by anyone who removes
+them. `GET /api/audit/verify` walks the whole chain and
 reports whether it is intact. Changing, deleting or reordering any event
 breaks every hash after it. The full chain can be exported as execution
 evidence.
+
+The log is **tamper-evident with a published head hash**, not tamper-proof.
+Someone with access to the database file could rewrite an event and every
+later hash consistently. That is detectable only against a head hash recorded
+elsewhere, which is why the exported evidence publishes it.
 
 ---
 
@@ -167,7 +174,10 @@ not by convention:
 * Every component except the Executor receives a **read-only** session. SQLite
   is opened with `mode=ro`, and each connection sets `PRAGMA query_only=ON`.
   A write through it fails inside SQLite.
-* The Executor builds the only runtime **writable** session.
+* The Executor builds the only runtime **writable** session. It only accepts a
+  `VerifiedAction` whose HMAC seal, computed by the verifier over the whole
+  action, still matches. An action edited after verification (for example
+  while it waits for approval) is refused.
 * **Provisioning** (migrations and the synthetic-data seeder) also writes. It
   runs as an offline build step before the application starts, from
   `scripts/seed.py`. The application never imports it, and the test suite
@@ -233,7 +243,12 @@ and never merged into one number.
 | `SPECULATIVE` | Modelled only | Seasonal fill after the order book: each counterparty repeats what it invoiced in the same week last year, citing that invoice |
 
 Each week reports inflow and outflow per class, and three nested closing
-balances: contracted only, contracted plus expected, and all classes. Alerts
+balances: contracted only, contracted plus expected, and all classes.
+
+**Contracted-only cash is expected to go negative within 13 weeks.** No small
+business holds a quarter of signed orders, so contracted-only cash always
+runs out somewhere in the window. That is not a data error or a failing
+business: it shows how much of the forecast rests on orders not yet signed. Alerts
 name the classes that drive them, and a shortfall is always also quoted on
 contracted-only cash.
 
@@ -277,7 +292,7 @@ The fourth layer does not depend on the first three working.
 | Component | Status |
 |---|---|
 | Money, configuration, data model, migrations, seeder, projection with confidence classes | done |
-| Ledger read API, Executor, audit chain | in progress |
+| Ledger read API, Executor (sealed actions, tier gates), audit chain with tamper detection | done |
 | Verifier plane, rules, tiers, Trust Receipt | planned |
 | Proposer plane and LLM clients | planned |
 | Capabilities (radar, financing matcher, analysis), alerts, scenarios | planned |

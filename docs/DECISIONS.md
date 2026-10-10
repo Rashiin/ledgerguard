@@ -168,8 +168,102 @@ week 13. The UI and alerts must show both.
 **Cost.**
 * The fill is the crudest part of the model: no growth, no trend, and one-off
   orders from last year are repeated.
-* Contracted-only means contracted lines on *both* sides. It answers "what do
-  signed commitments alone imply", not "worst case". A stress view (contracted
-  inflows against all outflows) could be added in Phase 5 if wanted.
+* Contracted-only means contracted lines on *both* sides: the same standard of
+  evidence on each side, and the primary band. Phase 5 adds one named stress
+  scenario, "contracted inflows against all outflows". Payroll, tax, rent and
+  loan repayments fall due whether or not the order book converts. It is a
+  scenario, not a fourth band.
+* Contracted-only cash will go negative within 13 weeks for any realistic
+  SME. Nobody holds a quarter of signed orders. Docs and UI must say so in
+  one line, so the band reads as honesty rather than a modelling failure.
 * Alerts (Phase 5) must name the classes that drive them, and the shortfall
   headline must also be quoted on contracted-only cash.
+
+## D-010 · The Executor accepts only sealed `VerifiedAction`s (Phase 2)
+
+**Decision.** A `VerifiedAction` carries an HMAC-SHA256 seal over its
+canonical content: intent id, kind, tier, payload, receipt id, verifier
+version, verification time and blocking rules. The key is 32 random bytes in
+`data/verifier.key` (mode 0600), created on first start and never committed.
+
+The Executor recomputes the seal and refuses:
+* anything that is not a `VerifiedAction`;
+* a missing or foreign seal;
+* any field changed after sealing, including in-place payload edits.
+
+**Why.** An `isinstance` check alone would let any in-process code build a
+`VerifiedAction` by hand. The seal also protects actions waiting in the
+approval queue: a pending T3 payment edited in the database (amount or
+payee) no longer verifies.
+
+**Cost / residual risk.** Code running inside the application process can
+read the key. The seal guards against accidental bypass and tampering with
+stored actions, not against a compromised process. This goes in the risk
+register.
+
+## D-011 · The Executor is the single write gateway, including for the audit log (Phase 2)
+
+**Decision.** The Executor owns the only runtime writable engine. It exposes:
+* `execute(action, approval)` for ledger changes;
+* `record(actor, type, payload)` for audit appends.
+
+Other components log events through `record`. A ledger change and its
+`action.executed` event (with a before/after field diff) commit in one
+transaction. Every refusal is written as `action.refused`, with the received
+type and the reason.
+
+The Executor also checks, independently of the verifier:
+* `BLOCK` cannot be overridden;
+* `INITIATE_PAYMENT` and `ACCEPT_FINANCING_OFFER` must be T3;
+* T2 needs a human approver (operator or owner; never `llm` or `system`);
+* T3 additionally needs the typed phrase `CONFIRM <intent_id>` and an
+  approval no earlier than `verified_at + cool_off_seconds`, checked against
+  both the approval timestamp and the clock.
+
+Writers use `BEGIN IMMEDIATE`, so audit sequence numbers cannot race.
+
+**Why.** One writer is easy to reason about and test. These checks repeat
+verifier checks on purpose (defence in depth): if Phase 3 has a bug, the
+Executor still holds the hard invariants.
+
+**Cost.** The Executor duplicates part of the tier logic. Kinds without a
+handler are refused ("no executor handler"). Phase 2 implements
+`MARK_DISPUTED`; the others come with their payload schemas in Phases 3 and 5.
+
+## D-012 · Audit chain: hash definition and append-only trigger (Phase 2)
+
+**Decision.**
+* `hash = sha256(prev_hash ‖ canonical_json(content))`, where content is
+  `{id, seq, occurred_at, actor, event_type, payload}`.
+* The genesis `prev_hash` is 64 zeros.
+* Timestamps are hashed in exactly the textual form stored (UTC, microseconds).
+* Verification checks contiguous sequence numbers from 1, each `prev_hash`
+  link, and each recomputed hash. It reports the first bad sequence number
+  and why.
+* Migration 0002 adds SQLite triggers that abort any UPDATE or DELETE on
+  `audit_event`.
+
+**Why.** Two independent layers:
+* the trigger stops modification through any normal connection;
+* the chain detects modification by someone who drops the trigger, which
+  anyone with file access can do.
+
+The tests tamper exactly that way.
+
+**Cost / residual risk.** The chain is unkeyed, as specified. An attacker
+with file access alone who rewrites an event and *every later hash* produces
+a chain that is internally consistent. The chain proves integrity only
+relative to a head hash recorded elsewhere, so the evidence export publishes
+it.
+
+The accurate description is "tamper-evident with a published head hash". It
+is not tamper-proof.
+
+## D-013 · Row drill-down endpoint (Phase 2)
+
+**Decision.** `GET /api/ledger/rows/{table}/{id}` returns one row from an
+allow-listed table. Decimals are returned as strings, never floats.
+
+**Why.** Spec 7.3 requires every figure to drill down to its source rows in
+one click. The Trust Receipt cites `{table, id}` pairs, and this endpoint
+resolves them. It is an addition to the endpoint list in spec 8.1.

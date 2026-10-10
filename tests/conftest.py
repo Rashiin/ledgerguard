@@ -22,3 +22,20 @@ def seeded_db(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("ledger") / "ledger.sqlite"
     create_fresh(path, nordvik.build(42, CATALOGUE).rows)
     return path
+
+
+@pytest.fixture
+def fresh_db(tmp_path: Path, seeded_db: Path) -> Path:
+    """A private copy of the seeded ledger, for tests that write."""
+    import shutil
+
+    path = tmp_path / "ledger.sqlite"
+    shutil.copyfile(seeded_db, path)
+    return path
+
+
+@pytest.fixture(scope="session")
+def policy():  # type: ignore[no-untyped-def]
+    from ledgerguard.config import load_policy
+
+    return load_policy(ROOT / "config" / "policy.yaml")

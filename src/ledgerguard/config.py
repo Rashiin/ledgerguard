@@ -136,6 +136,7 @@ class Settings:
     config_dir: Path
     policy: Policy
     model: ModelConfig
+    key_path: Path  # the verifier's sealing key (created on first start, mode 0600)
 
 
 def load_settings() -> Settings:
@@ -146,4 +147,5 @@ def load_settings() -> Settings:
         config_dir=config_dir,
         policy=load_policy(config_dir / "policy.yaml"),
         model=load_model_config(config_dir / "model.yaml"),
+        key_path=Path(os.environ.get("LEDGERGUARD_KEY", "data/verifier.key")),
     )

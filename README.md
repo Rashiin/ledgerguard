@@ -8,10 +8,11 @@ or routed to a human for approval.
 
 FinTechathon 2026 · International Track · Topic E.
 
-> **Status: Phase 1 (foundation).** Data model, migrations, the synthetic
-> ledger and configuration are in place. The verifier, proposer, capabilities
-> and UI arrive in later phases. Sections marked *(later phase)* describe what
-> is coming.
+> **Status: Phase 2.** The data model, the synthetic ledger and the cash-flow
+> projection (with confidence classes) are in place, along with the Executor
+> and the tamper-evident audit log. The verifier, proposer, capabilities and
+> UI arrive in later phases. Sections marked *(later phase)* describe what is
+> coming.
 
 ## Runs offline, on your own hardware
 
@@ -42,7 +43,17 @@ uv run ledgerguard-api
 ```
 
 Then open http://127.0.0.1:8000/api/health. Set `LEDGERGUARD_PORT` to use a
-different port.
+different port. Other endpoints so far:
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/ledger/summary` | Cash, accounts, open invoices by status, next payroll |
+| `GET /api/ledger/rows/{table}/{id}` | One source row, for drill-down |
+| `GET /api/audit?from_seq=&limit=` | Audit events |
+| `GET /api/audit/verify` | `{"intact": true, "events": N, "head_hash": ...}` |
+
+On first start the app creates `data/verifier.key`, the sealing key for
+verified actions (owner-readable only, never committed).
 
 Run the checks:
 
@@ -97,10 +108,15 @@ src/ledgerguard/
   db/               models, column types, read-only engine
   migrations/       Alembic migrations
   provisioning.py   offline: migrate + seed (the only writer besides the Executor)
-  analytics/        13-week projection as pure functions
+  analytics/        13-week projection with confidence classes, pure functions
+  ledger/           read-only ledger queries
+  audit/            hash chain: hashing, verification, reading
+  verifier/seal.py  VerifiedAction and its HMAC seal
+  executor/         the only runtime writer: tier gates, handlers, audit appends
   seed/nordvik.py   synthetic ledger generator
-  api/app.py        FastAPI app (read-only)
+  api/app.py        FastAPI app (reads only; writes go through the Executor)
 scripts/seed.py     builds data/ledger.sqlite and fixtures/manifest.json
+docs/ARCHITECTURE.md  design: two planes, verification stages, tiers, data model
 docs/DECISIONS.md   architecture decisions and their reasons
 THIRD_PARTY.md      every dependency and its licence
 ```
