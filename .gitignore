@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+.DS_Store
+
+# The ledger is rebuilt by scripts/seed.py; only the manifest is committed.
+data/*.sqlite
+data/*.sqlite-*

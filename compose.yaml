@@ -1,0 +1,18 @@
+# One-command run for judges:  docker compose up
+# Then open http://localhost:8000/api/health
+#
+# No model server is started. The default LLM_CLIENT=replay serves recorded
+# model responses, so nothing leaves the machine and no API key is needed.
+services:
+  ledgerguard:
+    build: .
+    image: ledgerguard:local
+    ports:
+      - "8000:8000"
+    environment:
+      LLM_CLIENT: replay
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5

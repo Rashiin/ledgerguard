@@ -1,0 +1,27 @@
+# Permission-tier policy. Loaded and validated at boot; a bad value stops startup.
+# Hard-coded invariants (ACCEPT_FINANCING_OFFER and INITIATE_PAYMENT are always T3,
+# BLOCK is never overridable) live in code, not here, so they cannot be configured away.
+version: 1
+currency: EUR
+
+# Money is always a quoted string. An amount above its tier's ceiling escalates
+# one tier; above the T3 ceiling the AmountCeiling rule blocks it.
+amount_ceilings:
+  T1: "50000.00"
+  T2: "75000.00"
+  T3: "150000.00"
+
+t3:
+  cool_off_seconds: 60
+  require_typed_confirmation: true
+
+# Minimum balance an outbound action may leave on each account (SufficientBalance).
+account_floors:
+  acc_operating: "5000.00"
+  acc_petty_cash: "100.00"
+
+rules:
+  duplicate_payment_window_days: 14
+  payroll_lead_days: 5
+  tax_reserve_horizon_days: 45
+  concentration_warning_share: "0.30"

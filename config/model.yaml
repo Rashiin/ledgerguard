@@ -1,0 +1,24 @@
+# LLM client selection. The environment variable LLM_CLIENT overrides `client`.
+# local             -> Ollama on this machine (default; no network egress)
+# openai_compatible -> any OpenAI-shaped endpoint (optional, never required)
+# replay            -> recorded cassettes; no model server, no network
+client: local
+
+# A malformed ActionIntent is retried at most twice with the schema error fed
+# back verbatim, then the turn fails visibly. It is never repaired by hand.
+max_intent_retries: 2
+
+local:
+  base_url: http://localhost:11434
+  model: qwen2.5:7b-instruct
+  request_timeout_seconds: 120
+  temperature: 0
+  num_ctx: 8192
+
+openai_compatible:
+  base_url: null
+  model: null
+  api_key_env: OPENAI_API_KEY
+
+replay:
+  cassette_dir: fixtures/llm_cassettes

@@ -1,0 +1,56 @@
+[project]
+name = "ledgerguard"
+version = "0.1.0"
+description = "SME finance copilot where the language model proposes and a deterministic verifier decides."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "alembic>=1.13",
+    "fastapi>=0.115",
+    "pydantic>=2.8",
+    "pyyaml>=6.0",
+    "sqlalchemy>=2.0.30",
+    "uvicorn>=0.30",
+]
+
+[project.scripts]
+ledgerguard-api = "ledgerguard.api.app:main"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.27",
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "types-pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# CHECK constraints list every enum member on one line.
+"src/ledgerguard/migrations/versions/*" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+packages = ["ledgerguard"]
+exclude = ["src/ledgerguard/migrations/"]

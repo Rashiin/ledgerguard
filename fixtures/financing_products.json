@@ -1,0 +1,107 @@
+{
+  "synthetic": true,
+  "notice": "SYNTHETIC CATALOGUE. Every provider, product, rate and fee below is invented for the LedgerGuard sandbox. None of these are real offers and no real lender is represented.",
+  "products": [
+    {
+      "id": "fin_cl_01", "provider": "Synthetic Bank A", "kind": "credit_line",
+      "name": "Existing revolving facility - drawdown",
+      "min_amount": "1000.00", "max_amount": "100000.00", "nominal_rate": "0.0890",
+      "fee_structure": {"arrangement_fee": "0.00", "non_utilisation_fee_annual": "0.0050"},
+      "term_months": 12, "time_to_funding_days": 1, "requires_collateral": true,
+      "eligibility_rules": {"existing_facility_account": "acc_credit_line"}
+    },
+    {
+      "id": "fin_cl_02", "provider": "Synthetic Fintech D", "kind": "credit_line",
+      "name": "Flexible online credit line",
+      "min_amount": "5000.00", "max_amount": "75000.00", "nominal_rate": "0.1490",
+      "fee_structure": {"drawdown_fee_rate": "0.0100"},
+      "term_months": 12, "time_to_funding_days": 2, "requires_collateral": false,
+      "eligibility_rules": {"min_trading_years": 2, "min_annual_revenue": "250000.00"}
+    },
+    {
+      "id": "fin_tl_01", "provider": "Synthetic Bank A", "kind": "term_loan",
+      "name": "Secured growth loan, 36 months",
+      "min_amount": "25000.00", "max_amount": "250000.00", "nominal_rate": "0.0790",
+      "fee_structure": {"arrangement_fee_rate": "0.0150", "arrangement_fee_min": "500.00"},
+      "term_months": 36, "time_to_funding_days": 21, "requires_collateral": true,
+      "eligibility_rules": {"min_trading_years": 3, "min_annual_revenue": "1000000.00",
+                            "purposes": ["working_capital", "equipment", "growth"]}
+    },
+    {
+      "id": "fin_tl_02", "provider": "Synthetic Bank B", "kind": "term_loan",
+      "name": "Unsecured SME loan, 24 months",
+      "min_amount": "10000.00", "max_amount": "100000.00", "nominal_rate": "0.1150",
+      "fee_structure": {"arrangement_fee_rate": "0.0200"},
+      "term_months": 24, "time_to_funding_days": 10, "requires_collateral": false,
+      "eligibility_rules": {"min_trading_years": 2, "min_annual_revenue": "500000.00",
+                            "purposes": ["working_capital", "growth"]}
+    },
+    {
+      "id": "fin_tl_03", "provider": "Synthetic Credit Union C", "kind": "term_loan",
+      "name": "Community business loan, 12 months",
+      "min_amount": "5000.00", "max_amount": "50000.00", "nominal_rate": "0.0950",
+      "fee_structure": {"arrangement_fee": "250.00"},
+      "term_months": 12, "time_to_funding_days": 14, "requires_collateral": false,
+      "eligibility_rules": {"max_employees": 25, "purposes": ["working_capital"]}
+    },
+    {
+      "id": "fin_tl_04", "provider": "Synthetic Development Lender K", "kind": "term_loan",
+      "name": "Green equipment loan, 60 months",
+      "min_amount": "50000.00", "max_amount": "500000.00", "nominal_rate": "0.0590",
+      "fee_structure": {"arrangement_fee_rate": "0.0100"},
+      "term_months": 60, "time_to_funding_days": 30, "requires_collateral": true,
+      "eligibility_rules": {"purposes": ["equipment"]}
+    },
+    {
+      "id": "fin_if_01", "provider": "Synthetic Factor E", "kind": "invoice_factoring",
+      "name": "Selective invoice finance",
+      "min_amount": "10000.00", "max_amount": "250000.00", "nominal_rate": "0.0000",
+      "fee_structure": {"advance_rate": "0.85", "discount_fee_rate_per_30_days": "0.0125",
+                        "service_fee_rate": "0.0050", "min_fee_per_invoice": "75.00"},
+      "term_months": 3, "time_to_funding_days": 3, "requires_collateral": false,
+      "eligibility_rules": {"requires_open_receivables": true,
+                            "eligible_debtor_risk_bands": ["A", "B"]}
+    },
+    {
+      "id": "fin_if_02", "provider": "Synthetic Factor F", "kind": "invoice_factoring",
+      "name": "Whole-ledger factoring, 12-month commitment",
+      "min_amount": "50000.00", "max_amount": "500000.00", "nominal_rate": "0.0000",
+      "fee_structure": {"advance_rate": "0.90", "discount_fee_rate_per_30_days": "0.0095",
+                        "service_fee_rate": "0.0120", "minimum_annual_fee": "6000.00"},
+      "term_months": 12, "time_to_funding_days": 14, "requires_collateral": false,
+      "eligibility_rules": {"requires_open_receivables": true, "min_annual_revenue": "1000000.00"}
+    },
+    {
+      "id": "fin_sc_01", "provider": "Synthetic Supplier Finance G", "kind": "supplier_credit",
+      "name": "Payment-term extension, +60 days",
+      "min_amount": "5000.00", "max_amount": "150000.00", "nominal_rate": "0.0000",
+      "fee_structure": {"extension_fee_rate": "0.0200"},
+      "term_months": 2, "time_to_funding_days": 5, "requires_collateral": false,
+      "eligibility_rules": {"requires_open_payables": true, "min_trading_years": 2}
+    },
+    {
+      "id": "fin_sc_02", "provider": "Synthetic Trade Finance H", "kind": "supplier_credit",
+      "name": "Reverse factoring programme",
+      "min_amount": "20000.00", "max_amount": "300000.00", "nominal_rate": "0.0000",
+      "fee_structure": {"discount_fee_rate_per_30_days": "0.0085"},
+      "term_months": 3, "time_to_funding_days": 10, "requires_collateral": false,
+      "eligibility_rules": {"requires_open_payables": true, "supplier_must_enrol": true}
+    },
+    {
+      "id": "fin_ma_01", "provider": "Synthetic Merchant Funder I", "kind": "merchant_advance",
+      "name": "Revenue-based advance",
+      "min_amount": "5000.00", "max_amount": "120000.00", "nominal_rate": "0.0000",
+      "fee_structure": {"factor_rate": "1.16", "holdback_rate": "0.12"},
+      "term_months": 9, "time_to_funding_days": 2, "requires_collateral": false,
+      "eligibility_rules": {"min_trading_years": 1}
+    },
+    {
+      "id": "fin_ma_02", "provider": "Synthetic Merchant Funder J", "kind": "merchant_advance",
+      "name": "Same-week cash advance",
+      "min_amount": "2000.00", "max_amount": "60000.00", "nominal_rate": "0.0000",
+      "fee_structure": {"factor_rate": "1.24", "holdback_rate": "0.15"},
+      "term_months": 6, "time_to_funding_days": 1, "requires_collateral": false,
+      "eligibility_rules": {}
+    }
+  ]
+}

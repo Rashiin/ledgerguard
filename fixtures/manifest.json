@@ -1,0 +1,44 @@
+{
+  "profile": "nordvik",
+  "seed": 42,
+  "as_of": "2026-10-16",
+  "shortfall_weeks": [
+    6,
+    7,
+    8
+  ],
+  "concentration_customer": "cp_brennan",
+  "overdue_receivables": [
+    "inv_0412",
+    "inv_0623",
+    "inv_0649"
+  ],
+  "disputed_receivable": "inv_0620",
+  "duplicate_pair": [
+    "inv_0638",
+    "inv_0377"
+  ],
+  "anomalous_transaction": "txn_0867",
+  "payroll_in_shortfall": "pay_0026",
+  "brennan_overdue_invoice": "inv_0412",
+  "big_supplier_payable": "inv_0663",
+  "brennan_refit_milestone": "inv_0677",
+  "vat_obligation": "obl_0004",
+  "opening_balance": "335949.37",
+  "as_of_balance": "160031.04",
+  "weekly_closing": [
+    "249384.11",
+    "172321.66",
+    "122151.27",
+    "176532.54",
+    "163290.00",
+    "-20214.37",
+    "-132189.15",
+    "-129103.77",
+    "155763.98",
+    "90323.33",
+    "18932.37",
+    "129736.90",
+    "195210.97"
+  ]
+}
