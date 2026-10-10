@@ -184,7 +184,11 @@ Invoice text, counterparty names, transaction descriptions and uploaded document
 
 The fourth layer holds even if the first three fail.
 
-## 12. Implementation status
+## 12. Development process
+
+LedgerGuard was built with the help of an AI coding assistant. The architecture and the design decisions were made by the team, and the judgement calls behind them are recorded in DECISIONS.md. The git history is complete.
+
+## 13. Implementation status
 
 | Component | Status |
 |---|---|

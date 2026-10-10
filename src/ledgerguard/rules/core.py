@@ -133,11 +133,12 @@ def amount_ceiling(ctx: RuleContext) -> RuleResult:
         return RuleResult(
             name,
             Outcome.BLOCK,
-            f"{format_eur(amount)} is above the {format_eur(ceiling)} ceiling for money "
-            "leaving the business. It cannot be approved here.",
+            f"{format_eur(amount)} exceeds the configured outbound limit of "
+            f"{format_eur(ceiling)}. The limit is outbound_ceiling in config/policy.yaml. "
+            "An owner who expects payments this large can raise it there and restart.",
             ("ABOVE_OUTBOUND_CEILING",),
         )
-    return _pass(name, f"{format_eur(amount)} is within the {format_eur(ceiling)} ceiling.")
+    return _pass(name, f"{format_eur(amount)} is within the {format_eur(ceiling)} outbound limit.")
 
 
 def duplicate_payment(ctx: RuleContext) -> RuleResult:

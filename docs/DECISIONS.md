@@ -152,7 +152,7 @@ We chose to put the policy check in Phase 3 with the other stages and let it blo
 
 The amount ceiling exists to limit money leaving the business, so it applies only to outbound actions. The only outbound kinds are INITIATE_PAYMENT and ACCEPT_FINANCING_OFFER, and both are always T3. A ceiling can therefore never escalate a tier, and the old T1 and T2 ceilings had nothing left to do.
 
-We chose a single `outbound_ceiling` in `config/policy.yaml`. An outbound amount above it is blocked by AmountCeiling. Recording a receipt stays T2 with no ceiling and is bounded by what the invoice still owes, re-checked at execution.
+We chose a single `outbound_ceiling` in `config/policy.yaml`. An outbound amount above it is blocked by AmountCeiling. A €200,000 supplier payment is ordinary for some businesses, so a bare refusal would be a dead end. The refusal names the limit and says it is set by `outbound_ceiling` in `config/policy.yaml`, so the owner knows how to raise it. Recording a receipt stays T2 with no ceiling and is bounded by what the invoice still owes, re-checked at execution.
 
 We gave up escalation for large drafts. A €900,000 draft invoice is now T1 like any other draft. That is acceptable because a draft moves no money and is not sent to anyone.
 

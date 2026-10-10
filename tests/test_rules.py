@@ -109,7 +109,9 @@ def test_amount_ceiling_blocks_outbound_money_above_the_ceiling(
 ) -> None:
     policy = policy.model_copy(update={"outbound_ceiling": Decimal("100000.00")})
     r = rules.amount_ceiling(ctx(snapshot, policy, *pay("inv_0665")))
-    assert r.result is Outcome.BLOCK and "ceiling for money leaving" in r.reason
+    assert r.result is Outcome.BLOCK
+    assert "configured outbound limit" in r.reason
+    assert "outbound_ceiling in config/policy.yaml" in r.reason
 
 
 def test_outbound_ceiling_is_inclusive(snapshot: LedgerSnapshot, policy: Policy) -> None:
