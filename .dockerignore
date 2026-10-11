@@ -10,4 +10,7 @@ data
 evidence
 docs
 tests
-node_modules
+**/node_modules
+web/dist
+.ledgerguard
+.claude

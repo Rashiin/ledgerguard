@@ -273,3 +273,17 @@ The OpenAI-compatible client used to fall back to plain JSON mode whenever the r
 ## D-042 · The prompt's scenario example is not the demo's scenario
 
 The example first showed Brennan Hospitality paying 30 days late, which is scenario 3 word for word. The demo's own answer should not sit in the prompt. The example now shows a supplier invoice paid two weeks late. Scenario 3 was recorded again afterwards and produced the Brennan scenario on its first attempt.
+
+## D-043 · The UI shows the verifier's work instead of a clean answer
+
+Every turn in the Console shows its steps, each marked by whether code, the model or the verifier took it, including rejected drafts and the parser's errors. A mandatory fact the model left out comes first, labelled as put back by the verifier and saying why. A mandatory fact the model cited is shown in the verifier's sentence, with the model's own words below it as commentary. A corrected figure shows the model's number struck through beside the recomputed one, and every marker the verifier writes into text is highlighted. A block is shown once, with its rule and its reason, above the claims. Every row id opens the row it names.
+
+We chose visible machinery over a clean chat bubble, because the verifier is the product and a judge has to see it work. We gave up some readability. A long answer with several insertions is busier than a plain reply would be.
+
+## D-044 · The approval diff comes from the Executor's own handler, rolled back
+
+The inbox shows what approving an action would change by running the same handler that execution runs, inside a transaction that is always rolled back. We chose this over a separate description of each action's effects, because a second description could drift from what the code writes. A test checks that the preview equals the changes execution then records. The diff is computed against the ledger as it stands, so the inbox computes every remaining diff again after any approval. A new row's id can change when another approval lands first.
+
+## D-045 · The projection chart draws three lines, not stacked areas
+
+The requirements ask for the confidence classes as distinct stacked bands. The chart draws the closing balance three times, on contracted lines, with expected lines added, and with every line, as three lines on one axis. Closing balances are cumulative, so stacking them as areas would add one balance on top of another and show a total that means nothing. Three lines keep the classes separate, never merged into one number, which is what the requirement is for. If the chart showed weekly flows instead of balances, stacked bars per class would be the right form.

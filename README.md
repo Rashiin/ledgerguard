@@ -36,13 +36,22 @@ The model is needed only for live local runs, from Phase 4. The tests, the demo 
 
 You need [uv](https://docs.astral.sh/uv/). It installs and pins Python 3.11 by itself.
 
+You also need Node.js 22 or later to build the web UI.
+
 ```bash
 uv sync
 uv run python scripts/seed.py --profile nordvik --seed 42
-uv run ledgerguard-api
+(cd web && npm ci && npm run build)
+LLM_CLIENT=replay uv run ledgerguard-api
 ```
 
-Open http://127.0.0.1:8000/api/health to check it is running. `LEDGERGUARD_PORT` changes the port.
+Open http://127.0.0.1:8000 for the UI. `LEDGERGUARD_PORT` changes the port. With `LLM_CLIENT=replay` the recorded scenarios run with no model server. Leave it out to use the local model that `config/model.yaml` names.
+
+Recordings match the exact request, including the facts drawn from the ledger. Approving an action changes the ledger, so scenarios recorded on the fresh ledger stop replaying after it. Run the read-only scenarios first and the approvals last, or seed the ledger again to start over.
+
+The UI has four screens. The Console streams each turn's steps, marked by whether code, the model or the verifier took them, and shows the verified answer with a Trust Receipt beside it. The Cash-Flow Radar shows the 13-week projection by confidence class, the alerts, the scenario simulator and the financing matcher. The Approval Inbox shows each pending action with the ledger changes approving it would make. The Audit screen walks the hash chain and lists every event.
+
+For frontend work, run the API on port 8610 and `npm run dev` in `web/`. Vite serves on port 5610 and proxies `/api` to the API.
 
 | Endpoint | Returns |
 |---|---|
@@ -51,7 +60,14 @@ Open http://127.0.0.1:8000/api/health to check it is running. `LEDGERGUARD_PORT`
 | `GET /api/audit?from_seq=&limit=` | Audit events |
 | `GET /api/audit/verify` | Whether the audit chain is intact, its length and its head hash |
 | `GET /api/receipts/{id}` | One Trust Receipt |
+| `POST /api/chat` | Body `{"message": "…"}`. A server-sent event stream of the turn's steps, then the verified turn |
+| `GET /api/cashflow/projection?weeks=13` | The weekly projection with each confidence class kept separate |
+| `POST /api/cashflow/scenario` | Body `{"scenario": {"type": "customer_pays_late", "counterparty_id": "cp_brennan", "days": 30}}`. Before and after, and the change in alerts |
+| `GET /api/alerts` | Radar alerts with severity, lead time and the rows behind them |
+| `POST /api/financing/match` | Body `{"weights": {"cost": "40", "coverage": "20"}}`. Options ranked by total cost and fit, with a do-nothing baseline |
+| `GET /api/analysis` | Margins, burn, runway, DSO, DPO, cash conversion cycle and anomalies, each with its method |
 | `GET /api/approvals` | Actions waiting for approval, with their rules, flags and figures |
+| `GET /api/approvals/{id}/diff` | The ledger changes approving the action would make, computed by the Executor's own handler and rolled back |
 | `POST /api/approvals/{id}/approve` | Body `{"approver": "operator", "confirmation": "CONFIRM int_…"}`. The confirmation is required for T3. |
 | `POST /api/approvals/{id}/decline` | Body `{"by": "operator", "reason": "…"}` |
 
@@ -63,7 +79,10 @@ Run the checks with:
 uv run pytest
 uv run ruff check src tests scripts
 uv run mypy
+(cd web && npm run lint && npm run typecheck)
 ```
+
+`scripts/probe_grammar.py OUT_DIR` measures how the local runtime's schema grammar orders properties and whether it biases the model's choices. It needs Ollama with the default model and saves every raw request and response.
 
 ## Quickstart with Docker
 
@@ -71,7 +90,7 @@ uv run mypy
 docker compose up
 ```
 
-Open http://localhost:8080/api/health. `LEDGERGUARD_HOST_PORT` changes the host port. The image contains the seeded ledger and starts with `LLM_CLIENT=replay`, so it needs no model server and no network. The Docker path is verified in Phase 7.
+Open http://localhost:8080 for the UI. `LEDGERGUARD_HOST_PORT` changes the host port. The image contains the seeded ledger and starts with `LLM_CLIENT=replay`, so it needs no model server and no network. The Docker path is verified in Phase 7.
 
 ## The sandbox ledger
 
@@ -110,8 +129,12 @@ src/ledgerguard/
   service.py            turns and the approval queue
   executor/             the only runtime writer
   seed/nordvik.py       the synthetic ledger generator
-  api/app.py            the HTTP API
+  api/app.py            the HTTP API, which also serves the built UI
+  proposer/             allowlist, prompts, the turn grammar, model clients, the turn loop
+web/                    the four-screen UI: React, Vite, Tailwind, Recharts
 scripts/seed.py         builds data/ledger.sqlite and fixtures/manifest.json
+scripts/record_turn.py  records one turn against the local model for replay
+scripts/probe_grammar.py  measures the runtime grammar's behaviour
 docs/ARCHITECTURE.md    how the system is designed
 docs/DECISIONS.md       the judgement calls behind it
 docs/RISK_REGISTER.md   known residual risks

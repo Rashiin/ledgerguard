@@ -483,6 +483,30 @@ class Executor:
             raise
         return ExecutionResult(checked.intent_id, changes, seq)
 
+    def preview(self, action: object) -> list[Change]:
+        """The changes approving this action would make, computed and rolled back.
+
+        The approval inbox shows this as its diff. It runs the same handler that
+        execution runs, inside a transaction that is always rolled back, so what
+        the person approves is what the code would write. Nothing is committed and
+        nothing is logged. Blocked or unsealed actions are refused as they are by
+        ``execute``.
+        """
+        if not isinstance(action, VerifiedAction):
+            raise ExecutionRefused(
+                f"only a VerifiedAction can be previewed, got {type(action).__name__}"
+            )
+        if not self._sealer.is_valid(action):
+            raise ExecutionRefused("seal missing or invalid")
+        if action.blocking_rules:
+            raise ExecutionRefused(f"blocked by {', '.join(action.blocking_rules)}")
+        with Session(self._engine) as session:
+            session.begin()
+            try:
+                return self._apply(session, action)
+            finally:
+                session.rollback()
+
     def close(self, intent_id: str, status: IntentStatus, reason: str) -> None:
         """Move an open intent to failed, or to rejected after an approval-time re-check."""
         if status not in (IntentStatus.FAILED, IntentStatus.REJECTED):

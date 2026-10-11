@@ -22,7 +22,13 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from ledgerguard.db.models import ActionIntentRecord, TrustReceiptRecord
 from ledgerguard.domain.enums import ActionKind, Actor, IntentStatus, Tier
-from ledgerguard.executor.executor import Approval, ExecutionRefused, ExecutionResult, Executor
+from ledgerguard.executor.executor import (
+    Approval,
+    Change,
+    ExecutionRefused,
+    ExecutionResult,
+    Executor,
+)
 from ledgerguard.verifier.pipeline import TurnContext, Verifier
 from ledgerguard.verifier.seal import VerifiedAction
 from ledgerguard.verifier.snapshot import load_snapshot
@@ -131,6 +137,15 @@ class CopilotService:
                 }
                 for intent, receipt in rows
             ]
+
+    def preview(self, intent_id: str) -> list[Change]:
+        """What approving a pending action would change, row by row."""
+        with self._reads() as session:
+            record = session.get(ActionIntentRecord, intent_id)
+            if record is None or record.status is not IntentStatus.PENDING_APPROVAL:
+                raise ExecutionRefused(f"{intent_id} is not waiting for approval")
+            action = action_from_record(record)
+        return self._executor.preview(action)
 
     def approve(
         self, intent_id: str, approver: Actor, confirmation: str | None = None

@@ -165,10 +165,17 @@ def test_scenario_7_record_payment_needs_approval_then_applies(
 
     pending = copilot.pending()
     assert [p["intent_id"] for p in pending] == [turn.intent_id]
+    # The inbox diff runs the real handler and rolls it back: nothing is written.
+    diff = copilot.preview(turn.intent_id)
+    assert invoice(fresh_db, "inv_0412").status is InvoiceStatus.OVERDUE
+    assert chain(fresh_db) == (True, ["intent.verified"])
     with pytest.raises(ExecutionRefused, match="cannot approve"):
         copilot.approve(turn.intent_id, Actor.LLM)
 
     result = copilot.approve(turn.intent_id, Actor.OPERATOR)
+    assert diff == result.changes
+    with pytest.raises(ExecutionRefused, match="not waiting"):
+        copilot.preview(turn.intent_id)
     fields = {(c["table"], c["field"]): c for c in result.changes}
     assert fields[("invoice", "status")]["before"] == "overdue"
     assert fields[("invoice", "status")]["after"] == "paid"

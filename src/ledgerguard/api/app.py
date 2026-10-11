@@ -19,6 +19,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -314,6 +315,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def approvals(service: Copilot) -> dict[str, Any]:
         return {"pending": service.pending()}
 
+    @app.get("/api/approvals/{intent_id}/diff")
+    def approval_diff(intent_id: str, service: Copilot) -> dict[str, Any]:
+        try:
+            changes = service.preview(intent_id)
+        except ExecutionRefused as refusal:
+            raise HTTPException(409, str(refusal)) from None
+        return {"intent_id": intent_id, "changes": changes}
+
     @app.post("/api/approvals/{intent_id}/approve")
     def approve(intent_id: str, body: ApproveBody, service: Copilot) -> dict[str, Any]:
         try:
@@ -334,6 +343,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except ExecutionRefused as refusal:
             raise HTTPException(409, str(refusal)) from None
         return {"intent_id": intent_id, "status": "declined", "audit_seq": seq}
+
+    # The built web UI, when present. API routes above take precedence.
+    web = settings.web_dir
+    if web is not None and (web / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=web, html=True), name="web")
 
     return app
 

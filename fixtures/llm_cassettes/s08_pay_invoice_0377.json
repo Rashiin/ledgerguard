@@ -1,0 +1,16 @@
+{
+ "cassette": "s08_pay_invoice_0377",
+ "interactions": [
+  {
+   "key": "7acae27afd075218eca11f53bf08d4dadd0e20b077515a2f885269407673b8fd",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The invoice from Delmar Smallwares, inv_0377, is overdue and requires payment of €4,312.50.\",\n      \"fact_id\": \"inv.inv_0377\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\"inv_0377\"]\n  },\n  \"rationale\": \"The owner needs to pay this supplier invoice as it is overdue.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4015,
+    "eval_count": 113,
+    "done_reason": "stop",
+    "elapsed_ms": 12071
+   }
+  }
+ ]
+}

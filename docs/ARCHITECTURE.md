@@ -264,4 +264,4 @@ LedgerGuard was built with the help of an AI coding assistant. The architecture 
 | Turn loop with retries and dry run, allowlist, schema-bound local client, replay and recording, chat stream | done |
 | Cash-flow radar, financing matcher, financial analysis, alerts, scenarios, their API endpoints | done |
 | Grammar probes, branch-free turn grammar, keyed scenarios | done |
-| Web UI | planned |
+| Web UI: Console, Cash-Flow Radar, Approval Inbox, Audit | done |

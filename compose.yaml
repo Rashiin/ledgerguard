@@ -1,5 +1,5 @@
 # Run the demo with: docker compose up
-# Then open http://localhost:8080/api/health. LEDGERGUARD_HOST_PORT changes the
+# Then open http://localhost:8080 for the UI. LEDGERGUARD_HOST_PORT changes the
 # host port.
 #
 # No model server starts. LLM_CLIENT=replay serves recorded model responses, so
