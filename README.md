@@ -4,7 +4,7 @@ LedgerGuard is a finance copilot for small and medium businesses in which the la
 
 It was built for FinTechathon 2026, International Track, Topic E.
 
-> **Status: Phase 3 of 8.** The synthetic ledger, the 13-week cash projection, the audit log, the Executor and the full verifier are working. The language-model proposer, the three capabilities and the web UI come next. Lines marked *later phase* describe parts that are not built yet.
+> **Status: Phase 4 of 8, in progress.** The synthetic ledger, the 13-week cash projection, the audit log, the Executor and the full verifier are working, including the check that an answer does not leave out what mattered. The local model now answers through a schema it cannot break and cites facts that code computed. The turn loop, the three capabilities and the web UI come next. Lines marked *later phase* describe parts that are not built yet.
 
 ## Runs offline, on your own hardware
 

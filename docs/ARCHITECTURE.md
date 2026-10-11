@@ -64,10 +64,28 @@ The local model client may retry a malformed intent twice, sending the schema er
 | 2 | Recomputation | Re-derives every claimed figure from its cited rows | The recomputed value replaces the model's. A difference raises `FIGURE_MISMATCH` and both values go on the receipt |
 | 3 | Business rules | Runs each rule as a pure function of the intent and a ledger snapshot | A `BLOCK` is final. No tier or approval overrides it |
 | 4 | Provenance | Checks that every claim cites existing rows of a kind that can support it | The claim is replaced by a visible marker saying the verifier removed it |
+| 4b | Material omission | Checks that every fact the turn made mandatory was said | The fact is put back at the top of the answer and `MATERIAL_OMISSION` is recorded |
 | 5 | Policy | Requires total cost of capital and a fixed disclosure on financing content, and removes guaranteed-outcome language | Financing without a verified total cost is blocked. Guarantee phrases are masked visibly |
 | 6 | Tier assignment | Sets the tier from the action kind | A tier supplied by the model is discarded and recorded |
 
-Numbers inside sentences get the same treatment as claimed figures. Every money-like number in the model's prose must equal a figure the verifier computed. A figure the verifier corrected is substituted with the recomputed value. Any other number is replaced by a visible marker. A wrong amount cannot survive inside a sentence.
+Numbers inside sentences get the same treatment as claimed figures. A figure or a mention in any currency other than the ledger's raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros, and any other amount is masked.
+
+### Facts and material omission
+
+Tools give the model facts rather than raw rows. A fact has a stable id, a statement written by code, a figure and the derivation behind it. The model cites a fact by id and writes the sentence in its own words. The verifier does not trust the fact as the model echoes it. It recomputes the turn's facts from its own snapshot, resolves each cited id there and checks the figure.
+
+Some facts are mandatory, because leaving them out would mislead. A fact becomes mandatory when a declared condition holds:
+
+* a projected week closes below zero within the 13 weeks;
+* a rule blocks the action under discussion;
+* a customer is above the concentration threshold and the answer concerns revenue;
+* an alert is at severity high or above, once alerts exist.
+
+A response that omits a mandatory fact is not passed as given. The verifier puts the fact at the top of the answer in its own words, records `MATERIAL_OMISSION` on the receipt and keeps the model's phrasing for everything else. A fact counts as said only when a surviving claim cites it. Mentioning it in passing is not enough.
+
+Which facts a turn could cite, and which were mandatory, depends on the tools the orchestrator ran. The orchestrator records that list, and the model's output never sets it. Forecasts, scenarios and financing rankings are about cash whatever tools ran, so the shortfall is mandatory for them anyway.
+
+Most guardrails check whether what was said is true. This stage checks whether what mattered was said at all, because an omission is how a financial assistant does real harm. Every money-like number in the model's prose must equal a figure the verifier computed. A figure the verifier corrected is substituted with the recomputed value. Any other number is replaced by a visible marker. A wrong amount cannot survive inside a sentence.
 
 ### Business rules
 
@@ -169,9 +187,11 @@ The default model client talks to an open-weight model served by Ollama on the o
 
 | Client | Use |
 |---|---|
-| `LocalClient` | The default. Talks to local Ollama, asks for JSON output and retries a malformed intent at most twice |
+| `LocalClient` | The default. Talks to local Ollama and passes the turn's JSON schema as `format`, so the runtime can only generate output in that shape |
 | `OpenAICompatibleClient` | Optional, for any OpenAI-style endpoint. Nothing requires it |
 | `ReplayClient` | Replays recorded responses. The tests, the demo and the Docker image use it with no model server and no network |
+
+The schema is built for each turn from the action kinds the turn allows. A kind outside the allowlist cannot be expressed, and neither can an amount on a payment. Schema enforcement removes malformed output as a failure class. It does not make output correct, which is still the verifier's job. A run on this machine takes about 15 seconds a turn, which is why the demo replays recorded turns.
 
 ## 11. Prompt-injection containment
 
@@ -195,6 +215,7 @@ LedgerGuard was built with the help of an AI coding assistant. The architecture 
 | Money, configuration, data model, migrations, seeder, projection with confidence classes | done |
 | Ledger read API, Executor with sealed actions and tier gates, audit chain | done |
 | The six verification stages, eight rules, tiers, Trust Receipt, approval queue with re-check | done |
-| Proposer and model clients | planned |
+| Facts with materiality, stage 4b, currency check, schema-constrained local client, prompts | done |
+| Turn loop with retries, replay client, allowlist derivation | in progress |
 | Cash-flow radar, financing matcher, financial analysis, alerts, scenarios | planned |
 | Web UI | planned |

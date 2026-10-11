@@ -24,12 +24,12 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 from typing import Any
 
 from ledgerguard.audit.chain import timestamp
 from ledgerguard.config import Policy
 from ledgerguard.domain.enums import Tier
+from ledgerguard.facts import Fact, facts_for_turn
 from ledgerguard.rules import NEVER_AUTO_PASS, Outcome, RuleContext, RuleResult, evaluate
 from ledgerguard.verifier import intent as I
 from ledgerguard.verifier.policy import (
@@ -49,7 +49,13 @@ from ledgerguard.verifier.recompute import (
 )
 from ledgerguard.verifier.seal import Sealer, VerifiedAction
 from ledgerguard.verifier.snapshot import LedgerSnapshot, table_of
-from ledgerguard.verifier.text import TextFix, Verified, check_text, verified_pool
+from ledgerguard.verifier.text import (
+    TextFix,
+    Verified,
+    check_text,
+    foreign_currency,
+    verified_pool,
+)
 from ledgerguard.verifier.tiers import assign_tier
 
 VERIFIER_VERSION = "1.0.0"
@@ -59,6 +65,18 @@ APPROVERS = "operator"
 
 def t3_phrase(intent_id: str) -> str:
     return f"CONFIRM {intent_id}"
+
+
+@dataclass(frozen=True)
+class TurnContext:
+    """What deterministic code knows about the turn, recorded by the orchestrator.
+
+    ``tools_called`` lists the tools the orchestrator actually ran. The model's
+    output never sets it. The verifier uses it to decide which facts the turn
+    could cite and which of them were mandatory.
+    """
+
+    tools_called: tuple[str, ...] = ()
 
 
 @dataclass
@@ -91,7 +109,10 @@ class Verifier:
         self._clock = clock
         self._new_id = new_id
 
-    def verify(self, raw: str | bytes, snapshot: LedgerSnapshot) -> Verification:
+    def verify(
+        self, raw: str | bytes, snapshot: LedgerSnapshot, context: TurnContext | None = None
+    ) -> Verification:
+        context = context or TurnContext()
         token = self._new_id()
         intent_id, receipt_id = f"int_{token}", f"rcp_{token}"
         now = self._clock()
@@ -131,7 +152,15 @@ class Verifier:
                 None,
                 raw_text,
             )
-        intent = parsed.intent
+        model_claims = parsed.intent.claims
+        facts = facts_for_turn(
+            snapshot,
+            parsed.intent.kind,
+            context.tools_called,
+            self._policy.rules.concentration_warning_share,
+        )
+        claims, fact_errors = _resolve_facts(model_claims, facts)
+        intent = parsed.intent.model_copy(update={"claims": claims})
         reads: set[str] = set()
 
         # ---- stage 2: recompute the claims, then what the payload would move
@@ -140,6 +169,8 @@ class Verifier:
 
         # ---- stage 4 runs before the rules need citations: provenance per claim
         prov = [check_claim(snapshot, i, c, recomps[i], reads) for i, c in enumerate(intent.claims)]
+        for i, reason in fact_errors.items():
+            prov[i] = ProvenanceFinding(i, "removed", reason)
         cited = frozenset(
             r for c in intent.claims for r in c.source_row_ids if snapshot.row(r) is not None
         )
@@ -184,12 +215,21 @@ class Verifier:
             if r.result is not Outcome.PASS:
                 flags.update(r.flags)
 
+        # ---- stage 4b: material omission. What mattered must have been said.
+        omissions = _omitted(model_claims, prov, facts, rules)
+        for fact in omissions:
+            reads.update(r for r in fact.source_row_ids if table_of(r))
+        if omissions:
+            flags.add("MATERIAL_OMISSION")
+
         # ---- stage 5: policy, and the text the user may see
+        currency = snapshot.business.currency
         presented_claims, text_fixes, guarantee_hits = self._present(
-            intent, recomps, prov, resolution
+            intent, recomps, prov, resolution, currency
         )
+        presented_claims = [_inserted(f) for f in omissions] + presented_claims
         rationale, fixes = check_text(
-            "rationale", intent.rationale, self._pool(recomps, resolution)
+            "rationale", intent.rationale, self._pool(recomps, resolution), currency
         )
         text_fixes += fixes
         rationale, hits = mask_guarantees(rationale)
@@ -214,6 +254,11 @@ class Verifier:
             flags.add("UNSUPPORTED_CLAIM_REMOVED")
         if any(f.reason == "no verified figure matches" for f in text_fixes):
             flags.add("TEXT_FIGURE_MASKED")
+        if any(f.reason.startswith("currency") for f in text_fixes) or any(
+            foreign_currency(t, currency)
+            for t in (intent.rationale, *(c.statement for c in intent.claims))
+        ):
+            flags.add("CURRENCY_MISMATCH")
 
         # ---- stage 6: tier
         needs_human = bool(flags & NEVER_AUTO_PASS)
@@ -240,6 +285,8 @@ class Verifier:
             text_fixes=text_fixes,
             resolution=resolution,
             disclosures=[FINANCING_DISCLOSURE] if disclosure else [],
+            omissions=omissions,
+            context=context,
         )
         action = None
         if outcome == "verified":
@@ -329,6 +376,7 @@ class Verifier:
         recomps: list[Recomputation],
         prov: list[ProvenanceFinding],
         resolution: Resolution,
+        currency: str,
     ) -> tuple[list[dict[str, Any]], list[TextFix], list[str]]:
         pool = self._pool(recomps, resolution)
         claims: list[dict[str, Any]] = []
@@ -346,7 +394,7 @@ class Verifier:
                 )
                 continue
             text, claim_fixes = check_text(
-                f"claims[{rc.claim_index}].statement", claim.statement, pool
+                f"claims[{rc.claim_index}].statement", claim.statement, pool, currency
             )
             text, claim_hits = mask_guarantees(text)
             fixes += claim_fixes
@@ -389,6 +437,8 @@ class Verifier:
         resolution: Resolution | None = None,
         schema_errors: list[dict[str, str]] | None = None,
         disclosures: list[str] | None = None,
+        omissions: list[Fact] | None = None,
+        context: TurnContext | None = None,
     ) -> TrustReceipt:
         needs_approval = outcome == "verified" and tier in (Tier.T2, Tier.T3)
         approval = Approval(
@@ -420,6 +470,11 @@ class Verifier:
             payload_figures={
                 k: str(v) for k, v in (resolution.figures if resolution else {}).items()
             },
+            material_omissions=[
+                {"fact_id": f.id, "inserted": f.statement, "why": f.materiality or ""}
+                for f in omissions or []
+            ],
+            tools_called=list(context.tools_called) if context else [],
             risk_flags=sorted(flags),
             disclosures=disclosures or [],
             approval=approval,
@@ -444,4 +499,85 @@ def _resolved(res: Resolution) -> dict[str, Any]:
     return out
 
 
-__all__ = ["VERIFIER_VERSION", "Decimal", "Verification", "Verifier", "t3_phrase"]
+__all__ = ["VERIFIER_VERSION", "TurnContext", "Verification", "Verifier", "t3_phrase"]
+
+
+def _resolve_facts(
+    claims: list[I.Claim], facts: dict[str, Fact]
+) -> tuple[list[I.Claim], dict[int, str]]:
+    """Replace each fact citation with the fact's own derivation and rows.
+
+    The model's statement is kept. Its figure is kept too when it gave one, so a
+    wrong figure still shows up as a mismatch. A citation of a fact this turn did
+    not produce is reported so provenance can remove the claim visibly.
+    """
+    resolved: list[I.Claim] = []
+    errors: dict[int, str] = {}
+    for i, claim in enumerate(claims):
+        if claim.fact_id is None:
+            resolved.append(claim)
+            continue
+        fact = facts.get(claim.fact_id)
+        if fact is None:
+            errors[i] = f"it cites fact {claim.fact_id}, which no tool in this turn produced"
+            resolved.append(claim)
+            continue
+        derivation = (
+            None
+            if fact.formula is None
+            else I.Derivation.model_construct(
+                formula=fact.formula, operands=list(fact.operands), params=dict(fact.params)
+            )
+        )
+        resolved.append(
+            I.Claim.model_construct(
+                statement=claim.statement,
+                fact_id=claim.fact_id,
+                figure=claim.figure if claim.figure is not None else fact.figure,
+                derivation=derivation,
+                source_row_ids=list(dict.fromkeys([*fact.source_row_ids, *claim.source_row_ids])),
+            )
+        )
+    return resolved, errors
+
+
+def _omitted(
+    model_claims: list[I.Claim],
+    prov: list[ProvenanceFinding],
+    facts: dict[str, Fact],
+    rules: list[RuleResult],
+) -> list[Fact]:
+    """Mandatory facts the response left out, in a stable order.
+
+    A mandatory fact counts as said only when a surviving claim cites its id. A
+    BLOCK on the action is always mandatory. The model can cite it as
+    ``block.<RuleName>`` once a tool has shown it the dry run.
+    """
+    said = {
+        c.fact_id
+        for c, p in zip(model_claims, prov, strict=True)
+        if c.fact_id is not None and p.status != "removed"
+    }
+    required = [f for f in facts.values() if f.mandatory]
+    required += [
+        Fact(
+            id=f"block.{r.rule}",
+            statement=f"This action is blocked by {r.rule}. {r.reason}",
+            source_row_ids=tuple(r.rows),
+            mandatory=True,
+            materiality="a rule blocks the action under discussion",
+        )
+        for r in rules
+        if r.result is Outcome.BLOCK
+    ]
+    return [f for f in required if f.id not in said]
+
+
+def _inserted(fact: Fact) -> dict[str, Any]:
+    return {
+        "statement": fact.statement,
+        "figure": None if fact.figure is None else str(fact.figure),
+        "status": "inserted_by_verifier",
+        "fact_id": fact.id,
+        "sources": list(fact.source_row_ids),
+    }

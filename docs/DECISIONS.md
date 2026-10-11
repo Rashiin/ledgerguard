@@ -157,3 +157,33 @@ We chose a single `outbound_ceiling` in `config/policy.yaml`. An outbound amount
 We gave up escalation for large drafts. A €900,000 draft invoice is now T1 like any other draft. That is acceptable because a draft moves no money and is not sent to anyone.
 
 This would change if drafts started leaving the system, for example by being emailed to customers. Then a draft would be an external effect and would need its own tier and ceiling.
+
+## D-023 · The model runtime enforces the schema
+
+`LocalClient` passes a JSON schema as Ollama's `format`, and Ollama turns it into a grammar. The schema is written by hand and built per turn from the allowed kinds. Money is a quoted string with at most two decimals, payments have no amount field, and kinds outside the allowlist cannot be expressed. A test checks that the schema, the worked examples and the Pydantic models agree.
+
+In the first probe the model held the shape without help, but a 7B model will not always do so, and enforcing the schema removes that failure class. The parser stays as strict as before, so a runtime that ignores the schema still cannot slip anything through. We gave up nothing we needed. A runtime without grammar support would fall back to plain JSON mode and the retry path.
+
+## D-024 · Tools return facts, and the model cites them by id
+
+In the first probe all three of the model's errors came from building derivations: an invented row id, a missing field name and the wrong week. Tools now return facts, each with an id, a statement written by code, a figure and the derivation behind it. The model cites a fact by id and phrases the sentence. The verifier recomputes the turn's facts from its own snapshot and resolves each id there, so a fact the model echoes back is never trusted. A citation of a fact no tool produced this turn is removed visibly.
+
+We gave up some of the model's freedom to compute things nobody prepared for it. The model can still write a claim with its own derivation, and the verifier checks it as before. If the model ever needed figures no tool provides, the right answer would be a new tool, not wider derivations.
+
+In the re-probe the fact-based prompt was half the size of the first one. The turn took 14 seconds instead of 40, and every figure matched.
+
+## D-025 · Stage 4b, material omission
+
+Correct statements can still mislead by leaving out the one thing that mattered. The first probe gave three plausible claims about the quarter and never mentioned that week 7 closes at minus €219,676.
+
+The deterministic layer declares when a fact is mandatory. The conditions are a projected week below zero, a BLOCK on the action, a customer above the concentration threshold in a revenue answer, and high-severity alerts once Phase 5 builds them. If no surviving claim cites a mandatory fact, the verifier puts it at the top of the answer and records `MATERIAL_OMISSION`.
+
+We chose to deliver the corrected answer with the omission flagged rather than refuse the turn. That matches how a wrong figure is handled: the verifier's version wins and the receipt says what changed. We also chose citation as the test of "said", because matching words in prose would be guesswork. The cost is that a model which mentions the shortfall in passing without citing it gets the fact inserted anyway. That is redundant, but never wrong.
+
+A BLOCK is mandatory, but the model cannot know about a block before it proposes the action. Until the turn loop gives the model a dry-run tool that can cite `block.<RuleName>`, every blocked action carries the flag. The receipt is still honest about it.
+
+Which facts are mandatory depends on the tools the turn ran. The orchestrator records that list, not the model. Forecasts, scenarios and financing rankings always count as cash answers, so skipping the projection tool cannot dodge the shortfall. If the orchestrator failed to record a tool, a revenue answer could miss its concentration fact. That is R-17.
+
+## D-026 · Currency is its own finding
+
+The first probe wrote dollars for a euro ledger. Any figure or mention in another currency raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros and the change is recorded. A non-matching amount is masked with its symbol, so a stray "$" never survives next to a masked figure. A model that writes the wrong currency in a financial answer has misunderstood the ledger, and the flag lets an owner see that. "Pound" on its own is not treated as a currency, because it is also a unit of weight.

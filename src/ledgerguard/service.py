@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from ledgerguard.db.models import ActionIntentRecord, TrustReceiptRecord
 from ledgerguard.domain.enums import ActionKind, Actor, IntentStatus, Tier
 from ledgerguard.executor.executor import Approval, ExecutionRefused, ExecutionResult, Executor
-from ledgerguard.verifier.pipeline import Verifier
+from ledgerguard.verifier.pipeline import TurnContext, Verifier
 from ledgerguard.verifier.seal import VerifiedAction
 from ledgerguard.verifier.snapshot import load_snapshot
 
@@ -69,11 +69,17 @@ class CopilotService:
         self._executor = executor
         self._clock = clock
 
-    def submit(self, raw_output: str, conversation_id: str) -> TurnResult:
-        """Verify one proposer output, record it, and run it if its tier allows."""
+    def submit(
+        self, raw_output: str, conversation_id: str, context: TurnContext | None = None
+    ) -> TurnResult:
+        """Verify one proposer output, record it, and run it if its tier allows.
+
+        ``context`` is what the orchestrator recorded about the turn, such as the
+        tools it ran. It never comes from the model's output.
+        """
         with self._reads() as session:
             snapshot = load_snapshot(session)
-        v = self._verifier.verify(raw_output, snapshot)
+        v = self._verifier.verify(raw_output, snapshot, context)
         receipt = self._executor.store_verification(
             receipt=v.receipt,
             conversation_id=conversation_id,

@@ -36,6 +36,10 @@ class TrustReceipt(BaseModel):
     policy: list[dict[str, Any]]
     text_corrections: list[dict[str, str]]
     payload_figures: dict[str, str]
+    # Stage 4b: mandatory facts the response left out, which the verifier put back.
+    material_omissions: list[dict[str, str]] = []
+    # The tools the orchestrator ran this turn. They decide which facts were mandatory.
+    tools_called: list[str] = []
     risk_flags: list[str]
     disclosures: list[str]
     approval: Approval

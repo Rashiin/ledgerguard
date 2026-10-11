@@ -27,20 +27,42 @@ from ledgerguard.money import format_eur
 
 UNVERIFIED = "[figure removed: not verified]"
 
+# Currency marks the pattern recognises, and the ISO code each one means.
+CURRENCY_MARKS = {
+    "€": "EUR",
+    "$": "USD",
+    "£": "GBP",
+    "¥": "JPY",
+    "EUR": "EUR",
+    "USD": "USD",
+    "GBP": "GBP",
+    "JPY": "JPY",
+    "CHF": "CHF",
+    "euro": "EUR",
+    "euros": "EUR",
+    "dollar": "USD",
+    "dollars": "USD",
+    "pound": "GBP",
+    "pounds": "GBP",
+}
+
 _NUMBER = re.compile(
     r"""
     (?<![\w.\-/])                       # not inside an id, a date or another number
-    (?P<cur>€\s?|EUR\s?)?
+    (?P<cur>(?:[€$£¥]|EUR|USD|GBP|JPY|CHF)\s?)?
     (?P<sign>[-−])?
     (?P<int>\d{1,3}(?:,\d{3})+|\d+)
     (?P<frac>\.\d+)?
     (?P<suffix>\s?[kKmM](?![a-zA-Z]))?
     (?P<pct>\s?%)?
-    (?P<eur>\s?(?:EUR|euros?)\b)?
+    (?P<post>\s?(?:EUR|USD|GBP|JPY|CHF|euros?|dollars?|pounds?)\b)?
     (?![\w\-/]|\.\d)                    # not followed by more id or date characters
     """,
     re.VERBOSE,
 )
+# A foreign currency named anywhere, with or without a number next to it. "Pound"
+# alone is left out because it is also a unit of weight.
+_FOREIGN_WORDS = re.compile(r"[$£¥]|\b(?:USD|GBP|JPY|CHF|dollars?)\b")
 
 
 @dataclass(frozen=True)
@@ -51,6 +73,7 @@ class Figure:
     start: int
     end: int
     text: str
+    currency: str | None  # ISO code of the mark written next to it, if any
 
 
 def find_figures(text: str) -> list[Figure]:
@@ -58,7 +81,9 @@ def find_figures(text: str) -> list[Figure]:
     for m in _NUMBER.finditer(text):
         digits = m["int"].replace(",", "")
         frac = m["frac"] or ""
-        money = bool(m["cur"] or m["eur"])
+        mark = (m["cur"] or m["post"] or "").strip()
+        currency = CURRENCY_MARKS.get(mark) or CURRENCY_MARKS.get(mark.lower())
+        money = currency is not None
         percent = bool(m["pct"])
         suffix = (m["suffix"] or "").strip().lower()
         plain = int(digits)
@@ -74,7 +99,13 @@ def find_figures(text: str) -> list[Figure]:
         multiplier = {"k": Decimal(1000), "m": Decimal(1_000_000)}.get(suffix, Decimal(1))
         found.append(
             Figure(
-                value * multiplier, quantum * multiplier, percent, m.start(), m.end(), m.group(0)
+                value * multiplier,
+                quantum * multiplier,
+                percent,
+                m.start(),
+                m.end(),
+                m.group(0),
+                currency,
             )
         )
     return found
@@ -115,20 +146,46 @@ def _render(value: Decimal, percent: bool) -> str:
     return f"{value}%" if percent else format_eur(value)
 
 
-def check_text(field: str, text: str, verified: Verified) -> tuple[str, list[TextFix]]:
+def foreign_currency(text: str, currency: str) -> bool:
+    """True if the text names a currency other than the ledger's."""
+    return any(
+        CURRENCY_MARKS.get(m.group(0), m.group(0)) != currency
+        for m in _FOREIGN_WORDS.finditer(text)
+    )
+
+
+def check_text(
+    field: str, text: str, verified: Verified, currency: str = "EUR"
+) -> tuple[str, list[TextFix]]:
+    """Check every figure in ``text``. ``currency`` is the ledger's ISO code.
+
+    A figure written in another currency is a finding in its own right. If the
+    amount matches a verified figure it is shown again in the ledger's currency
+    and the change is recorded. Otherwise it is masked with the rest.
+    """
     fixes: list[TextFix] = []
     out: list[str] = []
     cursor = 0
     for fig in find_figures(text):
+        foreign = fig.currency is not None and fig.currency != currency
         pool = verified.percents if fig.percent else verified.money
-        if any(_same(fig, v) for v in pool):
+        match = next((v for v in pool if _same(fig, v)), None)
+        if match is not None and not foreign:
             continue
-        replacement, reason = UNVERIFIED, "no verified figure matches"
-        for model, recomputed, is_pct in verified.corrections:
-            if is_pct == fig.percent and _same(fig, model):
-                replacement = _render(recomputed, is_pct)
-                reason = f"model figure {model} corrected to recomputed {recomputed}"
-                break
+        if match is not None:
+            replacement = _render(match, fig.percent)
+            reason = (
+                f"currency: {fig.currency} written for a {currency} amount, shown in {currency}"
+            )
+        else:
+            replacement, reason = UNVERIFIED, "no verified figure matches"
+            for model, recomputed, is_pct in verified.corrections:
+                if is_pct == fig.percent and _same(fig, model):
+                    replacement = _render(recomputed, is_pct)
+                    reason = f"model figure {model} corrected to recomputed {recomputed}"
+                    break
+            if foreign:
+                reason = f"currency: {fig.currency} written in a {currency} ledger, and " + reason
         out.append(text[cursor : fig.start])
         out.append(replacement)
         cursor = fig.end

@@ -89,13 +89,25 @@ class Derivation(Strict):
     params: dict[str, str] = Field(default_factory=dict, max_length=8)
 
 
+FactId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_.]{1,60}$")]
+
+
 class Claim(Strict):
     statement: Text
+    # A fact a tool provided. The verifier recomputes it from the ledger and uses
+    # its derivation and rows, so the model does not build either itself.
+    fact_id: FactId | None = None
     figure: Figure | None = None
     derivation: Derivation | None = None
-    # Required in spirit; an empty list is not a schema error but is stripped,
-    # visibly, by the provenance stage.
+    # A claim with neither a fact nor any rows is not a schema error. The
+    # provenance stage removes it visibly.
     source_row_ids: list[RowId] = Field(default_factory=list, max_length=200)
+
+    @model_validator(mode="after")
+    def _one_source_of_derivation(self) -> Claim:
+        if self.fact_id is not None and self.derivation is not None:
+            raise ValueError("a claim cites a fact or gives a derivation, not both")
+        return self
 
 
 # --------------------------------------------------------------------------- payloads
