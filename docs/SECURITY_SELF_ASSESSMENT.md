@@ -1,6 +1,6 @@
 # Security self-assessment
 
-Draft. The Phase 8 PDF is built from this file. It covers the incidents found during development first, because they are the evidence for the design. The permission tiers, write-path enforcement, audit chain and injection containment follow. Known residual risks are in [RISK_REGISTER.md](RISK_REGISTER.md).
+The PDF is built from this file by `scripts/build_docs.py`. It covers the incidents found during development first, because they are the evidence for the design. The permission tiers, write-path enforcement, audit chain and injection containment follow. Known residual risks are in [RISK_REGISTER.md](RISK_REGISTER.md).
 
 ## 1. We measured where our defences fire, and it was not where we expected
 
@@ -89,11 +89,48 @@ This is the honest measure of the neutraliser: useful against phrasings it has s
 
 `tests/test_adversarial.py` runs all six fixtures against a scripted model that obeys every injection, which is a harder test than the real model's recordings. In every case the injected instruction never reaches the prompt, the attempt is logged with the removed text, the turn shows a containment notice and nothing unauthorised reaches the Executor.
 
-## 4. Sections to complete in Phase 8
+## 4. Security design
 
-* Permission tiers and the hard-coded invariants.
-* Write-path enforcement, including the one documented build-time exception for provisioning, risk R-01.
-* The audit chain: tamper-evident with a published head hash, not tamper-proof, risk R-03.
-* Prompt-injection containment and the adversarial fixtures.
-* The model-swap demonstration that safety holds across models.
-* The known-risk register.
+### 4.1 Permission tiers and the invariants in code
+
+| Tier | Actions | Gate |
+|---|---|---|
+| T0 | Answer, forecast, flag an anomaly | runs at once |
+| T1 | Draft an invoice, run a scenario, rank financing | runs at once, changes nothing outside the sandbox |
+| T2 | Record a receipt, mark an invoice disputed | an operator approves after seeing the exact ledger change |
+| T3 | Pay a supplier, accept a financing offer | an operator approves, types the confirmation phrase and waits out a 60-second cool-off |
+
+The tier is a function of the action kind. The model never chooses it, and a tier the model writes is discarded and recorded. Three invariants are in code, so no configuration can weaken them: payments and financing acceptances are always T3, the typed T3 confirmation cannot be turned off, and a `BLOCK` cannot be overridden by any approval. Approving re-runs every rule against the ledger as it stands at that moment, and a sealed action runs at most once. The Executor refuses anything that is not a `VerifiedAction` with an intact HMAC seal from the verifier, including an action edited while it waited.
+
+### 4.2 Write-path enforcement, and its one exception
+
+Every component except the Executor opens the ledger read-only: SQLite is opened with `mode=ro` and each connection sets `query_only`, so a write fails inside SQLite. A test attempts a write through the read-only session and asserts that it raises. The Executor builds the only writable session the running application has.
+
+The seeder and the migrations also write. They run from `scripts/seed.py` as a build step before the application starts, in modules the application never imports, and a test starts the real application in a clean interpreter to prove that. This is the one documented exception, risk R-01. The held-out fixture run adds rows to a temporary copy of the ledger in the same way, as a build step outside the application.
+
+### 4.3 The audit chain
+
+Every event is chained by `sha256(prev_hash ‖ canonical_json(event))`. Canonical JSON sorts keys, writes decimals as strings and refuses floats. Database triggers refuse updates and deletes on the log, and `GET /api/audit/verify` walks the whole chain and names the first event that does not match. A test tampers with a stored event and checks that verification fails.
+
+The chain is tamper-evident with a published head hash. It is not tamper-proof. Someone with the database file could drop the triggers and rewrite an event together with every later hash, and only a head hash kept somewhere else would show it. `evidence/audit_chain.json` publishes the head hash of the evidence run for that reason, risk R-03.
+
+### 4.4 Prompt-injection containment
+
+Five layers, described in the technical documentation section 9: outside text fenced in data tags, instruction-shaped text neutralised wherever code writes outside text into a sentence, an allowlist from the owner's words enforced three times, turns with no memory between them, and a verifier, rules and tier gate that never read the prompt.
+
+| Fixtures | Run | Neutraliser removed the instruction | Unauthorised action |
+|---|---|---|---|
+| Six, written as attacks before the first run | after the neutraliser was widened in response to them | 6 of 6 | none, with the real model or with a model that obeys the injection |
+| Four, held out | once, blind, with the neutraliser frozen | 0 of 4 | none, with either model |
+
+The six exposed three weaknesses that were fixed, section 3. The four show what the neutraliser is worth against phrasings it has not seen. The deterministic layers held in all ten.
+
+### 4.5 Safety across models
+
+To be completed with the second model's run of `scripts/model_swap_demo.py`.
+
+### 4.6 The trust model
+
+One operator approves everything, and that person is trusted. The system protects the owner from a wrong or manipulated model, from outside text in the ledger and from approving two individually safe actions into an unsafe pair. It does not protect against an operator who approves a harmful action deliberately, against someone with direct access to the database file, or against a compromised host. The sandbox is not a bank, the financing catalogue is synthetic, and the rule engine is tested, not formally verified.
+
+## 5. Known-risk register

@@ -4,7 +4,19 @@ LedgerGuard is a finance copilot for small and medium businesses in which the la
 
 It was built for FinTechathon 2026, International Track, Topic E.
 
-> **Status: Phase 4 of 8, in progress.** The synthetic ledger, the 13-week cash projection, the audit log, the Executor and the full verifier are working, including the check that an answer does not leave out what mattered. The local model now answers through a schema it cannot break and cites facts that code computed. The turn loop, the three capabilities and the web UI come next. Lines marked *later phase* describe parts that are not built yet.
+## For judges
+
+| Deliverable | Where |
+|---|---|
+| Technical documentation | [docs/technical_documentation.pdf](docs/technical_documentation.pdf), built from [the Markdown source](docs/technical_documentation.md) |
+| Security self-assessment and known-risk list | [docs/security_self_assessment.pdf](docs/security_self_assessment.pdf), built from [SECURITY_SELF_ASSESSMENT.md](docs/SECURITY_SELF_ASSESSMENT.md) and [RISK_REGISTER.md](docs/RISK_REGISTER.md) |
+| Presentation deck | [docs/deck.pdf](docs/deck.pdf) |
+| Demo video, 3 min 40 s | [docs/demo.mp4](docs/demo.mp4) |
+| Execution evidence | [evidence/](evidence/README.md): every scenario turn, every Trust Receipt, the operator's decisions and the audit chain with its head hash |
+| Measurements | [evidence/robustness](evidence/robustness/README.md), [evidence/heldout](evidence/heldout/README.md) and [evidence/model_swap](evidence/model_swap) |
+| Design decisions | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DECISIONS.md](docs/DECISIONS.md) |
+
+The fastest way to see it working is `docker compose up` and http://localhost:8080. Run the read-only scenarios and the fixtures first, then the approval requests, then work through the Approval Inbox.
 
 ## Runs offline, on your own hardware
 

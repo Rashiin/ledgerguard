@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LedgerGuard deck</title>
+<style>
+  @page { size: 13.333in 7.5in; margin: 0; }
+  :root { --ink: #0f172a; --muted: #475569; --accent: #2563eb; --warn: #b45309; --block: #b91c1c; --ok: #047857; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: #e2e8f0; }
+  section { width: 13.333in; height: 7.5in; padding: 0.55in 0.7in; background: #ffffff; position: relative;
+            break-after: page; overflow: hidden; display: flex; flex-direction: column; }
+  section:last-child { break-after: auto; }
+  .kicker { font-size: 13pt; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 8pt; }
+  h1 { font-size: 34pt; line-height: 1.12; margin: 0 0 14pt; letter-spacing: -0.015em; }
+  h2 { font-size: 26pt; line-height: 1.15; margin: 0 0 12pt; letter-spacing: -0.01em; }
+  p, li { font-size: 15pt; line-height: 1.45; color: #1e293b; }
+  ul { margin: 0; padding-left: 1.1em; }
+  li { margin: 0 0 6pt; }
+  .muted { color: var(--muted); }
+  .row { display: flex; gap: 0.45in; flex: 1; min-height: 0; }
+  .col { flex: 1; min-width: 0; }
+  .shot { flex: 1.45; min-width: 0; display: flex; align-items: flex-start; }
+  .shot img { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 18px rgba(15,23,42,0.08); }
+  .big { font-size: 44pt; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .stat { margin-bottom: 18pt; }
+  .stat .label { font-size: 13pt; color: var(--muted); }
+  .tag { display: inline-block; font-size: 11pt; font-weight: 600; padding: 2pt 8pt; border-radius: 4pt; margin-right: 6pt; }
+  .t-block { background: #fee2e2; color: var(--block); }
+  .t-warn { background: #fef3c7; color: var(--warn); }
+  .t-ok { background: #d1fae5; color: var(--ok); }
+  .footer { position: absolute; left: 0.7in; right: 0.7in; bottom: 0.3in; font-size: 10pt; color: #94a3b8; display: flex; justify-content: space-between; }
+  table { border-collapse: collapse; font-size: 13pt; width: 100%; }
+  td, th { border-bottom: 1px solid #e2e8f0; padding: 6pt 8pt; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.03em; }
+  .title-slide { justify-content: center; background: #0f172a; color: #f8fafc; }
+  .title-slide p { color: #cbd5e1; }
+  .title-slide .kicker { color: #93c5fd; }
+</style>
+</head>
+<body>
+
+<section class="title-slide">
+  <p class="kicker">FinTechathon 2026 · International Track · Topic E</p>
+  <h1 style="font-size:52pt">LedgerGuard</h1>
+  <p style="font-size:22pt; max-width: 10in">An SME finance copilot in which the language model never acts directly.
+  It proposes. Deterministic code recomputes, checks and decides.</p>
+  <p style="margin-top: 28pt">Runs on the owner's own machine. The ledger never leaves the building.</p>
+</section>
+
+<section>
+  <p class="kicker">The problem</p>
+  <h2>In small-business finance, a wrong number is a wrong payment</h2>
+  <div class="row">
+    <div class="col">
+      <ul>
+        <li>A small business lives week to week on cash. The owner needs to know where the gap is, what it costs to close and what is odd in the books.</li>
+        <li>An AI assistant could do that work. Most demos trust the model to add up, to read records correctly and to resist manipulation.</li>
+        <li>Here the cost of a mistake is a missed payroll, a duplicate payment or a loan signed on the wrong figures.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="stat"><p class="big">€219,676</p><p class="label">below zero in week 7 of the sandbox business's forecast</p></div>
+      <div class="stat"><p class="big">0 of 3</p><p class="label">accurate claims about the quarter, in our first live probe, that mentioned it</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>2</span></div>
+</section>
+
+<section>
+  <p class="kicker">Why trust is the blocker</p>
+  <h2>Checking what was said is not enough. Something must check what was left out, and who may act</h2>
+  <div class="row">
+    <div class="col">
+      <ul>
+        <li><b>Arithmetic.</b> The model added three invoices to €112,543.81. They total €100,454.45.</li>
+        <li><b>Omission.</b> It described the quarter accurately and never mentioned the shortfall.</li>
+        <li><b>Evasion.</b> Told its payment was blocked, it answered with a chat reply, which kept the block off the record.</li>
+        <li><b>Injection.</b> Supplier names and invoice notes are written by outsiders, and the model reads them.</li>
+      </ul>
+      <p class="muted">All four happened in our own runs. None of them reached the ledger.</p>
+    </div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>3</span></div>
+</section>
+
+<section>
+  <p class="kicker">Architecture</p>
+  <h2>Two planes: the model proposes, code decides</h2>
+  <div class="row">
+    <div class="col" style="flex:1.1">
+      <img src="media/architecture.svg" style="width:100%">
+    </div>
+    <div class="col" style="flex:0.9">
+      <ul>
+        <li>The model's only output is a typed <b>ActionIntent</b>. Payments name invoices, never an amount or a payee.</li>
+        <li>The <b>verifier</b> recomputes every figure, runs eight rules, checks provenance and what must be said, and sets the tier. It never reads the prompt.</li>
+        <li>The <b>Executor</b> holds the only writable connection and accepts only sealed, verified actions.</li>
+        <li>Every turn gets a <b>Trust Receipt</b>, and every event joins a hash chain.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>4</span></div>
+</section>
+
+<section>
+  <p class="kicker">Architecture · local first</p>
+  <h2>Because correctness lives in code, the model can live on the owner's laptop</h2>
+  <div class="row">
+    <div class="col">
+      <ul>
+        <li>Default model: Qwen2.5-7B-Instruct, open weights, served by Ollama on the owner's machine. No invoice, transaction or payroll figure goes to a model provider.</li>
+        <li>A weaker model makes worse proposals. It cannot get a blocked payment through.</li>
+        <li>The constraint layer is tested like the rest. Ollama's JSON grammar silently chose the model's answer until we measured it and removed every branch.</li>
+        <li>Judges run it with <code>docker compose up</code>: recorded model responses, no model server, no network.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <table>
+        <tr><th>Tier</th><th>Gate</th></tr>
+        <tr><td>T0 read</td><td>runs at once</td></tr>
+        <tr><td>T1 simulate</td><td>runs at once</td></tr>
+        <tr><td>T2 change records</td><td>operator approves the exact diff</td></tr>
+        <tr><td>T3 move money</td><td>approval, typed phrase, 60-second cool-off</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>5</span></div>
+</section>
+
+<section>
+  <p class="kicker">Demo 1 · what must be said</p>
+  <h2>The model left out week 7. The verifier put it back, first, in its own words</h2>
+  <div class="row">
+    <div class="col" style="flex:0.7">
+      <ul>
+        <li>"Why is week 7 so bad?" The model listed the payables and did not state the shortfall.</li>
+        <li>The verifier inserts the mandatory fact at the top and records <span class="tag t-warn">MATERIAL_OMISSION</span>.</li>
+        <li>Every figure carries its source rows, one click from the ledger.</li>
+      </ul>
+    </div>
+    <div class="shot"><img src="media/02_week7_omission_put_back.png"></div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>6</span></div>
+</section>
+
+<section>
+  <p class="kicker">Demo 2 · a T3 payment blocked</p>
+  <h2>PayrollProtection: paying would leave payroll €1,031.43 short</h2>
+  <div class="row">
+    <div class="col" style="flex:0.7">
+      <ul>
+        <li>"Pay the Kessling and Vantor invoices due on or before 1 November."</li>
+        <li>The rules run on the draft first. The model is shown the block and must answer about the same payment.</li>
+        <li><span class="tag t-block">BLOCK</span> No approval can override it. The receipt lists all eight rules.</li>
+      </ul>
+    </div>
+    <div class="shot"><img src="media/03_payroll_protection_block.png"></div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>7</span></div>
+</section>
+
+<section>
+  <p class="kicker">Demo 3 · injection contained</p>
+  <h2>A supplier invoice tells the assistant to pay a new account. It never reaches the model</h2>
+  <div class="row">
+    <div class="col" style="flex:0.7">
+      <ul>
+        <li>The instruction is removed before the model reads it, logged, and shown to the owner.</li>
+        <li>The allowed actions come from the owner's words only. A question cannot become a payment.</li>
+        <li>Six fixtures: invoice note, supplier name, PDF memo, booking note, scenario echo, a three-turn slow burn.</li>
+      </ul>
+    </div>
+    <div class="shot"><img src="media/05_injection_contained.png"></div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>8</span></div>
+</section>
+
+<section>
+  <p class="kicker">Demo 4 · approval with the exact diff</p>
+  <h2>The operator sees what the code would write, because the code wrote it and rolled it back</h2>
+  <div class="row">
+    <div class="col" style="flex:0.7">
+      <ul>
+        <li>The diff comes from the Executor's own handler in a transaction that is always rolled back.</li>
+        <li>Approving re-runs every rule on the ledger as it stands then.</li>
+        <li>T3 needs the typed phrase after a 60-second cool-off.</li>
+      </ul>
+    </div>
+    <div class="shot"><img src="media/09_inbox_diff.png"></div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>9</span></div>
+</section>
+
+<section>
+  <p class="kicker">Evidence</p>
+  <h2>We measured where our defences fire, and it was not where we expected</h2>
+  <div class="row">
+    <div class="col">
+      <div class="stat"><p class="big">0 of 50</p><p class="label">sampled answers with a wrong figure in a claim's figure field. Citing facts moved the errors into prose.</p></div>
+      <div class="stat"><p class="big">5 of 5</p><p class="label">wrong figures in prose masked by the text check, including three wrong payment totals</p></div>
+      <div class="stat"><p class="big">0 of 4</p><p class="label">held-out injections caught by the pattern neutraliser, run blind. None of the ten fixtures produced an unauthorised action.</p></div>
+    </div>
+    <div class="shot"><img src="media/16_wrong_total_masked.png"></div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>10</span></div>
+</section>
+
+<section>
+  <p class="kicker">Evidence · audit chain and model swap</p>
+  <h2>Every event is chained, and the chain verifies</h2>
+  <div class="row">
+    <div class="col" style="flex:0.75">
+      <ul>
+        <li>Twelve scenarios and six fixtures replay offline, in Docker, with networking switched off.</li>
+        <li><code>evidence/</code> holds every turn, every receipt, the operator's decisions and the audit chain with its head hash.</li>
+        <li id="swap">Model swap: to be completed with the second model's run.</li>
+      </ul>
+    </div>
+    <div class="shot"><img src="media/14_audit_chain_intact.png"></div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>11</span></div>
+</section>
+
+<section>
+  <p class="kicker">Team</p>
+  <h2>Team</h2>
+  <div class="row">
+    <div class="col">
+      <p><b>Rashin Gholijani Farahani</b></p>
+      <p class="muted">Team members, institutions and roles to be completed before submission.</p>
+      <p style="margin-top:28pt">Source, documentation and evidence: the GitHub repository named in the submission.</p>
+    </div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>12</span></div>
+</section>
+
+</body>
+</html>

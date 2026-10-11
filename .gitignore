@@ -17,3 +17,5 @@ data/*.sqlite-*
 # Local working notes and the full build spec. Never committed.
 .ledgerguard/
 data/*.key
+docs/technical_documentation.html
+docs/security_self_assessment.html

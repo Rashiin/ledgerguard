@@ -54,21 +54,21 @@ Correctness therefore does not depend on the model. A weak or manipulated model 
 
 A malformed intent is rejected and the user is told so. It is never repaired. Money must be a quoted decimal string, and a bare JSON number is refused because it has already passed through floating point. Payment payloads name invoices and nothing else. The verifier works out what is owed and seals that amount into the action, so the model has no field in which to name a sum.
 
-The local model client may retry a malformed intent twice, sending the schema error back unchanged. After that the turn fails with "the agent could not produce a valid action".
+The orchestrator retries a malformed intent at most twice, sending the parser's errors back unchanged, for every client alike. After that the turn fails with "the agent could not produce a valid action".
 
 ## 3. The six verification stages
 
 | # | Stage | What it does | On failure |
 |---|---|---|---|
 | 1 | Schema | Parses the intent strictly | The intent is rejected and logged, and the user sees that the action was malformed |
-| 2 | Recomputation | Re-derives every claimed figure from its cited rows | The recomputed value replaces the model's. A difference raises `FIGURE_MISMATCH` and both values go on the receipt |
+| 2 | Recomputation | Re-derives every claimed figure from its cited rows | The recomputed value becomes the claim's figure. A difference raises `FIGURE_MISMATCH` and both values go on the receipt |
 | 3 | Business rules | Runs each rule as a pure function of the intent and a ledger snapshot | A `BLOCK` is final. No tier or approval overrides it |
 | 4 | Provenance | Checks that every claim cites existing rows of a kind that can support it | The claim is replaced by a visible marker saying the verifier removed it |
 | 4b | Material omission | Checks that every fact the turn made mandatory was said | The fact is put back at the top of the answer and `MATERIAL_OMISSION` is recorded |
 | 5 | Policy | Requires total cost of capital and a fixed disclosure on financing content, and removes guaranteed-outcome language | Financing without a verified total cost is blocked. Guarantee phrases are masked visibly |
 | 6 | Tier assignment | Sets the tier from the action kind | A tier supplied by the model is discarded and recorded |
 
-Numbers inside sentences get the same treatment as claimed figures. Every money-like number in the model's prose must equal a figure the verifier computed. A figure the verifier corrected is replaced with the recomputed value, and any other number is replaced by a visible marker. A wrong amount cannot survive inside a sentence. A figure or a mention in any currency other than the ledger's raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros, and any other amount is masked.
+Numbers inside sentences get the same treatment as claimed figures. Every money-like number in the model's prose must equal a figure the verifier computed. A figure the verifier corrected is replaced by a marker that states the cited figure, and is never written into the model's sentence as if the model had said it. Any other unverified number is replaced by a visible marker. A wrong amount cannot survive inside a sentence. A figure or a mention in any currency other than the ledger's raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros, and any other amount is masked.
 
 ### Facts and material omission
 
@@ -79,7 +79,9 @@ Some facts are mandatory, because leaving them out would mislead the owner. A fa
 * a projected week closes below zero within the 13 weeks;
 * a rule blocks the action under discussion;
 * a customer is above the concentration threshold and the answer concerns revenue;
-* an alert is at severity high or above, once alerts exist.
+* an alert is at severity high or above, unless it falls inside a shortfall that is already stated;
+* a scenario was run, whose result is then stated;
+* a financing answer is given, which always states the ranking with total costs and the do-nothing line.
 
 A mandatory fact is always shown in the verifier's own sentence, word for word, and it comes first. The model's sentence about it is kept beside it as commentary. The model can add to the fact. It cannot replace it, soften it or turn a projection into a promise. A model that cites the shortfall and then says it should resolve itself passes a citation check, and code cannot reliably detect that kind of minimising language. Showing the fact in the verifier's words makes detecting it unnecessary.
 
@@ -167,7 +169,7 @@ The ledger is SQLite through SQLAlchemy 2, with the schema managed by Alembic.
 
 Every amount is a `Decimal` with two places, stored as integer cents. The money parser, the column type and canonical JSON all refuse floats. Rates are stored as exact text. The only currency is EUR.
 
-All data comes from a deterministic seeder, and the same seed gives a byte-identical database. The situations the demo relies on are listed in [fixtures/README.md](../fixtures/README.md).
+All data comes from a deterministic seeder, and the same seed gives a byte-identical database on a given platform. D-054 explains why the Docker image's file differs in its bytes but not its data. The situations the demo relies on are listed in [fixtures/README.md](../fixtures/README.md).
 
 ## 9. Cash-flow projection
 
@@ -202,8 +204,8 @@ The schema is built for each turn from the action kinds the turn allows. A kind 
 1. The plan, meaning the allowed action kinds and tools, comes from the owner's request alone, through a short list of readable patterns. A request that matches nothing can only be answered, not acted on.
 2. The tools run on the read-only snapshot and return facts. Ledger text inside a fact is neutralised first, and anything stripped is written to the audit log.
 3. The model drafts an ActionIntent under the turn's schema. A draft that fails the strict parser is retried at most twice, with the parser's errors sent back unchanged. After that the turn fails visibly with "The agent could not produce a valid action". Output is never repaired.
-4. For actions that change records or move money, the rules run on the draft without changing anything. If a rule blocks, the model sees the block as a mandatory fact and writes its final answer once more, for the same kind of action. It may shrink the action, but it cannot turn a blocked payment into a chat answer.
-5. The final output goes to the verifier with the list of tools that actually ran.
+4. For actions that change records or move money, the rules run on the draft without changing anything. If a rule blocks, the model sees the block as a mandatory fact and writes its final answer once more, for the same kind of action. It may shrink the action, but it cannot turn a blocked payment into a chat answer. A scenario draft is run on a copy of the projection instead, and the model writes its final answer with the result in front of it.
+5. The final output goes to the verifier with the list of tools that actually ran and the action kinds the plan allowed. A kind outside the plan is refused there as well as in the turn loop.
 
 `POST /api/chat` streams each of these steps as a server-sent event, then the verified result with its receipt.
 

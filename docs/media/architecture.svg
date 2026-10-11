@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="900" height="640" fill="#ffffff"/>
+
+  <!-- UI -->
+  <rect x="150" y="20" width="600" height="56" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="450" y="44" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">Web UI</text>
+  <text x="450" y="64" text-anchor="middle" font-size="12" fill="#475569">Console · Cash-Flow Radar · Approval Inbox · Audit</text>
+  <line x1="450" y1="76" x2="450" y2="104" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="460" y="95" font-size="11" fill="#64748b">owner's words, attachments</text>
+
+  <!-- Proposer -->
+  <rect x="150" y="106" width="600" height="112" rx="8" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="170" y="130" font-size="13" font-weight="700" fill="#1d4ed8">PROPOSER PLANE · probabilistic</text>
+  <text x="170" y="154" font-size="12" fill="#1e293b">Plan from the owner's words only → read-only tools return facts → local model</text>
+  <text x="170" y="174" font-size="12" fill="#1e293b">drafts under a branch-free JSON grammar → dry run of the rules, or a scenario run</text>
+  <text x="170" y="200" font-size="12" font-weight="600" fill="#1d4ed8">Output: ActionIntent, typed data, never executed here</text>
+  <line x1="450" y1="218" x2="450" y2="246" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Verifier -->
+  <rect x="150" y="248" width="600" height="172" rx="8" fill="#ecfdf5" stroke="#6ee7b7"/>
+  <text x="170" y="272" font-size="13" font-weight="700" fill="#047857">VERIFIER PLANE · deterministic, never reads the prompt</text>
+  <g font-size="12" fill="#1e293b">
+    <text x="170" y="298">1 Schema and the plan's allowed kinds</text>
+    <text x="170" y="318">2 Recomputation of every figure</text>
+    <text x="170" y="338">3 Eight business rules, BLOCK is final</text>
+    <text x="460" y="298">4 Provenance of every claim</text>
+    <text x="460" y="318">4b Material omission: what must be said</text>
+    <text x="460" y="338">5 Policy · 6 Tier from the action kind</text>
+  </g>
+  <text x="170" y="364" font-size="12" fill="#1e293b">Figures in prose checked too: a wrong amount is masked, a correction is marked</text>
+  <text x="170" y="404" font-size="12" font-weight="600" fill="#047857">Output: sealed VerifiedAction + Trust Receipt</text>
+  <line x1="450" y1="420" x2="450" y2="448" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Executor -->
+  <rect x="150" y="450" width="600" height="72" rx="8" fill="#fffbeb" stroke="#fcd34d"/>
+  <text x="170" y="474" font-size="13" font-weight="700" fill="#b45309">EXECUTOR · the only runtime writer</text>
+  <text x="170" y="496" font-size="12" fill="#1e293b">T0, T1 run at once · T2 operator approves the exact diff</text>
+  <text x="170" y="514" font-size="12" fill="#1e293b">T3 typed phrase + 60 s cool-off · every rule re-run at approval</text>
+  <line x1="450" y1="522" x2="450" y2="550" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Ledger -->
+  <rect x="150" y="552" width="600" height="64" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="450" y="578" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Sandbox ledger, SQLite · hash-chained audit log</text>
+  <text x="450" y="598" text-anchor="middle" font-size="12" fill="#475569">read-only connections everywhere else · sha256(prev ‖ event)</text>
+
+  <!-- side note -->
+  <rect x="772" y="106" width="118" height="314" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="831" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">On the owner's</text>
+  <text x="831" y="146" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">machine</text>
+  <g font-size="10.5" fill="#475569" text-anchor="middle">
+    <text x="831" y="176">Ollama, open</text>
+    <text x="831" y="190">weights</text>
+    <text x="831" y="216">no data sent to</text>
+    <text x="831" y="230">a model provider</text>
+    <text x="831" y="256">replay recordings</text>
+    <text x="831" y="270">for the demo and</text>
+    <text x="831" y="284">Docker, offline</text>
+  </g>
+</svg>

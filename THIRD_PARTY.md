@@ -97,6 +97,7 @@ The web UI in `web/` is built into static files that the API serves. These packa
 | packaging | 26.3 | Apache-2.0 OR BSD-2-Clause |
 | certifi, through httpx | 2026.7.22 | **MPL-2.0** |
 | pathspec, through mypy | 1.1.1 | **MPL-2.0** |
+| markdown, to build the PDFs from Markdown | 3.7 | BSD-3-Clause |
 | vite | 5.4.11 | MIT |
 | @vitejs/plugin-react | 4.3.4 | MIT |
 | typescript | 5.6.3 | Apache-2.0 |
@@ -120,6 +121,8 @@ The two MPL-2.0 packages are used unmodified by the test and type-check tools. T
 | uv | 0.13.0 | MIT OR Apache-2.0 |
 | CPython | 3.11.17 | PSF-2.0 |
 | Node.js, used to build the web UI | 22 in the Docker build stage | MIT |
+| Google Chrome, headless, to print the PDFs and capture the screenshots | 149 | proprietary freeware, used as a tool and not distributed |
+| FFmpeg, to join the video frames | 8.1 | LGPL-2.1 or later, or GPL depending on the build, used as a tool and not distributed |
 
 ## Language models
 
