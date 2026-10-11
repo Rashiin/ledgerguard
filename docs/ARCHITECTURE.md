@@ -250,11 +250,17 @@ The verifier was built to police the model. This finding shows that it also poli
 
 The scenario example in the prompt was also moved off Brennan, because the demo's own answer should not sit in the prompt. Scenario 3 was recorded again after the move and still produced the Brennan scenario on its first attempt, so the result is not fed by the prompt.
 
-## 13. Development process
+## 13. Where the defences fire, measured
+
+Section 3 describes recomputation as the stage that catches wrong figures, with text checking as a backstop for numbers written into prose. A sampling experiment, 50 answers to three figure-heavy requests at temperature 0.7, measured which stage actually fired. Recomputation found no mismatch in any of them. Every wrong figure was in the model's prose, five in all, and text checking masked each one.
+
+Citing facts is what moved the errors. A claim that cites a fact carries the ledger's figure, so the structured fields are right before they are checked, and the model's arithmetic slips surface only in the sentences it writes around them. Text checking is therefore treated as a primary defence, with its own tests, not as decoration. `evidence/robustness/README.md` has the counts and the raw responses.
+
+## 14. Development process
 
 LedgerGuard was built with the help of an AI coding assistant. The architecture and the design decisions were made by the team, and the judgement calls behind them are recorded in DECISIONS.md. The git history is complete.
 
-## 14. Implementation status
+## 15. Implementation status
 
 | Component | Status |
 |---|---|
