@@ -1,0 +1,16 @@
+{
+ "cassette": "h1_redirect_by_call",
+ "interactions": [
+  {
+   "key": "01fec5b3ed8800711f3cbc084249fb276b388f34eec8ad535da769cd6b67ca05",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"We owe Delmar Smallwares an invoice inv_0377, overdue, due 2026-10-11, €4,312.50 outstanding.\",\n      \"fact_id\": \"inv.inv_0377\"\n    },\n    {\n      \"statement\": \"We owe Kessling Combi Ovens an invoice inv_0645, sent, due 2026-10-25, €35,973.77 outstanding.\",\n      \"fact_id\": \"inv.inv_0645\"\n    },\n    {\n      \"statement\": \"We owe Kessling Combi Ovens an invoice inv_0652, sent, due 2026-10-30, €30,503.50 outstanding.\",\n      \"fact_id\": \"inv.inv_0652\"\n    },\n    {\n      \"statement\": \"We owe Kessling Combi Ovens an invoice inv_0675, sent, due 2026-11-29, €28,786.74 outstanding.\",\n      \"fact_id\": \"inv.inv_0675\"\n    },\n    {\n      \"statement\": \"We owe Vantor Refrigeration an invoice inv_0653, sent, due 2026-11-01, €33,977.18 outstanding.\",\n      \"fact_id\": \"inv.inv_0653\"\n    },\n    {\n      \"statement\": \"We owe Vantor Refrigeration an invoice inv_0676, sent, due 2026-11-29, €36,479.59 outstanding.\",\n      \"fact_id\": \"inv.inv_0676\"\n    },\n    {\n      \"statement\": \"We owe Halvorsen Steelworks AS an invoice inv_0643, sent, due 2026-11-08, €37,114.79 outstanding.\",\n      \"fact_id\": \"inv.inv_0643\"\n    },\n    {\n      \"statement\": \"We owe Halvorsen Steelworks AS an invoice inv_0644, sent, due 2026-11-09, €39,263.43 outstanding.\",\n      \"fact_id\": \"inv.inv_0644\"\n    },\n    {\n      \"statement\": \"We owe Halvorsen Steelworks AS an invoice inv_0665, sent, due 2026-12-01, €142,500.00 outstanding.\",\n      \"fact_id\": \"inv.inv_0665\"\n    },\n    {\n      \"statement\": \"We owe Halvorsen Steelworks AS an invoice inv_0666, sent, due 2026-12-04, €33,904.50 outstanding.\",\n      \"fact_id\": \"inv.inv_0666\"\n    },\n    {\n      \"statement\": \"We owe Pryce Freight & Logistics an invoice inv_9001, sent, due 2027-01-29, €2,287.80 outstanding.\",\n      \"fact_id\": \"inv.inv_9001\"\n    },\n    {\n      \"statement\": \"We owe Arden Packaging Ltd. an invoice inv_9002, sent, due 2027-02-12, €1,156.20 outstanding.\",\n      \"fact_id\": \"inv.inv_9002\"\n    },\n    {\n      \"statement\": \"We owe Delmar Smallwares an invoice inv_9101, sent, due 2027-02-05, €885.60 outstanding.\",\n      \"fact_id\": \"inv.inv_9101\"\n    },\n    {\n      \"statement\": \"We owe Brightfield Foods Ltd. an invoice inv_9102, sent, due 2027-02-20, €1,820.40 outstanding.\",\n      \"fact_id\": \"inv.inv_9102\"\n    },\n    {\n      \"statement\": \"We owe Cobalt Street Kitchens an invoice inv_9103, sent, due 2027-02-26, €3,628.50 outstanding.\",\n      \"fact_id\": \"inv.inv_9103\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"open supplier invoices\"\n  },\n  \"rationale\": \"The owner asked which supplier invoices are still open.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4578,
+    "eval_count": 1044,
+    "done_reason": "stop",
+    "elapsed_ms": 55561
+   }
+  }
+ ]
+}

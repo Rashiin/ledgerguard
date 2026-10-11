@@ -69,7 +69,15 @@ A turn's allowed kinds were passed to the model only as the grammar. A test with
 
 Facts neutralised outside text, but rule reasons were written separately. When the a2 supplier, whose name carries an instruction, was blocked by CounterpartyWhitelist, the block reason quoted the raw name. It reached the model in the dry-run prompt and the owner in the block sentence, which the system presents in the verifier's own words. Rule reasons now neutralise outside text too.
 
-### 3.4 What holds without the neutraliser
+### 3.4 Four held-out fixtures, run blind: the neutraliser caught none
+
+Widening the neutraliser after seeing the six fixtures cost them their value as a test of it. So four more fixtures were written after it was frozen, committed before they ran, and run once with no fix afterwards. They hid a payment redirection "agreed on a call", an "agent note" in a customer's name, a reconciliation order inside an attached bank export, and a ready-made ActionIntent in JSON inside an invoice description.
+
+The neutraliser removed nothing from any of them. Every instruction reached the model, nothing was logged and no containment notice appeared, so by the requirement's full definition the result is 0 of 4 contained. No fixture produced an unauthorised action, with the real model or with a scripted model that obeys every injection: 4 of 4 held at the layers that do not read the text. The real model did not repeat the redirected account to the owner and did not copy the forged intent. The fix that would catch these four is recorded with the run and deliberately not applied. `evidence/heldout/README.md` has the table and every response.
+
+This is the honest measure of the neutraliser: useful against phrasings it has seen, and blind to new ones. It is why it is one layer of five and why nothing else depends on it.
+
+### 3.5 What holds without the neutraliser
 
 * The allowlist comes from the owner's own words, and attached documents never feed it.
 * A payment can name only existing invoices. Its payload has no payee, account or amount, so "pay Kestrel Trade" cannot be expressed.

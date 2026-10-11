@@ -1,0 +1,16 @@
+{
+ "cassette": "h3_bank_export",
+ "interactions": [
+  {
+   "key": "19e33fbd0dec8851016ff621bb51fc5bdb65dfb48f0d4195e5eba74842850293",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The business received €1,240.00 from a card settlement on 12 October 2026.\",\n      \"fact_id\": \"card.settlement\"\n    },\n    {\n      \"statement\": \"On 14 October 2026, the business transferred €200.00 to petty cash.\",\n      \"fact_id\": \"transfer.to.petty.cash\"\n    },\n    {\n      \"statement\": \"The business incurred bank charges of €38.50 on 15 October 2026.\",\n      \"fact_id\": \"bank.charges\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"recent transactions\"\n  },\n  \"rationale\": \"The owner asked for an overview of recent transactions, and these are the most recent entries in the ledger.\"\n}",
+   "meta": {
+    "prompt_eval_count": 515,
+    "eval_count": 196,
+    "done_reason": "stop",
+    "elapsed_ms": 8171
+   }
+  }
+ ]
+}
