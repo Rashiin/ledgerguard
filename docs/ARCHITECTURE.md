@@ -220,11 +220,40 @@ Invoice text, counterparty names, transaction descriptions and uploaded document
 
 The fourth layer holds even if the first three fail.
 
-## 12. Development process
+## 12. The constraint layer is part of the system
+
+Local models are run with a JSON schema that the runtime turns into a grammar, so the model cannot emit a token that breaks the schema. This is usually treated as safety with no downside. We found that the grammar also decides some of what the model says, and that from the outside its choices look exactly like a weak model choosing badly.
+
+The first recording of scenario 3 asked what happens if Brennan Hospitality pays 30 days late. The model ran the contracted-receipts stress test instead. A prompt that described each scenario type changed nothing. Before concluding that a 7-billion-parameter model could not follow the request, we probed the runtime directly. Told outright to write a late-paying-customer scenario for `cp_brennan`, the model still produced the stress test. It could not do otherwise.
+
+`scripts/probe_grammar.py` measures the cause. Each probe sends one short request with a schema at temperature zero and keeps the raw request and response. On Ollama 0.40.2 with the shipped model:
+
+| Probe | Asked for | Came back |
+|---|---|---|
+| Three required properties declared as zebra, apple, mango | that order | apple, mango, zebra |
+| One required property zed, optional beta and alpha | beta, alpha, zed | zed, beta. Alpha was dropped. |
+| One branch per scenario type | a late-paying customer | the stress test |
+| A flat scenario with a type and optional arguments, asked for invoice_id before days | a supplier invoice paid 14 days late | the invoice with an invented date and no delay |
+| The same, asked for in the grammar's order | the same | exactly that |
+| Every action kind under the turn grammar | each of the ten kinds in turn | each kind as asked, with its payload exact |
+
+The grammar writes required properties first and optional ones after, each group in alphabetical order. Three consequences followed, and we met each of them in a real run.
+
+1. With one branch per alternative, the ordering decides which branch the model can finish. A customer's fields sort before `type`, so a model that starts with `type` could only complete the stress-test branch, which has no other fields.
+2. A flat object with a required type and optional arguments traps the model in a different way. Having written `days`, it can no longer write `counterparty_id`, which sorts first. Removing the branches did not remove the bug. The second recording of scenario 3 under the flat schema failed all three attempts, and each retry told the model to add a field that the grammar would not let it write.
+3. The model copies the key order it is shown. An example in another order teaches it a sequence that the grammar cannot finish.
+
+The fixes are structural. No generated grammar uses `anyOf`. A scenario is keyed by its type, and each type holds its own fields, all required, so there is nothing optional to skip past. Every example in the prompt is shown in the order its turn's grammar enforces. Two tests hold this for every grammar the proposer can produce: no grammar branches, and no object combines a required choice with two or more optional fields that depend on it. The top-level choice between action kinds was probed explicitly and was never biased. It is also flat now, with the payload of a turn that allows several kinds merged into one object of optional fields. D-041 explains why that one case is safe.
+
+The verifier was built to police the model. This finding shows that it also polices the machinery around the model. A system that trusts its own constraint layer has moved the unverified step, not removed it. Here the strict parser rejected every trapped answer, the turn failed visibly, and nothing reached the ledger. Helpfulness suffered, safety did not. That is the claim of section 1 in a case we did not design.
+
+The scenario example in the prompt was also moved off Brennan, because the demo's own answer should not sit in the prompt. Scenario 3 was recorded again after the move and still produced the Brennan scenario on its first attempt, so the result is not fed by the prompt.
+
+## 13. Development process
 
 LedgerGuard was built with the help of an AI coding assistant. The architecture and the design decisions were made by the team, and the judgement calls behind them are recorded in DECISIONS.md. The git history is complete.
 
-## 13. Implementation status
+## 14. Implementation status
 
 | Component | Status |
 |---|---|
@@ -234,4 +263,5 @@ LedgerGuard was built with the help of an AI coding assistant. The architecture 
 | Facts with materiality, stage 4b with verbatim mandatory facts, currency check | done |
 | Turn loop with retries and dry run, allowlist, schema-bound local client, replay and recording, chat stream | done |
 | Cash-flow radar, financing matcher, financial analysis, alerts, scenarios, their API endpoints | done |
+| Grammar probes, branch-free turn grammar, keyed scenarios | done |
 | Web UI | planned |

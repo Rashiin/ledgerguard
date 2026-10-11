@@ -14,6 +14,7 @@ from typing import Any
 
 from ledgerguard.domain.enums import ActionKind
 from ledgerguard.facts import Fact
+from ledgerguard.proposer.schema import grammar_order, intent_schema
 from ledgerguard.proposer.tools import ToolResult
 
 SYSTEM = """You are the proposer in LedgerGuard, a finance copilot for a small business.
@@ -28,6 +29,7 @@ How to write claims:
   Write amounts with the {symbol} sign. Never use another currency.
 - Do not promise outcomes. Say what the ledger shows.
 - Choose the kind that matches the request. You may only use these kinds: {kinds}.
+- Write the keys of every object in the order the examples show.
 
 Examples of valid ActionIntents. They show the shape only. Take every figure
 from the tool results, never from these examples:
@@ -56,7 +58,7 @@ EXAMPLES: dict[ActionKind, dict[str, Any]] = {
     },
     ActionKind.RUN_SCENARIO: {
         "kind": "RUN_SCENARIO",
-        "payload": {"scenario": {"type": "delay_payable", "invoice_id": "inv_0652", "days": 14}},
+        "payload": {"scenario": {"delay_payable": {"invoice_id": "inv_0652", "days": 14}}},
         "claims": [],
         "rationale": "Simulate paying this supplier invoice two weeks later.",
     },
@@ -119,18 +121,25 @@ CURRENCY_SYMBOLS = {"EUR": "€"}
 # Added to the system prompt when RUN_SCENARIO is allowed. It says what each
 # scenario type means and where the ids come from. It names no figures.
 SCENARIO_GUIDE = """
-Scenario types for RUN_SCENARIO. Pick the one that matches what the owner asked:
-- customer_pays_late: one customer pays its invoices some days later. The
-  counterparty_id is the last part of a rev.share fact id, such as rev.share.cp_x.
-- delay_payable: one supplier invoice is paid some days later. Use its invoice id.
-- draw_credit_line: draw an amount on the credit line on a date.
-- contracted_inflows_only: a stress view that counts only contracted receipts. Use it
-  only when the owner asks for a stress test or a worst case."""
+Scenario types for RUN_SCENARIO. Name exactly one, as the key of "scenario",
+and pick the one that matches what the owner asked:
+- customer_pays_late with counterparty_id and days: one customer pays its
+  invoices some days later. The counterparty_id is the last part of a rev.share
+  fact id, such as rev.share.cp_x.
+- delay_payable with days and invoice_id: one supplier invoice is paid later.
+- draw_credit_line with amount and on: draw an amount on the credit line on a date.
+- contracted_inflows_only with an empty object: a stress view that counts only
+  contracted receipts. Use it only when the owner asks for a stress test or a
+  worst case."""
 
 
 def system_prompt(allowed: Iterable[ActionKind], currency: str) -> str:
     kinds = sorted(set(allowed), key=lambda k: k.value)
-    examples = "\n".join(json.dumps(EXAMPLES[k], ensure_ascii=False) for k in kinds)
+    # Shown in the order the turn's grammar enforces. See schema.grammar_order.
+    schema = intent_schema(kinds)
+    examples = "\n".join(
+        json.dumps(grammar_order(EXAMPLES[k], schema), ensure_ascii=False) for k in kinds
+    )
     text = SYSTEM.format(
         currency=currency,
         symbol=CURRENCY_SYMBOLS.get(currency, currency),

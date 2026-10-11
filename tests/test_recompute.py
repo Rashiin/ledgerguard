@@ -193,7 +193,7 @@ def test_payment_amounts_come_from_the_ledger(snapshot: LedgerSnapshot) -> None:
         ),
         (
             "RUN_SCENARIO",
-            {"scenario": {"type": "draw_credit_line", "amount": "500000.00", "on": "2026-11-01"}},
+            {"scenario": {"draw_credit_line": {"amount": "500000.00", "on": "2026-11-01"}}},
             "available",
         ),
         ("FLAG_ANOMALY", {"transaction_ids": ["txn_9999"]}, "does not exist"),

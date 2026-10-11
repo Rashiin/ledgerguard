@@ -160,10 +160,10 @@ class RecordingClient(LLMClient):
 class OpenAICompatibleClient(LLMClient):
     """Any OpenAI-style chat endpoint. Optional, and nothing depends on it.
 
-    The schema is sent as a JSON-schema response format when the root is a single
-    object, which is what such endpoints accept. A turn that allows several kinds
-    has an anyOf root, so it falls back to plain JSON mode and relies on the
-    parser and the retries.
+    The schema is sent as a JSON-schema response format without strict mode.
+    Strict mode requires every property to be required, and the turn schemas have
+    optional fields. How far the endpoint enforces the schema is up to it, so the
+    parser and the retries carry the guarantee, as they do for every client.
     """
 
     def __init__(self, base_url: str, model: str, api_key: str, timeout: int = 120) -> None:
@@ -173,13 +173,10 @@ class OpenAICompatibleClient(LLMClient):
         self._timeout = timeout
 
     def complete(self, messages: list[dict[str, str]], schema: dict[str, Any]) -> LLMResponse:
-        if schema.get("type") == "object":
-            fmt: dict[str, Any] = {
-                "type": "json_schema",
-                "json_schema": {"name": "action_intent", "schema": schema, "strict": True},
-            }
-        else:
-            fmt = {"type": "json_object"}
+        fmt: dict[str, Any] = {
+            "type": "json_schema",
+            "json_schema": {"name": "action_intent", "schema": schema, "strict": False},
+        }
         body = {
             "model": self._model,
             "messages": messages,

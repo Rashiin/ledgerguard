@@ -256,8 +256,20 @@ Numbers in the verifier's own fact sentences count as verified anywhere in the a
 
 When the only action a request names is a scenario, the draft must be a `RUN_SCENARIO`. The first recording of scenario 3 answered "What if Brennan pays 30 days late?" with a chat reply about the risk and ran nothing. Pinning the kind only narrows what the model may answer. It never adds a kind the plan would not allow. A request that names a scenario alongside another action requires nothing. We gave up a soft chat answer for "what if" questions the four types cannot express. Those now fail visibly. That is less friendly, but it is honest about what the system can simulate.
 
-## D-040 · The scenario grammar is one flat object
+## D-040 · No grammar branches, and scenarios are keyed by type
 
-The schema first offered one branch per scenario type. Told outright to write `customer_pays_late` for `cp_brennan`, the model produced `contracted_inflows_only` every time. In every recording, Ollama's grammar wrote object properties in alphabetical order. In a branch per type, a customer's fields come before `type`. So once the model started with `type`, the only branch it could finish was the one with no other fields. The scenario is now one object with `type` as an enum and the other fields optional, and the strict parser still checks each type's own fields.
+The scenario schema first offered one branch per type, then one flat object with a type and optional arguments. Both trapped the model, because Ollama's grammar writes required properties first and optional ones after, each group in alphabetical order. Section 12 of ARCHITECTURE.md gives the measurements. A scenario is now keyed by its type, such as `{"delay_payable": {"days": 14, "invoice_id": "inv_0652"}}`, and every argument inside is required. Past the parser, the radar, the facts and the recomputation still use the flat form with a `type` field, so only the format the model writes changed.
 
-The top-level choice between action kinds also uses branches, but every branch has the same property names, so the choice is made at `kind` and is not forced. The lesson for the deck: a constraint the runtime enforces is part of the system and has to be tested like the rest. Risk R-21 records it.
+We chose to change the wire format over relying on the prompt to teach the right key order for each type. A prompt can make a trap unlikely, but a structure removes it. We gave up the plainer flat format, and the parser now has one more check: a scenario must name exactly one type. If a runtime ever honoured declared property order, the flat format would be safe again, but the keyed one would still work.
+
+## D-041 · A turn that allows several kinds merges their payloads
+
+With no branches, a turn that allows several kinds cannot tie each payload to its kind in the grammar. The kind is an enum and the payload is one object holding every allowed kind's fields, all optional. The strict parser ties payload to kind, and a mismatch is retried like any malformed output. A turn that allows one kind, which includes every pinned final answer and every plain "what if", keeps that kind's exact payload with its required fields.
+
+The merged payload can in principle trap the model the same way the flat scenario did. In practice each allowed kind's example is shown with its own fields in grammar order, and a model answering with that kind writes the same fields in the same order. The probe of all ten kinds under the merged payload came back exact. The test that forbids dependent optional fields exempts this one object, and this entry is why. If a recording ever shows a merged payload trapping the model, the payload would move under one key per kind, as scenarios did.
+
+The OpenAI-compatible client used to fall back to plain JSON mode whenever the root was a branch, and used strict schema mode otherwise. Strict mode requires every property to be required, which none of our schemas meet, so the client now always sends the schema without strict mode. The parser carries the guarantee for that client as it does for every other.
+
+## D-042 · The prompt's scenario example is not the demo's scenario
+
+The example first showed Brennan Hospitality paying 30 days late, which is scenario 3 word for word. The demo's own answer should not sit in the prompt. The example now shows a supplier invoice paid two weeks late. Scenario 3 was recorded again afterwards and produced the Brennan scenario on its first attempt.

@@ -155,12 +155,15 @@ class Verifier:
                 raw_text,
             )
         model_claims = parsed.intent.claims
+        payload_view = parsed.intent.payload.model_dump(mode="json")
+        if isinstance(parsed.intent.payload, I.RunScenario):
+            payload_view["scenario"] = parsed.intent.payload.scenario_dict()
         facts = facts_for_turn(
             snapshot,
             parsed.intent.kind,
             context.tools_called,
             self._policy,
-            parsed.intent.payload.model_dump(mode="json"),
+            payload_view,
         )
         dry_run = CHECK_ACTION in context.tools_called
         claims, fact_errors, block_citations = _resolve_facts(model_claims, facts, dry_run)
@@ -398,7 +401,7 @@ class Verifier:
         rules = self._policy.rules
         payload = intent.payload
         if isinstance(payload, I.RunScenario):
-            scenario = payload.model_dump(mode="json")["scenario"]
+            scenario = payload.scenario_dict()
             result = radar.simulate(
                 snapshot,
                 scenario,

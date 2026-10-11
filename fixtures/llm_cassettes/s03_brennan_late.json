@@ -2,25 +2,25 @@
  "cassette": "s03_brennan_late",
  "interactions": [
   {
-   "key": "a444c1207a5067cb6a6d4c63ec6fa322a23aa830fae109438469ed89fb1084f3",
+   "key": "5698c341611dd379c01f1578a78f3ae1bb429d65da41e999cc23cc8a781ef959",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"Brennan Hospitality Group is 36.89% of net revenue over the last 12 months, above the 30% concentration threshold.\",\n      \"fact_id\": \"rev.share.cp_brennan\"\n    }\n  ],\n  \"kind\": \"RUN_SCENARIO\",\n  \"payload\": {\n    \"scenario\": {\n      \"type\": \"customer_pays_late\",\n      \"counterparty_id\": \"cp_brennan\",\n      \"days\": 30\n    }\n  },\n  \"rationale\": \"Simulate the impact of Brennan Hospitality paying 30 days late on the cash flow projection.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"Brennan Hospitality Group is 36.89% of net revenue over the last 12 months, above the 30% concentration threshold.\",\n      \"fact_id\": \"rev.share.cp_brennan\"\n    }\n  ],\n  \"kind\": \"RUN_SCENARIO\",\n  \"payload\": {\n    \"scenario\": {\n      \"customer_pays_late\": {\n        \"counterparty_id\": \"cp_brennan\",\n        \"days\": 30\n      }\n    }\n  },\n  \"rationale\": \"Simulate the impact of Brennan Hospitality paying its invoices 30 days late.\"\n}",
    "meta": {
-    "prompt_eval_count": 3434,
-    "eval_count": 144,
+    "prompt_eval_count": 3474,
+    "eval_count": 141,
     "done_reason": "stop",
-    "elapsed_ms": 16993
+    "elapsed_ms": 13916
    }
   },
   {
-   "key": "e409ff1bd8f15f933c22af35039fd5792f296c7155a5ad29b9486603bd9a7a8d",
+   "key": "9a1abddf86923a8e1c692135d29af112d54c4d96880193cc4e0300a2f45dfaaa",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"With Brennan Hospitality Group paying 30 days later than usual, projected cash reaches its low in week 11, ending 2027-01-03, at -€424,047.56, against -€219,676.22 in week 7 without the change.\",\n      \"fact_id\": \"scn.result\"\n    }\n  ],\n  \"kind\": \"RUN_SCENARIO\",\n  \"payload\": {\n    \"scenario\": {\n      \"type\": \"customer_pays_late\",\n      \"counterparty_id\": \"cp_brennan\",\n      \"days\": 30\n    }\n  },\n  \"rationale\": \"Simulate the impact of Brennan Hospitality paying 30 days late on the cash flow projection.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"With Brennan Hospitality Group paying 30 days later than usual, projected cash reaches its low in week 11, ending 2027-01-03, at -€424,047.56, against -€219,676.22 in week 7 without the change.\",\n      \"fact_id\": \"scn.result\"\n    }\n  ],\n  \"kind\": \"RUN_SCENARIO\",\n  \"payload\": {\n    \"scenario\": {\n      \"customer_pays_late\": {\n        \"counterparty_id\": \"cp_brennan\",\n        \"days\": 30\n      }\n    }\n  },\n  \"rationale\": \"Simulate the impact of Brennan Hospitality paying its invoices 30 days late.\"\n}",
    "meta": {
-    "prompt_eval_count": 4664,
-    "eval_count": 180,
+    "prompt_eval_count": 4701,
+    "eval_count": 177,
     "done_reason": "stop",
-    "elapsed_ms": 12264
+    "elapsed_ms": 9656
    }
   }
  ]

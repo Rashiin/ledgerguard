@@ -2,14 +2,14 @@
  "cassette": "s01_cash_quarter",
  "interactions": [
   {
-   "key": "0b25f61093b5c3617c2189e6276f25f5a884841c4c8f7799709bd1ae887bc9ac",
+   "key": "66fa92bf1944ce260a32b577cbb59781e6397d488bb08d66f7f45cde3a4577c8",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected cash for the next quarter starts at €182,499.93 and ends at €97,320.87, with a projected low in week 7 at -€219,676.22.\",\n      \"fact_id\": \"proj.shortfall\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"cash for the next quarter\"\n  },\n  \"rationale\": \"The owner asked for an overview of the cash situation for the next quarter.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected cash for the next quarter starts at €182,499.93 and ends at €97,320.87, with a projected low in week 7 at -€219,676.22.\",\n      \"fact_id\": \"proj.shortfall\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"cash projection for the next quarter\"\n  },\n  \"rationale\": \"The owner asked how the cash is looking for the next quarter, which requires a summary of the projected cash flow over the next 13 weeks.\"\n}",
    "meta": {
-    "prompt_eval_count": 3088,
-    "eval_count": 134,
+    "prompt_eval_count": 3102,
+    "eval_count": 149,
     "done_reason": "stop",
-    "elapsed_ms": 16358
+    "elapsed_ms": 14139
    }
   }
  ]

@@ -2,14 +2,25 @@
  "cassette": "s02_week7_why",
  "interactions": [
   {
-   "key": "2d472f9f2fbfa2fd1fa2f1ac270095d4447562f3f0277c75101ba01b01a7adbf",
+   "key": "90d7e664b5433ae914e873823df1c0b783e9736c87c7734d122270dd38872537",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"In week 7, the business faces significant outflows, particularly from payables, which contribute to the projected cash shortfall.\",\n      \"fact_id\": \"proj.w07.outflow_1\"\n    },\n    {\n      \"statement\": \"Additionally, the business has further outflows in week 7, including another payable, which exacerbates the cash shortfall.\",\n      \"fact_id\": \"proj.w07.outflow_2\"\n    },\n    {\n      \"statement\": \"The third major outflow in week 7 is another payable, which further reduces the projected cash balance.\",\n      \"fact_id\": \"proj.w07.outflow_3\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"week 7 cash shortfall\"\n  },\n  \"rationale\": \"The owner asked why week 7 is so bad, and the outflows in that week are the primary reason.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"In week 7, the business faces significant outflows, particularly from payables, which contribute to the projected cash shortfall.\",\n      \"fact_id\": \"proj.w07.outflow_1\"\n    },\n    {\n      \"statement\": \"Additionally, the outflow from another payable in week 7 further exacerbates the cash situation.\",\n      \"fact_id\": \"proj.w07.outflow_2\"\n    },\n    {\n      \"statement\": \"The third major outflow in week 7 is also from a payable, which is a significant contributor to the projected cash shortfall.\",\n      \"fact_id\": \"proj.w07.outflow_3\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {},\n  \"rationale\": \"The owner asked why week 7 is so bad, and the facts show significant outflows from payables in that week.\"\n}",
    "meta": {
-    "prompt_eval_count": 3086,
-    "eval_count": 209,
+    "prompt_eval_count": 3100,
+    "eval_count": 197,
     "done_reason": "stop",
-    "elapsed_ms": 17084
+    "elapsed_ms": 13373
+   }
+  },
+  {
+   "key": "77f4021353e7cd574f36e7504e2d0c771d0a41f2db6b4323895cccd362aa7ae0",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"In week 7, the business faces significant outflows, particularly from payables, which contribute to the projected cash shortfall.\",\n      \"fact_id\": \"proj.w07.outflow_1\"\n    },\n    {\n      \"statement\": \"Additionally, the outflow from another payable in week 7 further exacerbates the cash situation.\",\n      \"fact_id\": \"proj.w07.outflow_2\"\n    },\n    {\n      \"statement\": \"The third major outflow in week 7 is also from a payable, which is a significant contributor to the projected cash shortfall.\",\n      \"fact_id\": \"proj.w07.outflow_3\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"why week 7 is so bad\"\n  },\n  \"rationale\": \"The owner asked why week 7 is so bad, and the facts show significant outflows from payables in that week.\"\n}",
+   "meta": {
+    "prompt_eval_count": 3331,
+    "eval_count": 212,
+    "done_reason": "stop",
+    "elapsed_ms": 8907
    }
   }
  ]

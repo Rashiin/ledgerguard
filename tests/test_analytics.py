@@ -24,7 +24,7 @@ from ledgerguard.verifier.pipeline import TurnContext, Verification, Verifier
 from ledgerguard.verifier.seal import Sealer
 from ledgerguard.verifier.snapshot import LedgerSnapshot
 
-from .conftest import intent_json
+from .conftest import intent_json, keyed
 
 LATE = {"type": "customer_pays_late", "counterparty_id": "cp_brennan", "days": 30}
 DRAW = {"type": "draw_credit_line", "amount": "100000.00", "on": "2026-11-20"}
@@ -128,7 +128,12 @@ def test_a_scenario_on_rows_that_do_not_fit_is_refused(
     with pytest.raises(ValueError):
         simulate(snapshot, policy, scenario)
     v = verify(
-        snapshot, policy, "RUN_SCENARIO", {"scenario": scenario}, [], (CASH_PROJECTION, SCENARIO)
+        snapshot,
+        policy,
+        "RUN_SCENARIO",
+        {"scenario": keyed(scenario)},
+        [],
+        (CASH_PROJECTION, SCENARIO),
     )
     assert v.outcome == "rejected" and "INVALID_PAYLOAD_REFERENCE" in v.receipt.risk_flags
 
@@ -293,7 +298,7 @@ def test_a_scenario_result_is_recomputed_and_mandatory(
         snapshot,
         policy,
         "RUN_SCENARIO",
-        {"scenario": LATE},
+        {"scenario": keyed(LATE)},
         [{"statement": "Week 11 gets worse.", "fact_id": "scn.w11.closing"}],
         (CASH_PROJECTION, SCENARIO),
     )

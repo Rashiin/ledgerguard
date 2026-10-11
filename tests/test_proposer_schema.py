@@ -127,15 +127,100 @@ def test_claim_rejects_fact_and_derivation_together() -> None:
     assert I.parse_intent(raw).intent is None
 
 
-def test_the_scenario_grammar_is_one_flat_object() -> None:
-    """Ollama writes properties alphabetically, so a branch per scenario type let
-    only contracted_inflows_only start with "type". See the comment in schema.py."""
-    from ledgerguard.domain.enums import ActionKind
-    from ledgerguard.proposer.schema import intent_schema
+def _all_schemas() -> list[dict[str, Any]]:
+    """Every grammar the proposer can hand the runtime: one per kind, every pair,
+    every route's plan, and all kinds together."""
+    from itertools import combinations
 
-    scenario = intent_schema([ActionKind.RUN_SCENARIO])["properties"]["payload"]["properties"][
+    from ledgerguard.proposer.allowlist import ROUTES
+
+    kinds = list(ActionKind)
+    sets = [[k] for k in kinds] + [list(p) for p in combinations(kinds, 2)] + [kinds]
+    sets += [[ActionKind.ANSWER_QUERY, *r.kinds] for r in ROUTES]
+    return [S.intent_schema(s) for s in sets]
+
+
+def _keywords(node: Any) -> set[str]:
+    if isinstance(node, dict):
+        return set(node) | {k for v in node.values() for k in _keywords(v)}
+    if isinstance(node, list):
+        return {k for v in node for k in _keywords(v)}
+    return set()
+
+
+def test_no_generated_grammar_branches() -> None:
+    """Ollama orders properties alphabetically, so a branch per alternative lets
+    the ordering pick the branch. No grammar may branch anywhere."""
+    for schema in _all_schemas():
+        assert not _keywords(schema) & {"anyOf", "oneOf", "allOf", "if", "not"}
+
+
+def _objects(node: Any) -> list[dict[str, Any]]:
+    if isinstance(node, dict):
+        found = [node] if node.get("type") == "object" else []
+        return found + [o for v in node.values() for o in _objects(v)]
+    if isinstance(node, list):
+        return [o for v in node for o in _objects(v)]
+    return []
+
+
+def test_the_scenario_is_keyed_by_type_with_every_argument_required() -> None:
+    """A flat scenario with optional arguments let the grammar trap the model: having
+    written days, it could no longer write counterparty_id, which sorts first."""
+    scenario = S.intent_schema([ActionKind.RUN_SCENARIO])["properties"]["payload"]["properties"][
         "scenario"
     ]
-    assert "anyOf" not in json.dumps(scenario)
-    assert scenario["required"] == ["type"]
-    assert len(scenario["properties"]["type"]["enum"]) == 4
+    assert scenario["required"] == []
+    assert set(scenario["properties"]) == {
+        "customer_pays_late",
+        "delay_payable",
+        "draw_credit_line",
+        "contracted_inflows_only",
+    }
+    for args in scenario["properties"].values():
+        assert args["required"] == list(args["properties"])
+
+
+def test_optional_fields_never_depend_on_a_choice_made_in_the_same_object() -> None:
+    """The trap needs an object with a required choice and two or more optional
+    fields that depend on it: having written one, the model may be past the other.
+    The merged turn payload is the one exception, which D-041 explains."""
+    allowed_mixed = {id(S._merged_payload(list(ActionKind)))}
+    for schema in _all_schemas():
+        payload = schema["properties"]["payload"]
+        allowed_mixed.add(id(payload))
+        for obj in _objects(schema):
+            if id(obj) in allowed_mixed:
+                continue
+            props = obj.get("properties", {})
+            optional = [k for k in props if k not in obj.get("required", [])]
+            enums = [k for k, v in props.items() if "enum" in v and k in obj.get("required", [])]
+            assert not (len(optional) >= 2 and enums), (obj, optional, enums)
+
+
+def test_grammar_order_puts_required_first_then_sorts() -> None:
+    schema = S._object(
+        {"zed": {"type": "string"}, "beta": {"type": "string"}, "alpha": {"type": "string"}},
+        required=["zed"],
+    )
+    value = {"beta": "b", "alpha": "a", "zed": "z"}
+    assert list(S.grammar_order(value, schema)) == ["zed", "alpha", "beta"]
+
+
+@pytest.mark.parametrize("kind", list(ActionKind))
+def test_prompt_examples_are_shown_in_grammar_order(kind: ActionKind) -> None:
+    """The model copies the order it is shown. An example in another order would
+    teach it a sequence the grammar cannot finish."""
+    prompt = system_prompt([kind], "EUR")
+    shown = json.dumps(S.grammar_order(EXAMPLES[kind], S.intent_schema([kind])), ensure_ascii=False)
+    assert shown in prompt
+    assert shown.index('"claims"') < shown.index('"kind"') < shown.index('"payload"')
+
+
+def test_a_mixed_turn_shows_the_merged_order() -> None:
+    kinds = [ActionKind.ANSWER_QUERY, ActionKind.RECORD_PAYMENT]
+    schema = S.intent_schema(kinds)
+    assert schema["properties"]["payload"]["required"] == []
+    example = S.grammar_order(EXAMPLES[ActionKind.RECORD_PAYMENT], schema)
+    assert example["kind"] == "RECORD_PAYMENT"
+    assert json.dumps(example) in system_prompt(kinds, "EUR")

@@ -144,7 +144,7 @@ def test_drafts_and_scenarios_are_not_capped(snapshot: LedgerSnapshot, policy: P
         snapshot,
         policy,
         "RUN_SCENARIO",
-        {"scenario": {"type": "draw_credit_line", "amount": "90000.00", "on": "2026-11-20"}},
+        {"scenario": {"draw_credit_line": {"amount": "90000.00", "on": "2026-11-20"}}},
     )
     for c in (draft, scenario):
         assert rules.amount_ceiling(c).result is Outcome.PASS

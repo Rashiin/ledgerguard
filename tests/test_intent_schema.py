@@ -38,7 +38,7 @@ def test_every_kind_has_a_payload_model() -> None:
         "ANSWER_QUERY": {"topic": "cash"},
         "DRAFT_FORECAST": {"weeks": 13},
         "RUN_SCENARIO": {
-            "scenario": {"type": "customer_pays_late", "counterparty_id": "cp_brennan", "days": 30}
+            "scenario": {"customer_pays_late": {"counterparty_id": "cp_brennan", "days": 30}}
         },
         "FLAG_ANOMALY": {"transaction_ids": ["txn_0869"]},
         "DRAFT_INVOICE": {

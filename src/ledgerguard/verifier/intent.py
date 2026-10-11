@@ -154,8 +154,72 @@ Scenario = Annotated[
 ]
 
 
+class _CustomerPaysLateArgs(Strict):
+    counterparty_id: RowId
+    days: int = Field(ge=1, le=180)
+
+
+class _DelayPayableArgs(Strict):
+    days: int = Field(ge=1, le=180)
+    invoice_id: RowId
+
+
+class _DrawCreditLineArgs(Strict):
+    amount: Money
+    on: date
+
+
+class _NoArgs(Strict):
+    pass
+
+
+class ScenarioChoice(Strict):
+    """The scenario as the model writes it: one key, named after the type.
+
+    Each type's fields sit in their own object and are all required. A flat
+    object with a type field and optional arguments lets the grammar trap the
+    model: properties come out in a fixed order, so a model that writes days
+    first can never go back for counterparty_id. See proposer/schema.py.
+    Everything past the parser uses the flat ``Scenario`` form from ``chosen``.
+    """
+
+    customer_pays_late: _CustomerPaysLateArgs | None = None
+    delay_payable: _DelayPayableArgs | None = None
+    draw_credit_line: _DrawCreditLineArgs | None = None
+    contracted_inflows_only: _NoArgs | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one(self) -> ScenarioChoice:
+        named = [k for k in type(self).model_fields if getattr(self, k) is not None]
+        if len(named) != 1:
+            raise ValueError(
+                'name exactly one scenario type, such as {"delay_payable": {...}}; '
+                f"got {len(named)}"
+            )
+        return self
+
+    def chosen(self) -> CustomerPaysLate | DelayPayable | DrawCreditLine | ContractedInflowsOnly:
+        if self.customer_pays_late is not None:
+            a = self.customer_pays_late
+            return CustomerPaysLate(
+                type="customer_pays_late", counterparty_id=a.counterparty_id, days=a.days
+            )
+        if self.delay_payable is not None:
+            b = self.delay_payable
+            return DelayPayable(type="delay_payable", invoice_id=b.invoice_id, days=b.days)
+        if self.draw_credit_line is not None:
+            c = self.draw_credit_line
+            return DrawCreditLine(type="draw_credit_line", amount=c.amount, on=c.on)
+        return ContractedInflowsOnly(type="contracted_inflows_only")
+
+
 class RunScenario(Strict):
-    scenario: Scenario
+    scenario: ScenarioChoice
+
+    def scenario_dict(self) -> dict[str, Any]:
+        """The flat form the radar, the facts and the recomputation use."""
+        flat: dict[str, Any] = self.scenario.chosen().model_dump(mode="json")
+        return flat
 
 
 class FlagAnomaly(Strict):

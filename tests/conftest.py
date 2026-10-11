@@ -111,3 +111,9 @@ def copilot(fresh_db: Path, policy, clock: Clock) -> Iterator[Any]:  # type: ign
     )
     yield service
     executor.dispose()
+
+
+def keyed(scenario: dict[str, Any]) -> dict[str, Any]:
+    """A flat scenario, as the radar takes it, in the keyed form the model writes."""
+    args = {k: v for k, v in scenario.items() if k != "type"}
+    return {scenario["type"]: args}

@@ -478,7 +478,7 @@ def resolve_payload(snap: LedgerSnapshot, intent: I.ActionIntent, reads: set[str
             else:
                 reads.add(txn_id)
     elif isinstance(p, I.RunScenario):
-        s = p.scenario
+        s = p.scenario.chosen()
         if isinstance(s, I.CustomerPaysLate):
             _counterparty(snap, s.counterparty_id, CounterpartyType.CUSTOMER, res, reads)
         elif isinstance(s, I.DelayPayable):

@@ -183,10 +183,7 @@ def test_openai_compatible_client(monkeypatch: pytest.MonkeyPatch) -> None:
     assert reply.content == GOOD
     assert sent["body"]["response_format"]["type"] == "json_schema"
     assert sent["auth"] == "Bearer k"
-    C.OpenAICompatibleClient("https://example.test/v1", "m", "k").complete(
-        [], intent_schema([K.ANSWER_QUERY, K.DRAFT_FORECAST])
-    )
-    assert sent["body"]["response_format"] == {"type": "json_object"}
+    assert sent["body"]["response_format"]["json_schema"]["strict"] is False
 
 
 def test_make_client_follows_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -289,7 +286,7 @@ def test_a_model_that_comes_back_to_the_action_is_accepted(make_orchestrator: An
 def test_a_what_if_request_must_be_answered_with_a_scenario(make_orchestrator: Any) -> None:
     """A chat answer about a scenario that never ran is retried as a scenario. The
     scenario then runs, and the final answer is written with its result."""
-    late = {"type": "customer_pays_late", "counterparty_id": "cp_brennan", "days": 30}
+    late = {"customer_pays_late": {"counterparty_id": "cp_brennan", "days": 30}}
     chat = intent_json("ANSWER_QUERY", {"topic": "late"}, rationale="It would hurt.")
     draft = intent_json("RUN_SCENARIO", {"scenario": late}, rationale="Running it.")
     final = intent_json(

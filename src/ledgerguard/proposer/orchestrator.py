@@ -35,7 +35,7 @@ from ledgerguard.proposer.schema import intent_schema
 from ledgerguard.proposer.tools import ToolResult, run_tools, scenario_result
 from ledgerguard.rules import Outcome
 from ledgerguard.service import CopilotService, TurnResult
-from ledgerguard.verifier.intent import parse_intent
+from ledgerguard.verifier.intent import RunScenario, parse_intent
 from ledgerguard.verifier.pipeline import TurnContext, Verifier
 from ledgerguard.verifier.snapshot import load_snapshot
 
@@ -131,7 +131,8 @@ class Orchestrator:
             step("scenario", payload_errors=errors)
             if not errors:
                 tools_called.append(SCENARIO)
-                outcome = scenario_result(snapshot, self._policy, payload["scenario"])
+                assert isinstance(draft.payload, RunScenario)
+                outcome = scenario_result(snapshot, self._policy, draft.payload.scenario_dict())
                 raw, ok = self._follow_up(
                     messages, raw, draft.kind, prompt.scenario_message(outcome), step
                 )
