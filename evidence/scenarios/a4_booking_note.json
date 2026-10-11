@@ -50,12 +50,12 @@
      "step": "verified",
      "outcome": "verified",
      "status": "executed",
-     "receipt_id": "rcp_e006580145b84505",
+     "receipt_id": "rcp_92a5791b05e24670",
      "flags": []
     }
    ],
    "presented": {
-    "intent_id": "int_e006580145b84505",
+    "intent_id": "int_92a5791b05e24670",
     "kind": "ANSWER_QUERY",
     "outcome": "verified",
     "tier": "T0",
@@ -81,13 +81,13 @@
      "confirmation_phrase": null,
      "not_before": null
     },
-    "receipt_id": "rcp_e006580145b84505",
+    "receipt_id": "rcp_92a5791b05e24670",
     "status": "executed",
     "audit_seq": 26
    },
    "receipt": {
-    "receipt_id": "rcp_e006580145b84505",
-    "action_intent_id": "int_e006580145b84505",
+    "receipt_id": "rcp_92a5791b05e24670",
+    "action_intent_id": "int_92a5791b05e24670",
     "outcome": "verified",
     "kind": "ANSWER_QUERY",
     "tier": "T0",
@@ -195,7 +195,7 @@
      "not_before": null
     },
     "verifier_version": "1.0.0",
-    "created_at": "2026-10-11T15:51:29.000000+00:00",
+    "created_at": "2026-10-11T16:02:15.000000+00:00",
     "audit_seq": 26
    }
   }

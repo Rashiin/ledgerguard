@@ -1,6 +1,6 @@
 {
- "receipt_id": "rcp_61e4178ae4e74d88",
- "action_intent_id": "int_61e4178ae4e74d88",
+ "receipt_id": "rcp_93b0b480d0124ee1",
+ "action_intent_id": "int_93b0b480d0124ee1",
  "outcome": "verified",
  "kind": "ACCEPT_FINANCING_OFFER",
  "tier": "T3",
@@ -176,10 +176,10 @@
   "required": true,
   "by": "operator",
   "status": "pending",
-  "confirmation_phrase": "CONFIRM int_61e4178ae4e74d88",
-  "not_before": "2026-10-11T15:52:54.000000+00:00"
+  "confirmation_phrase": "CONFIRM int_93b0b480d0124ee1",
+  "not_before": "2026-10-11T16:03:40.000000+00:00"
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T15:51:54.000000+00:00",
+ "created_at": "2026-10-11T16:02:40.000000+00:00",
  "audit_seq": 39
 }

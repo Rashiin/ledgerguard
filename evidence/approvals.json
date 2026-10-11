@@ -1,17 +1,17 @@
 [
  {
   "scenario": "a6_slow_burn",
-  "intent_id": "int_e6b19da2990345f5",
+  "intent_id": "int_59f5940b8da24750",
   "decision": "declined",
   "reason": "Arrived with a request to change bank details. Checked by phone.",
   "audit_seq": 44
  },
  {
   "scenario": "s06_accept_factoring",
-  "intent_id": "int_61e4178ae4e74d88",
+  "intent_id": "int_93b0b480d0124ee1",
   "decision": "approved",
   "tier": "T3",
-  "confirmation": "CONFIRM int_61e4178ae4e74d88",
+  "confirmation": "CONFIRM int_93b0b480d0124ee1",
   "changes": [
    {
     "table": "transaction",
@@ -25,7 +25,7 @@
  },
  {
   "scenario": "s07_record_brennan_payment",
-  "intent_id": "int_685eafae09f24d8b",
+  "intent_id": "int_fc92cfa3c0c545ef",
   "decision": "approved",
   "tier": "T2",
   "confirmation": null,
@@ -56,7 +56,7 @@
  },
  {
   "scenario": "s08_pay_invoice_0377",
-  "intent_id": "int_dfecb175c6954c22",
+  "intent_id": "int_4bd7575a084c4888",
   "decision": "declined",
   "reason": "Suspected duplicate of inv_0641, already paid.",
   "audit_seq": 47

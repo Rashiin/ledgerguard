@@ -1,13 +1,25 @@
 {
- "receipt_id": "rcp_cfcc9e31f3864fe7",
- "action_intent_id": "int_cfcc9e31f3864fe7",
- "outcome": "verified",
- "kind": "ANSWER_QUERY",
- "tier": "T0",
+ "receipt_id": "rcp_da7a637e83f1490e",
+ "action_intent_id": "int_da7a637e83f1490e",
+ "outcome": "blocked",
+ "kind": "INITIATE_PAYMENT",
+ "tier": "T3",
  "rows_read": [
   {
-   "table": "business",
-   "id": "biz_nordvik"
+   "table": "invoice",
+   "id": "inv_0645"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0652"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0653"
+  },
+  {
+   "table": "payroll_run",
+   "id": "pay_0025"
   }
  ],
  "schema_errors": [],
@@ -23,37 +35,41 @@
   {
    "rule": "SufficientBalance",
    "result": "PASS",
-   "reason": "no outbound money in this action",
+   "reason": "Operating account keeps €27,816.18 after this payment. Its floor is €5,000.00.",
    "flags": [],
    "rows": []
   },
   {
    "rule": "AmountCeiling",
    "result": "PASS",
-   "reason": "no money leaves the business in this action",
+   "reason": "€100,454.45 is within the €150,000.00 outbound limit.",
    "flags": [],
    "rows": []
   },
   {
    "rule": "DuplicatePayment",
    "result": "PASS",
-   "reason": "no outbound money in this action",
+   "reason": "no payment of the same amount to the same supplier in the last 14 days",
    "flags": [],
    "rows": []
   },
   {
    "rule": "CounterpartyWhitelist",
    "result": "PASS",
-   "reason": "no outbound money in this action",
+   "reason": "every payee is whitelisted",
    "flags": [],
    "rows": []
   },
   {
    "rule": "PayrollProtection",
-   "result": "PASS",
-   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €296,277.02 to spare",
-   "flags": [],
-   "rows": []
+   "result": "BLOCK",
+   "reason": "Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43.",
+   "flags": [
+    "PAYROLL_PROTECTION"
+   ],
+   "rows": [
+    "pay_0025"
+   ]
   },
   {
    "rule": "TaxReserveFloor",
@@ -79,21 +95,26 @@
  ],
  "policy": [],
  "text_corrections": [],
- "payload_figures": {},
+ "payload_figures": {
+  "payment_total": "100454.45"
+ },
  "material_omissions": [],
  "tools_called": [
-  "get_audit_trail"
+  "get_open_invoices",
+  "check_action"
  ],
- "risk_flags": [],
+ "risk_flags": [
+  "PAYROLL_PROTECTION"
+ ],
  "disclosures": [],
  "approval": {
   "required": false,
   "by": null,
-  "status": "not_required",
+  "status": "not_applicable",
   "confirmation_phrase": null,
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T15:53:30.000000+00:00",
- "audit_seq": 48
+ "created_at": "2026-10-11T16:01:50.000000+00:00",
+ "audit_seq": 13
 }

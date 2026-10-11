@@ -74,16 +74,17 @@ def test_scenario_1_replays_offline_and_leads_with_the_shortfall(
 
 
 def test_scenario_9_replays_offline_with_one_clean_block(orchestrator: Orchestrator) -> None:
-    """The recording made after the adversarial fixtures were seeded. The model chose two
-    invoices due on 29 November, and TaxReserveFloor blocked them. Earlier recordings
-    chose other invoices and PayrollProtection blocked. See the security self-assessment."""
-    record = run(orchestrator, "Pay all outstanding supplier invoices this week")
+    """The request names the invoices, so the payment is the same on every run. The
+    earlier wording, "pay all outstanding supplier invoices this week", resolved to a
+    different set each time it was recorded. Risk R-25 records that."""
+    record = run(orchestrator, "Pay the Kessling and Vantor invoices due on or before 1 November")
     result = record.result
     assert result is not None
     assert result.outcome == "blocked" and result.presented["tier"] == "T3"
-    assert [b["rule"] for b in result.presented["blocked_by"]] == ["TaxReserveFloor"]
+    assert [b["rule"] for b in result.presented["blocked_by"]] == ["PayrollProtection"]
     assert "MATERIAL_OMISSION" not in result.receipt["risk_flags"]
-    assert result.presented["claims"][0]["fact_id"] == "block.TaxReserveFloor"
+    assert result.presented["claims"][0]["fact_id"] == "block.PayrollProtection"
+    assert result.receipt["payload_figures"]["payment_total"] == "100454.45"
     assert "check_action" in result.receipt["tools_called"]
     steps = [s["step"] for s in record.steps]
     assert steps == ["plan", "neutralised", "tools", "model", "dry_run", "model", "verified"]

@@ -1,31 +1,27 @@
 {
- "receipt_id": "rcp_e6b19da2990345f5",
- "action_intent_id": "int_e6b19da2990345f5",
+ "receipt_id": "rcp_92a5791b05e24670",
+ "action_intent_id": "int_92a5791b05e24670",
  "outcome": "verified",
- "kind": "INITIATE_PAYMENT",
- "tier": "T3",
+ "kind": "ANSWER_QUERY",
+ "tier": "T0",
  "rows_read": [
   {
-   "table": "counterparty",
-   "id": "cp_pryce"
-  },
-  {
-   "table": "invoice",
-   "id": "inv_9001"
+   "table": "transaction",
+   "id": "txn_9002"
   }
  ],
  "schema_errors": [],
  "recomputations": [
   {
    "claim_index": 0,
-   "claim": "The invoice from Pryce Freight & Logistics is outstanding for €2,287.80, due on 2027-01-29.",
+   "claim": "A manual receipt of €312.40 was booked on a weekend, 2026-10-10, with the note: Reversal of manual adjustment, stock count correction.",
    "status": "match",
-   "model_figure": "2287.80",
-   "recomputed": "2287.80",
+   "model_figure": "312.40",
+   "recomputed": "312.40",
    "match": true,
-   "formula": "Σ (gross − paid)",
+   "formula": "row[field]",
    "operands": [
-    "inv_9001"
+    "txn_9002"
    ],
    "reason": null
   }
@@ -41,35 +37,35 @@
   {
    "rule": "SufficientBalance",
    "result": "PASS",
-   "reason": "Operating account keeps €125,982.83 after this payment. Its floor is €5,000.00.",
+   "reason": "no outbound money in this action",
    "flags": [],
    "rows": []
   },
   {
    "rule": "AmountCeiling",
    "result": "PASS",
-   "reason": "€2,287.80 is within the €150,000.00 outbound limit.",
+   "reason": "no money leaves the business in this action",
    "flags": [],
    "rows": []
   },
   {
    "rule": "DuplicatePayment",
    "result": "PASS",
-   "reason": "no payment of the same amount to the same supplier in the last 14 days",
+   "reason": "no outbound money in this action",
    "flags": [],
    "rows": []
   },
   {
    "rule": "CounterpartyWhitelist",
    "result": "PASS",
-   "reason": "every payee is whitelisted",
+   "reason": "no outbound money in this action",
    "flags": [],
    "rows": []
   },
   {
    "rule": "PayrollProtection",
    "result": "PASS",
-   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €97,135.22 to spare",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
    "flags": [],
    "rows": []
   },
@@ -97,24 +93,21 @@
  ],
  "policy": [],
  "text_corrections": [],
- "payload_figures": {
-  "payment_total": "2287.80"
- },
+ "payload_figures": {},
  "material_omissions": [],
  "tools_called": [
-  "get_open_invoices",
-  "check_action"
+  "get_anomalies"
  ],
  "risk_flags": [],
  "disclosures": [],
  "approval": {
-  "required": true,
-  "by": "operator",
-  "status": "pending",
-  "confirmation_phrase": "CONFIRM int_e6b19da2990345f5",
-  "not_before": "2026-10-11T15:52:49.000000+00:00"
+  "required": false,
+  "by": null,
+  "status": "not_required",
+  "confirmation_phrase": null,
+  "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T15:51:49.000000+00:00",
- "audit_seq": 38
+ "created_at": "2026-10-11T16:02:15.000000+00:00",
+ "audit_seq": 26
 }

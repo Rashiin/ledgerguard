@@ -1,42 +1,13 @@
 {
- "receipt_id": "rcp_685eafae09f24d8b",
- "action_intent_id": "int_685eafae09f24d8b",
+ "receipt_id": "rcp_bccfcff6bb3149ea",
+ "action_intent_id": "int_bccfcff6bb3149ea",
  "outcome": "verified",
- "kind": "RECORD_PAYMENT",
- "tier": "T2",
- "rows_read": [
-  {
-   "table": "counterparty",
-   "id": "cp_brennan"
-  },
-  {
-   "table": "invoice",
-   "id": "inv_0412"
-  }
- ],
+ "kind": "ANSWER_QUERY",
+ "tier": "T0",
+ "rows_read": [],
  "schema_errors": [],
- "recomputations": [
-  {
-   "claim_index": 0,
-   "claim": "Brennan Hospitality Group has paid the invoice in full.",
-   "status": "match",
-   "model_figure": "46854.00",
-   "recomputed": "46854.00",
-   "match": true,
-   "formula": "Σ (gross − paid)",
-   "operands": [
-    "inv_0412"
-   ],
-   "reason": null
-  }
- ],
- "provenance": [
-  {
-   "claim_index": 0,
-   "status": "supported",
-   "reason": null
-  }
- ],
+ "recomputations": [],
+ "provenance": [],
  "rules_evaluated": [
   {
    "rule": "SufficientBalance",
@@ -89,39 +60,27 @@
   },
   {
    "rule": "ConcentrationWarning",
-   "result": "WARN",
-   "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory.",
-   "flags": [
-    "CONCENTRATION_RISK"
-   ],
-   "rows": [
-    "cp_brennan"
-   ]
+   "result": "PASS",
+   "reason": "no concentrated customer involved",
+   "flags": [],
+   "rows": []
   }
  ],
  "policy": [],
  "text_corrections": [],
- "payload_figures": {
-  "recorded_amount": "46854.00",
-  "outstanding_before": "46854.00"
- },
+ "payload_figures": {},
  "material_omissions": [],
- "tools_called": [
-  "get_open_invoices",
-  "check_action"
- ],
- "risk_flags": [
-  "CONCENTRATION_RISK"
- ],
+ "tools_called": [],
+ "risk_flags": [],
  "disclosures": [],
  "approval": {
-  "required": true,
-  "by": "operator",
-  "status": "pending",
+  "required": false,
+  "by": null,
+  "status": "not_required",
   "confirmation_phrase": null,
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T15:51:59.000000+00:00",
- "audit_seq": 41
+ "created_at": "2026-10-11T16:02:30.000000+00:00",
+ "audit_seq": 35
 }

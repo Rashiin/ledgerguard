@@ -63,14 +63,14 @@
      "step": "verified",
      "outcome": "verified",
      "status": "pending_approval",
-     "receipt_id": "rcp_dfecb175c6954c22",
+     "receipt_id": "rcp_4bd7575a084c4888",
      "flags": [
       "DUPLICATE_PAYMENT"
      ]
     }
    ],
    "presented": {
-    "intent_id": "int_dfecb175c6954c22",
+    "intent_id": "int_4bd7575a084c4888",
     "kind": "INITIATE_PAYMENT",
     "outcome": "verified",
     "tier": "T3",
@@ -99,16 +99,16 @@
      "required": true,
      "by": "operator",
      "status": "pending",
-     "confirmation_phrase": "CONFIRM int_dfecb175c6954c22",
-     "not_before": "2026-10-11T15:53:04.000000+00:00"
+     "confirmation_phrase": "CONFIRM int_4bd7575a084c4888",
+     "not_before": "2026-10-11T16:03:50.000000+00:00"
     },
-    "receipt_id": "rcp_dfecb175c6954c22",
+    "receipt_id": "rcp_4bd7575a084c4888",
     "status": "pending_approval",
     "audit_seq": 43
    },
    "receipt": {
-    "receipt_id": "rcp_dfecb175c6954c22",
-    "action_intent_id": "int_dfecb175c6954c22",
+    "receipt_id": "rcp_4bd7575a084c4888",
+    "action_intent_id": "int_4bd7575a084c4888",
     "outcome": "verified",
     "kind": "INITIATE_PAYMENT",
     "tier": "T3",
@@ -235,11 +235,11 @@
      "required": true,
      "by": "operator",
      "status": "pending",
-     "confirmation_phrase": "CONFIRM int_dfecb175c6954c22",
-     "not_before": "2026-10-11T15:53:04.000000+00:00"
+     "confirmation_phrase": "CONFIRM int_4bd7575a084c4888",
+     "not_before": "2026-10-11T16:03:50.000000+00:00"
     },
     "verifier_version": "1.0.0",
-    "created_at": "2026-10-11T15:52:04.000000+00:00",
+    "created_at": "2026-10-11T16:02:50.000000+00:00",
     "audit_seq": 43
    }
   }

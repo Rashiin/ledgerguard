@@ -3,7 +3,7 @@
  "turns": [
   {
    "turn": 1,
-   "request": "Pay all outstanding supplier invoices this week",
+   "request": "Pay the Kessling and Vantor invoices due on or before 1 November",
    "attachments": [],
    "steps": [
     {
@@ -17,8 +17,7 @@
       "get_open_invoices"
      ],
      "routes": [
-      "pay",
-      "open_items"
+      "pay"
      ]
     },
     {
@@ -59,7 +58,7 @@
      "step": "dry_run",
      "payload_errors": [],
      "blocks": [
-      "block.TaxReserveFloor"
+      "block.PayrollProtection"
      ]
     },
     {
@@ -73,44 +72,38 @@
      "step": "verified",
      "outcome": "blocked",
      "status": "rejected",
-     "receipt_id": "rcp_b5e3747495274249",
+     "receipt_id": "rcp_da7a637e83f1490e",
      "flags": [
-      "PAYROLL_PRESSURE",
-      "TAX_RESERVE"
+      "PAYROLL_PROTECTION"
      ]
     }
    ],
    "presented": {
-    "intent_id": "int_b5e3747495274249",
+    "intent_id": "int_da7a637e83f1490e",
     "kind": "INITIATE_PAYMENT",
     "outcome": "blocked",
     "tier": "T3",
     "claims": [
      {
-      "statement": "This action is blocked by TaxReserveFloor. VAT return Sep-Oct 2026, estimated from invoices issued in the period: €155,391.41 is due on 2026-11-23 and is ring-fenced. Projected cash the day before would be €114,508.03.",
+      "statement": "This action is blocked by PayrollProtection. Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43.",
       "figure": null,
       "status": "verified",
-      "fact_id": "block.TaxReserveFloor",
+      "fact_id": "block.PayrollProtection",
       "mandatory": true,
-      "commentary": "This action is blocked by TaxReserveFloor. VAT return Sep-Oct 2026, estimated from invoices issued in the period: €155,391.41 is due on 2026-11-23 and is ring-fenced. Projected cash the day before would be €114,508.03.",
+      "commentary": "This action is blocked by PayrollProtection. Paying the Kessling and Vantor invoices would leave the business with €72,544.75 before the payroll payment on 2026-10-28, which requires €73,576.18 in the account 5 days ahead. That is short by €1,031.43.",
       "sources": [
-       "obl_0004"
+       "pay_0025"
       ]
      }
     ],
-    "rationale": "The action to pay the selected invoices is blocked by the TaxReserveFloor. The VAT return for September-October 2026 is due on 2026-11-23 and requires €155,391.41 to be ring-fenced. The projected cash available the day before would be €114,508.03, which is insufficient to cover the required reserve. Therefore, we cannot proceed with the full payment.",
+    "rationale": "The action is blocked by the PayrollProtection rule. The business does not have sufficient funds to cover the invoices and the upcoming payroll payment.",
     "blocked_by": [
      {
-      "rule": "TaxReserveFloor",
-      "reason": "VAT return Sep-Oct 2026, estimated from invoices issued in the period: €155,391.41 is due on 2026-11-23 and is ring-fenced. Projected cash the day before would be €114,508.03."
-     }
-    ],
-    "warnings": [
-     {
       "rule": "PayrollProtection",
-      "reason": "Projected cash before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead covers it with only €3,653.19 to spare."
+      "reason": "Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43."
      }
     ],
+    "warnings": [],
     "disclosures": [],
     "approval": {
      "required": false,
@@ -119,32 +112,28 @@
      "confirmation_phrase": null,
      "not_before": null
     },
-    "receipt_id": "rcp_b5e3747495274249",
+    "receipt_id": "rcp_da7a637e83f1490e",
     "status": "rejected",
     "audit_seq": 13
    },
    "receipt": {
-    "receipt_id": "rcp_b5e3747495274249",
-    "action_intent_id": "int_b5e3747495274249",
+    "receipt_id": "rcp_da7a637e83f1490e",
+    "action_intent_id": "int_da7a637e83f1490e",
     "outcome": "blocked",
     "kind": "INITIATE_PAYMENT",
     "tier": "T3",
     "rows_read": [
      {
       "table": "invoice",
+      "id": "inv_0645"
+     },
+     {
+      "table": "invoice",
       "id": "inv_0652"
      },
      {
       "table": "invoice",
-      "id": "inv_0675"
-     },
-     {
-      "table": "invoice",
-      "id": "inv_0676"
-     },
-     {
-      "table": "obligation",
-      "id": "obl_0004"
+      "id": "inv_0653"
      },
      {
       "table": "payroll_run",
@@ -164,14 +153,14 @@
      {
       "rule": "SufficientBalance",
       "result": "PASS",
-      "reason": "Operating account keeps €32,500.80 after this payment. Its floor is €5,000.00.",
+      "reason": "Operating account keeps €27,816.18 after this payment. Its floor is €5,000.00.",
       "flags": [],
       "rows": []
      },
      {
       "rule": "AmountCeiling",
       "result": "PASS",
-      "reason": "€95,769.83 is within the €150,000.00 outbound limit.",
+      "reason": "€100,454.45 is within the €150,000.00 outbound limit.",
       "flags": [],
       "rows": []
      },
@@ -191,10 +180,10 @@
      },
      {
       "rule": "PayrollProtection",
-      "result": "WARN",
-      "reason": "Projected cash before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead covers it with only €3,653.19 to spare.",
+      "result": "BLOCK",
+      "reason": "Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43.",
       "flags": [
-       "PAYROLL_PRESSURE"
+       "PAYROLL_PROTECTION"
       ],
       "rows": [
        "pay_0025"
@@ -202,14 +191,10 @@
      },
      {
       "rule": "TaxReserveFloor",
-      "result": "BLOCK",
-      "reason": "VAT return Sep-Oct 2026, estimated from invoices issued in the period: €155,391.41 is due on 2026-11-23 and is ring-fenced. Projected cash the day before would be €114,508.03.",
-      "flags": [
-       "TAX_RESERVE"
-      ],
-      "rows": [
-       "obl_0004"
-      ]
+      "result": "PASS",
+      "reason": "cash covers each tax payment due by 2026-11-30",
+      "flags": [],
+      "rows": []
      },
      {
       "rule": "DisputedInvoiceLock",
@@ -229,7 +214,7 @@
     "policy": [],
     "text_corrections": [],
     "payload_figures": {
-     "payment_total": "95769.83"
+     "payment_total": "100454.45"
     },
     "material_omissions": [],
     "tools_called": [
@@ -237,8 +222,7 @@
      "check_action"
     ],
     "risk_flags": [
-     "PAYROLL_PRESSURE",
-     "TAX_RESERVE"
+     "PAYROLL_PROTECTION"
     ],
     "disclosures": [],
     "approval": {
@@ -249,7 +233,7 @@
      "not_before": null
     },
     "verifier_version": "1.0.0",
-    "created_at": "2026-10-11T15:51:04.000000+00:00",
+    "created_at": "2026-10-11T16:01:50.000000+00:00",
     "audit_seq": 13
    }
   }

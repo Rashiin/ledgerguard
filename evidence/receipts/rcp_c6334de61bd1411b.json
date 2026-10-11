@@ -1,6 +1,6 @@
 {
- "receipt_id": "rcp_1badb2b07da54f5b",
- "action_intent_id": "int_1badb2b07da54f5b",
+ "receipt_id": "rcp_c6334de61bd1411b",
+ "action_intent_id": "int_c6334de61bd1411b",
  "outcome": "verified",
  "kind": "ANSWER_QUERY",
  "tier": "T0",
@@ -374,6 +374,6 @@
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T15:51:14.000000+00:00",
+ "created_at": "2026-10-11T16:02:00.000000+00:00",
  "audit_seq": 18
 }
