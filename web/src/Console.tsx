@@ -308,66 +308,114 @@ function Containment({ steps }: { steps: Step[] }) {
 
 // ------------------------------------------------------------------ steps
 
-function lane(step: string): { label: string; tone: "slate" | "accent" | "warn" | "block" | "ok" } {
-  if (step === "model") return { label: "Model", tone: "accent" };
-  if (step === "plan" || step === "tools" || step === "scenario") return { label: "Code", tone: "slate" };
-  if (step === "neutralised") return { label: "Containment", tone: "block" };
-  if (step === "attachments") return { label: "Code", tone: "slate" };
-  return { label: "Verifier", tone: "ok" };
+// Which plane a step belongs to. The model only ever proposes. Everything else is code.
+function isModel(step: string): boolean {
+  return step === "model";
 }
 
-function describe(s: Step): string {
+function describe(s: Step): { title: string; detail?: string; tone?: "block" | "warn" | "ok" } {
   const list = (v: unknown) => (Array.isArray(v) ? v.join(", ") : String(v ?? ""));
   switch (s.step) {
     case "plan":
-      return `Allowlist from your words: ${list(s.routes) || "no route"} → kinds ${list(s.kinds)}${s.required ? `, must be ${s.required}` : ""}. Tools: ${list(s.tools) || "none"}.`;
+      return {
+        title: "Decided what this request may do, from your words alone",
+        detail: `Allowed: ${list(s.kinds)}${s.required ? `, must be ${s.required}` : ""}. Tools: ${list(s.tools) || "none"}.`,
+      };
     case "tools":
-      return `Tools ran on the read-only ledger and returned ${s.facts} facts.`;
+      return { title: `Read the ledger, read-only, and computed ${s.facts} facts` };
     case "neutralised":
-      return "Instruction-like text in outside content was removed before the model read it, and logged.";
+      return {
+        title: "Removed instructions hidden in outside text before the model read it",
+        tone: "block",
+      };
     case "attachments":
-      return `Attached documents read as outside content, never as instructions: ${list(s.documents)}.`;
-    case "model":
-      return `${s.phase === "final" ? "Final answer" : "Draft"}, attempt ${s.attempt}, ${Number(s.elapsed_ms) === 0 ? "replayed from the recording" : `${(Number(s.elapsed_ms) / 1000).toFixed(1)} s`}: ${s.valid ? "parsed" : "did not parse"}.`;
+      return { title: `Treated the attached document as outside content: ${list(s.documents)}` };
+    case "model": {
+      const when = Number(s.elapsed_ms) === 0 ? "replayed from the recording" : `${(Number(s.elapsed_ms) / 1000).toFixed(1)} s`;
+      return {
+        title: `${s.phase === "final" ? "Wrote its final answer" : "Drafted an action"}${Number(s.attempt) > 1 ? `, attempt ${s.attempt}` : ""}`,
+        detail: when,
+        tone: s.valid ? undefined : "warn",
+      };
+    }
     case "rejected":
-      return `Rejected by the strict parser and sent back verbatim: ${String(s.errors)}`;
+      return { title: "Rejected the model's output and sent the errors back", detail: String(s.errors), tone: "warn" };
     case "dry_run":
       return Array.isArray(s.blocks) && s.blocks.length
-        ? `Rules run on the draft without changing anything. Blocked: ${list(s.blocks)}. The model is shown the block.`
-        : "Rules run on the draft without changing anything. Nothing blocks.";
+        ? {
+            title: `Ran every rule on the draft first. ${list(s.blocks).replaceAll("block.", "")} blocked it`,
+            detail: "Nothing changed. The model was shown the block.",
+            tone: "block",
+          }
+        : { title: "Ran every rule on the draft first. Nothing blocked", detail: "Nothing changed." };
     case "scenario":
-      return "The scenario ran on a copy of the projection. The model is shown the result.";
+      return { title: "Ran the scenario on a copy of the projection", detail: "The ledger did not change." };
     case "final_refused":
-      return "The model would not answer about its own draft. The draft is what gets verified.";
+      return { title: "The model would not answer about its own draft. The draft is what was checked", tone: "warn" };
     case "verified":
-      return `Verified: ${s.outcome}, ${s.status}. Flags: ${list(s.flags) || "none"}.`;
+      return {
+        title: `Verified the answer: ${s.outcome}`,
+        detail: list(s.flags) || "no flags",
+        tone: s.outcome === "verified" ? "ok" : "block",
+      };
     default:
-      return JSON.stringify(s);
+      return { title: s.step };
   }
 }
 
+const TONE_TEXT = { block: "text-block", warn: "text-warn", ok: "text-ok" } as const;
+
+/** The turn as two lanes: what the model proposed on the left, what code did on the right. */
 function Steps({ steps, running }: { steps: Step[]; running: boolean }) {
   return (
-    <ol className="space-y-1 border-b border-slate-100 px-4 py-3">
-      {steps.map((s, i) => {
-        const l = lane(s.step);
-        return (
-          <li key={i} className="flex items-start gap-2 text-xs">
-            <span className="w-20 shrink-0 pt-0.5">
-              <Badge tone={l.tone}>{l.label}</Badge>
-            </span>
-            <span className={s.step === "rejected" ? "text-block" : "text-slate-600"}>
-              {describe(s)}
-            </span>
+    <div className="border-b border-slate-100 px-4 py-3">
+      <div className="mb-1.5 grid grid-cols-2 gap-3 text-[10px] font-semibold uppercase tracking-wider">
+        <div className="flex items-center gap-1.5 text-accent">
+          <span className="h-2 w-2 rounded-full bg-accent" /> Model · proposes
+        </div>
+        <div className="flex items-center gap-1.5 text-ok">
+          <span className="h-2 w-2 rounded-sm bg-ok" /> Code · checks and decides
+        </div>
+      </div>
+      <ol className="space-y-1">
+        {steps.map((s, i) => {
+          const d = describe(s);
+          const model = isModel(s.step);
+          const box = (
+            <div
+              className={`rounded-md border px-2.5 py-1.5 text-xs leading-snug ${
+                model
+                  ? "border-blue-200 bg-blue-50/70"
+                  : d.tone === "block"
+                    ? "border-red-200 bg-red-50"
+                    : d.tone === "warn"
+                      ? "border-amber-200 bg-amber-50"
+                      : "border-slate-200 bg-white"
+              }`}
+            >
+              <div className={`font-medium ${d.tone ? TONE_TEXT[d.tone] : model ? "text-blue-900" : "text-slate-800"}`}>
+                {d.title}
+              </div>
+              {d.detail && <div className="mt-0.5 break-words text-[11px] text-slate-500">{d.detail}</div>}
+            </div>
+          );
+          return (
+            <li key={i} className="grid grid-cols-2 gap-3">
+              {model ? box : <div className="border-r border-dashed border-slate-200" />}
+              {model ? <div /> : box}
+            </li>
+          );
+        })}
+        {running && (
+          <li className="grid grid-cols-2 gap-3">
+            <div />
+            <div className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-500">
+              <Spinner /> working
+            </div>
           </li>
-        );
-      })}
-      {running && (
-        <li className="flex items-center gap-2 text-xs text-slate-500">
-          <Spinner /> working
-        </li>
-      )}
-    </ol>
+        )}
+      </ol>
+    </div>
   );
 }
 
