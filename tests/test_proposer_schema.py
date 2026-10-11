@@ -125,3 +125,17 @@ def test_claim_rejects_fact_and_derivation_together() -> None:
         }
     )
     assert I.parse_intent(raw).intent is None
+
+
+def test_the_scenario_grammar_is_one_flat_object() -> None:
+    """Ollama writes properties alphabetically, so a branch per scenario type let
+    only contracted_inflows_only start with "type". See the comment in schema.py."""
+    from ledgerguard.domain.enums import ActionKind
+    from ledgerguard.proposer.schema import intent_schema
+
+    scenario = intent_schema([ActionKind.RUN_SCENARIO])["properties"]["payload"]["properties"][
+        "scenario"
+    ]
+    assert "anyOf" not in json.dumps(scenario)
+    assert scenario["required"] == ["type"]
+    assert len(scenario["properties"]["type"]["enum"]) == 4

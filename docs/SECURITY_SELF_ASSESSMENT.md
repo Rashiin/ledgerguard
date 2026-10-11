@@ -39,6 +39,8 @@ That is the case for defence in depth, made with recorded behaviour rather than 
 
 In the same recording, the model summed the three invoices of €35,973.77, €30,503.50 and €33,977.18 as €112,543.81. The correct total is €100,454.45. The verifier replaced the model's figure with a masked marker, and the block sentence shown to the owner carries the correct amount. Nothing about this was staged.
 
+The model made the same error again when scenario 9 was recorded after the Phase 5 changes, on the same day. That recording is committed in `fixtures/llm_cassettes/s09_pay_all_suppliers.json` unedited, so the demo replays the real mistake and the real correction.
+
 ## 2. Sections to complete in Phase 8
 
 * Permission tiers and the hard-coded invariants.

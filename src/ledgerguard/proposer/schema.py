@@ -40,29 +40,37 @@ def _ids(max_items: int) -> dict[str, Any]:
     return {"type": "array", "items": ROW_ID, "minItems": 1, "maxItems": max_items}
 
 
-SCENARIOS = [
-    _object(
-        {
-            "type": {"const": "customer_pays_late"},
-            "counterparty_id": ROW_ID,
-            "days": {"type": "integer", "minimum": 1, "maximum": 180},
-        }
-    ),
-    _object(
-        {
-            "type": {"const": "delay_payable"},
-            "invoice_id": ROW_ID,
-            "days": {"type": "integer", "minimum": 1, "maximum": 180},
-        }
-    ),
-    _object({"type": {"const": "draw_credit_line"}, "amount": MONEY, "on": DATE}),
-    _object({"type": {"const": "contracted_inflows_only"}}),
-]
+# One flat object rather than one branch per scenario type. Ollama's grammar
+# writes object properties in alphabetical order, so in a branch per type the
+# fields of customer_pays_late come before "type", and a model that starts with
+# "type" could only ever finish the contracted_inflows_only branch. Probed on
+# 2026-10-11: told outright to write customer_pays_late, the model produced
+# contracted_inflows_only under the branched schema and the right scenario under
+# this one. The strict parser still checks each type's own fields afterwards.
+SCENARIO = _object(
+    {
+        "type": {
+            "type": "string",
+            "enum": [
+                "customer_pays_late",
+                "delay_payable",
+                "draw_credit_line",
+                "contracted_inflows_only",
+            ],
+        },
+        "counterparty_id": ROW_ID,
+        "invoice_id": ROW_ID,
+        "days": {"type": "integer", "minimum": 1, "maximum": 180},
+        "amount": MONEY,
+        "on": DATE,
+    },
+    required=["type"],
+)
 
 PAYLOADS: dict[ActionKind, dict[str, Any]] = {
     ActionKind.ANSWER_QUERY: _object({"topic": TEXT}),
     ActionKind.DRAFT_FORECAST: _object({"weeks": {"type": "integer", "minimum": 1, "maximum": 13}}),
-    ActionKind.RUN_SCENARIO: _object({"scenario": {"anyOf": SCENARIOS}}),
+    ActionKind.RUN_SCENARIO: _object({"scenario": SCENARIO}),
     ActionKind.FLAG_ANOMALY: _object({"transaction_ids": _ids(50)}),
     ActionKind.DRAFT_INVOICE: _object(
         {

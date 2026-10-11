@@ -14,17 +14,20 @@ import queue
 import threading
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
+from decimal import Decimal
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 import ledgerguard
+from ledgerguard.analytics import analysis, financing, radar
+from ledgerguard.analytics.cashflow import ProjectedWeek
 from ledgerguard.audit.store import event_dict, load_events, verify_stored
-from ledgerguard.config import Settings, load_settings
+from ledgerguard.config import RuleParameters, Settings, load_settings
 from ledgerguard.db.engine import make_readonly_sessionmaker
 from ledgerguard.db.models import Business, Invoice, Transaction
 from ledgerguard.domain.enums import Actor
@@ -33,8 +36,10 @@ from ledgerguard.ledger import queries
 from ledgerguard.proposer.client import make_client
 from ledgerguard.proposer.orchestrator import Orchestrator
 from ledgerguard.service import CopilotService
+from ledgerguard.verifier import intent as I
 from ledgerguard.verifier.pipeline import Verifier
 from ledgerguard.verifier.seal import Sealer, load_or_create_key
+from ledgerguard.verifier.snapshot import load_snapshot
 
 
 def read_session(request: Request) -> Iterator[Session]:
@@ -59,6 +64,40 @@ class ApproveBody(BaseModel):
 
     approver: Literal["operator", "owner"]
     confirmation: str | None = None  # required for T3: the phrase on the receipt
+
+
+class ScenarioBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Checked against the same strict model the verifier uses, in JSON mode, so a
+    # date arrives as an ISO string exactly as it does from the model.
+    scenario: dict[str, Any]
+
+
+SCENARIO_ADAPTER: TypeAdapter[Any] = TypeAdapter(I.Scenario)
+
+
+class MatchBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Each weight is a decimal string, so the API never takes a float.
+    weights: dict[str, Annotated[str, Field(pattern=r"^\d{1,3}(\.\d{1,4})?$")]] = Field(
+        default_factory=dict
+    )
+
+
+def _week(w: ProjectedWeek) -> dict[str, Any]:
+    return {
+        "week": w.index,
+        "starts_on": w.starts_on.isoformat(),
+        "ends_on": w.ends_on.isoformat(),
+        "opening": str(w.opening),
+        "inflow": {c.value: str(v) for c, v in w.inflow.items()},
+        "outflow": {c.value: str(v) for c, v in w.outflow.items()},
+        "closing_contracted": str(w.closing_contracted),
+        "closing_with_expected": str(w.closing_with_expected),
+        "closing": str(w.closing),
+    }
 
 
 class ChatBody(BaseModel):
@@ -184,6 +223,85 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 yield _sse(*item)
 
         return StreamingResponse(stream(), media_type="text/event-stream")
+
+    def rules() -> RuleParameters:
+        return settings.policy.rules
+
+    @app.get("/api/cashflow/projection")
+    def projection(
+        session: ReadSession, weeks: Annotated[int, Query(ge=1, le=13)] = 13
+    ) -> dict[str, Any]:
+        snap = load_snapshot(session)
+        return {
+            "as_of": snap.as_of.isoformat(),
+            "cash_on_hand": str(snap.cash_on_hand()),
+            "primary_band": "contracted",
+            "weeks": [_week(w) for w in snap.weeks[:weeks]],
+        }
+
+    @app.get("/api/alerts")
+    def alerts(session: ReadSession) -> dict[str, Any]:
+        snap = load_snapshot(session)
+        r = rules()
+        found = radar.compute_alerts(
+            snap,
+            radar.baseline(snap),
+            r.protection_band,
+            r.payroll_margin_warning,
+            r.concentration_warning_share,
+        )
+        return {"as_of": snap.as_of.isoformat(), "alerts": [a.as_dict() for a in found]}
+
+    @app.post("/api/cashflow/scenario")
+    def scenario(body: ScenarioBody, session: ReadSession) -> dict[str, Any]:
+        try:
+            scenario = SCENARIO_ADAPTER.validate_json(json.dumps(body.scenario))
+        except ValidationError as problem:
+            raise HTTPException(422, problem.errors(include_url=False)) from None
+        snap = load_snapshot(session)
+        r = rules()
+        try:
+            result = radar.simulate(
+                snap,
+                SCENARIO_ADAPTER.dump_python(scenario, mode="json"),
+                r.protection_band,
+                r.payroll_margin_warning,
+                r.concentration_warning_share,
+            )
+        except ValueError as problem:
+            raise HTTPException(422, str(problem)) from None
+        return result.as_dict()
+
+    @app.post("/api/financing/match")
+    def financing_match(body: MatchBody, session: ReadSession) -> dict[str, Any]:
+        snap = load_snapshot(session)
+        try:
+            weights = financing.normalise({k: Decimal(v) for k, v in body.weights.items()})
+        except ValueError as problem:
+            raise HTTPException(422, str(problem)) from None
+        return financing.match(snap, weights).as_dict()
+
+    @app.get("/api/analysis")
+    def analysis_summary(session: ReadSession) -> dict[str, Any]:
+        snap = load_snapshot(session)
+        return {
+            "as_of": snap.as_of.isoformat(),
+            "metrics": [
+                {"name": m.name, "value": str(m.value), "unit": m.unit, "method": m.method}
+                for m in analysis.metrics(snap).values()
+            ],
+            "anomalies": [
+                {
+                    "id": a.id,
+                    "kind": a.kind,
+                    "rows": list(a.rows),
+                    "statement": a.statement,
+                    "amount": str(a.amount),
+                    "booked_on": a.booked_on.isoformat(),
+                }
+                for a in analysis.anomalies(snap)
+            ],
+        }
 
     @app.get("/api/receipts/{receipt_id}")
     def receipt(receipt_id: str, service: Copilot) -> dict[str, Any]:

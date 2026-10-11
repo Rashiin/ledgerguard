@@ -2,25 +2,25 @@
  "cassette": "s09_pay_all_suppliers",
  "interactions": [
   {
-   "key": "82ad9e2f25e22b92f7a1afc314721ac4522780571c2ed42f2fd74073d6346cbe",
+   "key": "e6323147c27621893fafee1bcf99355535dd0db8057e8193f6fd2ad4b4b93cf0",
    "model": "qwen2.5-7b-instruct",
    "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The total amount of outstanding supplier invoices due this week is €112,543.81.\",\n      \"fact_id\": \"inv.inv_0645\",\n      \"figure\": \"35973.77\"\n    },\n    {\n      \"statement\": \"The total amount of outstanding supplier invoices due this week is €112,543.81.\",\n      \"fact_id\": \"inv.inv_0652\",\n      \"figure\": \"30503.50\"\n    },\n    {\n      \"statement\": \"The total amount of outstanding supplier invoices due this week is €112,543.81.\",\n      \"fact_id\": \"inv.inv_0653\",\n      \"figure\": \"33977.18\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\n      \"inv_0645\",\n      \"inv_0652\",\n      \"inv_0653\"\n    ]\n  },\n  \"rationale\": \"The owner requested to pay all outstanding supplier invoices this week. The total amount of these invoices is €112,543.81, which is the sum of the amounts from the three invoices due this week.\"\n}",
    "meta": {
     "prompt_eval_count": 4000,
     "eval_count": 295,
     "done_reason": "stop",
-    "elapsed_ms": 15531
+    "elapsed_ms": 24218
    }
   },
   {
-   "key": "fd3aeb301e5855c24ca388270605dd2356caff6712ae2b99b536245ac7dcc131",
+   "key": "de458fe61a5e6582df11fa8331459d3bf8361679289d8479832069f843c9a977",
    "model": "qwen2.5-7b-instruct",
    "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"This action is blocked by PayrollProtection. Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43.\",\n      \"fact_id\": \"block.PayrollProtection\",\n      \"figure\": \"100454.45\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\n      \"inv_0645\",\n      \"inv_0652\",\n      \"inv_0653\"\n    ]\n  },\n  \"rationale\": \"The action is blocked by the PayrollProtection rule. Paying the total of €112,543.81 would leave the business with only €72,544.75 before the next payroll payment on 2026-10-28, which requires €73,576.18. This is a shortfall of €1,031.43. To avoid this issue, we need to reduce the payment amount.\"\n}",
    "meta": {
     "prompt_eval_count": 4490,
     "eval_count": 298,
     "done_reason": "stop",
-    "elapsed_ms": 16983
+    "elapsed_ms": 17458
    }
   }
  ]

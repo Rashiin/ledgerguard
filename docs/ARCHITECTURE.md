@@ -233,5 +233,5 @@ LedgerGuard was built with the help of an AI coding assistant. The architecture 
 | The six verification stages, eight rules, tiers, Trust Receipt, approval queue with re-check | done |
 | Facts with materiality, stage 4b with verbatim mandatory facts, currency check | done |
 | Turn loop with retries and dry run, allowlist, schema-bound local client, replay and recording, chat stream | done |
-| Cash-flow radar, financing matcher, financial analysis, alerts, scenarios | planned |
+| Cash-flow radar, financing matcher, financial analysis, alerts, scenarios, their API endpoints | done |
 | Web UI | planned |

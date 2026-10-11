@@ -1,0 +1,16 @@
+{
+ "cassette": "s04_short_options",
+ "interactions": [
+  {
+   "key": "56d209f17cb979167f4f7d92fada39a0e125c2ac388a232306ed384024e55532",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"Projected cash falls below zero in weeks 6 to 8, with the lowest point in week 7, ending 2026-12-06, at -€219,676.22.\",\n      \"fact_id\": \"proj.shortfall\"\n    },\n    {\n      \"statement\": \"In week 7, Payable inv_0665, due 2026-12-01, takes €142,500.00, and Order book payable inv_0681, due 2026-12-03, takes €33,953.66, and Payable inv_0666, due 2026-12-04, takes €33,904.50.\",\n      \"fact_id\": \"proj.w07.outflow_1\"\n    },\n    {\n      \"statement\": \"The gap to fund is €220,000.00, from 2026-11-23 to 2026-12-13, 21 days, and it needs to be covered within 38 days.\",\n      \"fact_id\": \"fin.gap\"\n    },\n    {\n      \"statement\": \"Synthetic Bank A, Existing revolving facility - drawdown, can cover 45% of the gap with a cost of €512.05 for €100,000.00, and it can be funded in 1 day.\",\n      \"fact_id\": \"fin.fin_cl_01.total_cost\"\n    },\n    {\n      \"statement\": \"Synthetic Factor E, Selective invoice finance, can cover 100% of the gap with a cost of €4,164.35 for €220,000.00, and it can be funded in 3 days.\",\n      \"fact_id\": \"fin.fin_if_01.total_cost\"\n    },\n    {\n      \"statement\": \"Synthetic Factor F, Whole-ledger factoring, 12-month commitment, can cover 100% of the gap with a cost of €6,000.00 for €220,000.00, and it can be funded in 14 days.\",\n      \"fact_id\": \"fin.fin_if_02.total_cost\"\n    }\n  ],\n  \"kind\": \"RANK_FINANCING\",\n  \"payload\": {\n    \"needed_by_week\": 7\n  },\n  \"rationale\": \"The owner needs to know the options for covering the projected shortfall in week 7.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4703,
+    "eval_count": 589,
+    "done_reason": "stop",
+    "elapsed_ms": 31909
+   }
+  }
+ ]
+}

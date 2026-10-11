@@ -140,7 +140,7 @@ def test_unrelated_answers_have_no_cash_obligation(
     assert "MATERIAL_OMISSION" not in v.receipt.risk_flags
 
 
-def test_no_shortfall_means_nothing_is_mandatory(snapshot: LedgerSnapshot, policy: Policy) -> None:
+def test_no_shortfall_means_no_shortfall_fact(snapshot: LedgerSnapshot, policy: Policy) -> None:
     lift = Decimal("500000.00")
     snapshot.weeks = [
         dataclasses.replace(
@@ -149,10 +149,18 @@ def test_no_shortfall_means_nothing_is_mandatory(snapshot: LedgerSnapshot, polic
         for w in snapshot.weeks
     ]
     v = verify(snapshot, policy, "ANSWER_QUERY", {"topic": "q"}, [], CASH)
-    assert "MATERIAL_OMISSION" not in v.receipt.risk_flags
-    assert "proj.shortfall" not in facts_for_turn(
-        snapshot, None, [CASH_PROJECTION], Decimal("0.30")
-    )
+    assert "proj.shortfall" not in facts_for_turn(snapshot, None, [CASH_PROJECTION], policy)
+    # With no shortfall to cover it, the corporation tax alert is mandatory on its own.
+    assert [m["fact_id"] for m in v.receipt.material_omissions] == ["alert.tax.obl_0008"]
+
+
+def test_alerts_inside_the_shortfall_are_citable_but_not_forced(
+    snapshot: LedgerSnapshot, policy: Policy
+) -> None:
+    facts = facts_for_turn(snapshot, None, [CASH_PROJECTION], policy)
+    tax = facts["alert.tax.obl_0008"]
+    assert not tax.mandatory and "High alert" in tax.statement
+    assert [f.id for f in facts.values() if f.mandatory] == ["proj.shortfall"]
 
 
 def test_revenue_answers_must_name_the_concentrated_customer(
@@ -243,13 +251,10 @@ def test_a_fact_from_a_tool_that_did_not_run_cannot_be_cited(
     assert "UNSUPPORTED_CLAIM_REMOVED" in v.receipt.risk_flags
 
 
-def test_facts_are_deterministic(snapshot: LedgerSnapshot) -> None:
-    first = facts_for_turn(
-        snapshot, None, [CASH_PROJECTION, REVENUE_CONCENTRATION], Decimal("0.30")
-    )
-    second = facts_for_turn(
-        snapshot, None, [CASH_PROJECTION, REVENUE_CONCENTRATION], Decimal("0.30")
-    )
+def test_facts_are_deterministic(snapshot: LedgerSnapshot, policy: Policy) -> None:
+    tools = [CASH_PROJECTION, REVENUE_CONCENTRATION]
+    first = facts_for_turn(snapshot, None, tools, policy)
+    second = facts_for_turn(snapshot, None, tools, policy)
     assert first == second and len(first) > 20
 
 
@@ -329,9 +334,7 @@ def test_a_cited_mandatory_fact_is_shown_in_the_verifiers_words(
         CASH,
     )
     shown = v.presented["claims"][0]
-    expected = facts_for_turn(
-        snapshot, None, [CASH_PROJECTION], policy.rules.concentration_warning_share
-    )["proj.shortfall"]
+    expected = facts_for_turn(snapshot, None, [CASH_PROJECTION], policy)["proj.shortfall"]
     assert shown["statement"] == expected.statement
     assert shown["commentary"] == softened
     assert shown["mandatory"] is True

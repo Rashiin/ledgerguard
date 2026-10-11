@@ -281,3 +281,40 @@ def test_a_model_that_comes_back_to_the_action_is_accepted(make_orchestrator: An
     result = orchestrator.run("Record that Harbourview paid invoice 0620", "c").result
     assert result is not None and result.outcome == "blocked"
     assert "MATERIAL_OMISSION" not in result.receipt["risk_flags"]
+
+
+# ---- what-if requests
+
+
+def test_a_what_if_request_must_be_answered_with_a_scenario(make_orchestrator: Any) -> None:
+    """A chat answer about a scenario that never ran is retried as a scenario. The
+    scenario then runs, and the final answer is written with its result."""
+    late = {"type": "customer_pays_late", "counterparty_id": "cp_brennan", "days": 30}
+    chat = intent_json("ANSWER_QUERY", {"topic": "late"}, rationale="It would hurt.")
+    draft = intent_json("RUN_SCENARIO", {"scenario": late}, rationale="Running it.")
+    final = intent_json(
+        "RUN_SCENARIO",
+        {"scenario": late},
+        [{"statement": "The low gets worse.", "fact_id": "scn.result"}],
+        "Here is the effect.",
+    )
+    orchestrator, client = make_orchestrator([chat, draft, final])
+    record = orchestrator.run("What if Brennan Hospitality pays 30 days late?", "c")
+    steps = [s["step"] for s in record.steps]
+    assert steps == ["plan", "tools", "model", "rejected", "model", "scenario", "model", "verified"]
+    assert "must be a RUN_SCENARIO action" in client.seen[1][-1]["content"]
+    result = record.result
+    assert result is not None and result.outcome == "verified"
+    assert result.presented["tier"] == "T1"
+    assert "run_scenario" in result.receipt["tools_called"]
+    assert result.presented["claims"][0]["fact_id"] == "proj.shortfall"
+    assert any(c.get("fact_id") == "scn.result" for c in result.presented["claims"])
+    assert "-€424,047.56" in json.dumps(result.presented, ensure_ascii=False)
+
+
+def test_a_what_if_alongside_another_action_requires_nothing() -> None:
+    from ledgerguard.proposer.allowlist import plan_turn
+
+    assert plan_turn("What if Brennan pays 30 days late?").required is ActionKind.RUN_SCENARIO
+    assert plan_turn("What if we pay supplier invoice 0377 now?").required is None
+    assert plan_turn("How is our cash?").required is None

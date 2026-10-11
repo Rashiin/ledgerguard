@@ -223,3 +223,41 @@ A cassette entry is keyed by the SHA-256 of the model name, the messages and the
 ## D-033 · The final answer after a block is pinned to the draft's kind, in code
 
 The dry run's follow-up schema allows only the draft's kind, but a schema is a request to the runtime. The OpenAI-compatible client falls back to plain JSON mode for some turns, and replay returns whatever was recorded. So the orchestrator also rejects a final answer of a different kind and retries it like any malformed output. If the model keeps answering around the action, the blocked draft is verified instead, so the block reaches the receipt with `MATERIAL_OMISSION`. The incident that led to this is written up in the security self-assessment.
+
+## D-034 · Radar alerts, and which of them an answer must carry
+
+The radar raises six kinds of alert from the projection and the ledger: shortfall, payroll pressure, tax reserve, overdue receivable, disputed receivable and revenue concentration. Each alert has a severity, a lead time in days, the rows it rests on and the confidence classes it depends on. Its headline is written by code.
+
+High and critical alerts are mandatory facts on any cash answer, with one exception. A high alert falling on or after the first negative week is citable but not forced, because the shortfall sentence already tells the owner that cash is gone by then. In the seeded ledger that applies to the corporation tax instalment on 8 December. We gave up a second inserted sentence about the same hole, because each extra insertion makes the flag easier to ignore. If tax penalties had to be shown separately from the shortfall, the exception would go.
+
+## D-035 · Scenarios are run by the orchestrator on the model's draft
+
+The model proposes a scenario as a `RUN_SCENARIO` payload. The orchestrator checks the payload against the ledger, runs it on the projection without changing anything, and gives the model the result as facts before its final answer. The result's headline is mandatory. There are four scenario types: a customer paying late, a supplier invoice paid late, a credit line drawn on a date, and contracted receipts only. A credit line draw charges monthly interest at the line's rate. A scenario that names a row that does not exist, or a customer invoice where a supplier invoice is needed, is rejected as an invalid payload.
+
+We chose a fixed set of types over free-form edits to the flows, because each type can be recomputed from its parameters and checked. We gave up "what if" questions outside those four. They now fail visibly, which D-039 explains.
+
+## D-036 · How the financing matcher costs and ranks options
+
+The gap to fund is the deepest projected shortfall, rounded up to the next €1,000, from the first negative week to the last. Each product is offered for as much of the gap as it can cover. An ineligible product is listed with the reason. Total cost is in euros over the real drawdown period. Term loans and merchant advances are costed over their full term, because that is what the business would pay. Ranking weighs cost, coverage, speed, flexibility and collateral, and the owner can change the weights.
+
+The ranking with total costs and the do-nothing line are mandatory on every financing answer, as the requirements ask. We do not combine products, for example a credit line topped up with invoice finance. Combinations are what a real adviser would suggest, but each one multiplies the cases to explain and recompute. If owners asked for blended funding, combinations would be the next addition.
+
+## D-037 · Financial analysis methods
+
+Every metric states its method in plain words. Revenue and cost of goods come from invoices over 12 months. Operating costs come from paid categories such as payroll, rent and fuel. DSO and DPO use open balances against 12 months of invoicing. There is no stock ledger, so the cash conversion cycle takes inventory days as zero and says so.
+
+Anomalies come from three checks: a median and MAD z-score above 5 within each category and counterparty, with at least 12 rows; supplier invoices with the same amount from the same supplier within 14 days; and manual bookings on a weekend. We chose checks an accountant can redo by hand over a learned model. The cost is that subtler patterns go unflagged.
+
+## D-038 · A claim's own correction comes before the verified pool
+
+Numbers in the verifier's own fact sentences count as verified anywhere in the answer. That let a claim citing cash on hand quote week 5's closing, a true number for the wrong thing, and keep it in its sentence while the figure field was corrected. Now a claim whose figure was corrected has that figure replaced in its own sentence first, before the pool is consulted. Each figure also carries a unit, money, percent or days, so a day count cannot verify an amount.
+
+## D-039 · A plain "what if" request must be answered with a scenario
+
+When the only action a request names is a scenario, the draft must be a `RUN_SCENARIO`. The first recording of scenario 3 answered "What if Brennan pays 30 days late?" with a chat reply about the risk and ran nothing. Pinning the kind only narrows what the model may answer. It never adds a kind the plan would not allow. A request that names a scenario alongside another action requires nothing. We gave up a soft chat answer for "what if" questions the four types cannot express. Those now fail visibly. That is less friendly, but it is honest about what the system can simulate.
+
+## D-040 · The scenario grammar is one flat object
+
+The schema first offered one branch per scenario type. Told outright to write `customer_pays_late` for `cp_brennan`, the model produced `contracted_inflows_only` every time. In every recording, Ollama's grammar wrote object properties in alphabetical order. In a branch per type, a customer's fields come before `type`. So once the model started with `type`, the only branch it could finish was the one with no other fields. The scenario is now one object with `type` as an enum and the other fields optional, and the strict parser still checks each type's own fields.
+
+The top-level choice between action kinds also uses branches, but every branch has the same property names, so the choice is made at `kind` and is not forced. The lesson for the deck: a constraint the runtime enforces is part of the system and has to be tested like the rest. Risk R-21 records it.

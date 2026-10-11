@@ -81,6 +81,9 @@ class Formula(StrEnum):
     PROJECTED_INFLOW = "PROJECTED_INFLOW"  # params.week, params.confidence
     PROJECTED_OUTFLOW = "PROJECTED_OUTFLOW"  # params.week, params.confidence
     REVENUE_SHARE = "REVENUE_SHARE"  # one counterparty, % of trailing-12-month net revenue
+    METRIC = "METRIC"  # params.name, one of the financial analysis metrics
+    SCENARIO_CLOSING = "SCENARIO_CLOSING"  # params.scenario, params.week, params.band
+    FINANCING_TOTAL_COST = "FINANCING_TOTAL_COST"  # one product, params.amount and params.days
 
 
 class Derivation(Strict):

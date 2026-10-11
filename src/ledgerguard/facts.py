@@ -16,9 +16,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
+from ledgerguard.analytics import analysis, financing, radar
+from ledgerguard.config import Policy
 from ledgerguard.domain.enums import AccountType, ActionKind, Direction
 from ledgerguard.money import format_eur
 from ledgerguard.untrusted import neutralise
@@ -32,6 +35,11 @@ ZERO = Decimal("0.00")
 CASH_PROJECTION = "get_cash_projection"
 REVENUE_CONCENTRATION = "get_revenue_concentration"
 OPEN_INVOICES = "get_open_invoices"
+FINANCING_OPTIONS = "get_financing_options"
+FINANCIAL_SUMMARY = "get_financial_summary"
+ANOMALIES = "get_anomalies"
+# Run by the orchestrator on the model's drafted scenario, not chosen by the model.
+SCENARIO = "run_scenario"
 # The dry run: the rules evaluated on a draft action before the final answer.
 # When it ran, the model has seen any block and can cite it as block.<RuleName>.
 CHECK_ACTION = "check_action"
@@ -269,21 +277,276 @@ def _span(weeks: list[int]) -> str:
     return "weeks " + ", ".join(str(w) for w in weeks[:-1]) + f" and {weeks[-1]}"
 
 
+# --------------------------------------------------------------------------- Phase 5 facts
+
+
+def alert_facts(snap: LedgerSnapshot, policy: Policy) -> list[Fact]:
+    """Every radar alert as a fact. High and critical alerts are mandatory.
+
+    The shortfall alert is left out because ``proj.shortfall`` already states it.
+    A high alert falling on or after the first negative week is citable but not
+    mandatory: the shortfall already tells the owner that cash is gone by then,
+    and a second inserted sentence about the same hole adds length, not warning.
+    """
+    proj = radar.baseline(snap)
+    rules = policy.rules
+    negative = [w for w in snap.weeks if w.closing < 0]
+    covered_from = negative[0].starts_on if negative else None
+    facts = []
+    for alert in radar.compute_alerts(
+        snap,
+        proj,
+        rules.protection_band,
+        rules.payroll_margin_warning,
+        rules.concentration_warning_share,
+    ):
+        if alert.kind == "SHORTFALL":
+            continue
+        falls_on = snap.as_of + timedelta(days=alert.lead_days)
+        mandatory = alert.high and (covered_from is None or falls_on < covered_from)
+        facts.append(
+            Fact(
+                id=f"alert.{alert.id}",
+                statement=f"{alert.severity.capitalize()} alert, {alert.lead_days} days ahead: "
+                f"{alert.headline}",
+                source_row_ids=alert.rows,
+                mandatory=mandatory,
+                materiality="an alert at severity high or above" if mandatory else None,
+            )
+        )
+    return facts
+
+
+def financing_facts(snap: LedgerSnapshot) -> list[Fact]:
+    """The gap, each option's total cost in euros, and what doing nothing means."""
+    result = financing.match(snap)
+    gap = result.gap
+    business = (snap.business.id,)
+    if gap is None:
+        return [Fact(id="fin.no_gap", statement=result.do_nothing, source_row_ids=business)]
+    facts = [
+        Fact(
+            id="fin.gap",
+            statement=(
+                f"The gap to fund is {format_eur(gap.amount)}, from {gap.need_by} to "
+                f"{gap.until}, {gap.days} days. Funding has to arrive within "
+                f"{gap.lead_days} days."
+            ),
+            figure=gap.amount,
+            formula=Formula.METRIC,
+            operands=business,
+            params={"name": "financing_gap"},
+            source_row_ids=business,
+        )
+    ]
+    ranked = []
+    for o in result.options:
+        if not o.eligible:
+            facts.append(
+                Fact(
+                    id=f"fin.{o.product_id}.ineligible",
+                    statement=f"{o.provider}, {o.name}, is not available: {'; '.join(o.reasons)}.",
+                    source_row_ids=(o.product_id,),
+                )
+            )
+            continue
+        ranked.append(o)
+        term = f", counting the full {o.full_term_months}-month term" if o.full_term_months else ""
+        cover = (o.amount * 100 / gap.amount).quantize(Decimal("1"))
+        facts.append(
+            Fact(
+                id=f"fin.{o.product_id}.total_cost",
+                statement=(
+                    f"{o.provider}, {o.name}: borrowing {format_eur(o.amount)} for "
+                    f"{o.days} days costs {format_eur(o.total_cost)} in total{term}. It "
+                    f"covers {cover}% of the gap and can be funded in {o.funded_in_days} "
+                    "days."
+                ),
+                figure=o.total_cost,
+                formula=Formula.FINANCING_TOTAL_COST,
+                operands=(o.product_id,),
+                params={"amount": str(o.amount), "days": str(o.days)},
+                source_row_ids=(o.product_id,),
+            )
+        )
+    # Every financing answer carries the ranking with total costs in euros and the
+    # do-nothing baseline, so both are mandatory once this tool has run.
+    if ranked:
+        order = "; ".join(
+            f"{n}. {o.provider}, {o.name}, {format_eur(o.total_cost)} in total for "
+            f"{format_eur(o.amount)} of the {format_eur(gap.amount)} gap"
+            for n, o in enumerate(ranked[:3], 1)
+        )
+        facts.append(
+            Fact(
+                id="fin.ranking",
+                statement=f"Ranked on cost, coverage, speed, flexibility and collateral: {order}.",
+                source_row_ids=(*business, *(o.product_id for o in ranked[:3])),
+                mandatory=True,
+                materiality="a financing answer always states total cost in euros",
+            )
+        )
+    facts.append(
+        Fact(
+            id="fin.do_nothing",
+            statement=f"Doing nothing: {result.do_nothing}",
+            source_row_ids=business,
+            mandatory=True,
+            materiality="a financing answer always shows the do-nothing baseline",
+        )
+    )
+    return facts
+
+
+METRIC_LABELS = {
+    "revenue_12m": "Revenue over the last 12 months",
+    "cost_of_goods_12m": "Cost of goods over the last 12 months",
+    "operating_costs_12m": "Operating costs over the last 12 months",
+    "gross_margin": "Gross margin",
+    "net_margin": "Net margin",
+    "monthly_operating_cash_flow": "Average monthly operating cash flow",
+    "burn_rate": "Monthly burn",
+    "runway_days": "Runway",
+    "dso": "Days sales outstanding",
+    "dpo": "Days payables outstanding",
+    "cash_conversion_cycle": "Cash conversion cycle",
+}
+
+
+def _render(value: Decimal, unit: str) -> str:
+    if unit == "money":
+        return format_eur(value)
+    if unit == "percent":
+        return f"{value}%"
+    return f"{value} days"
+
+
+def summary_facts(snap: LedgerSnapshot) -> list[Fact]:
+    business = (snap.business.id,)
+    return [
+        Fact(
+            id=f"ana.{m.name}",
+            statement=f"{METRIC_LABELS[m.name]} is {_render(m.value, m.unit)}. {m.method}",
+            figure=m.value,
+            formula=Formula.METRIC,
+            operands=business,
+            params={"name": m.name},
+            source_row_ids=business,
+        )
+        for m in analysis.metrics(snap).values()
+    ]
+
+
+def anomaly_facts(snap: LedgerSnapshot) -> list[Fact]:
+    facts = []
+    for a in analysis.anomalies(snap):
+        row = a.rows[-1]
+        field = "gross_amount" if row.startswith("inv_") else "amount"
+        facts.append(
+            Fact(
+                id=a.id,
+                statement=a.statement,
+                figure=a.amount,
+                formula=Formula.ROW_FIELD,
+                operands=(row,),
+                params={"field": field},
+                source_row_ids=a.rows,
+            )
+        )
+    return facts
+
+
+def scenario_facts(snap: LedgerSnapshot, policy: Policy, scenario: dict[str, Any]) -> list[Fact]:
+    """What a what-if scenario changes. The headline result is mandatory."""
+    rules = policy.rules
+    result = radar.simulate(
+        snap,
+        scenario,
+        rules.protection_band,
+        rules.payroll_margin_warning,
+        rules.concentration_warning_share,
+    )
+    text = radar.canonical_scenario(scenario)
+    rows = tuple(r for r in result.rows if r.split("_", 1)[0] in ("inv", "cp", "acc"))
+    rows = rows or _cash_accounts(snap)
+    low, before = result.lowest("after"), result.lowest("before")
+    statement = (
+        f"With {result.description}, projected cash reaches its low in week "
+        f"{low.index}, ending {low.ends_on}, at {format_eur(low.closing)}, against "
+        f"{format_eur(before.closing)} in week {before.index} without the change."
+    )
+    new = [a.headline for a in result.new_alerts if a.high]
+    if new:
+        statement += " New high alerts: " + " ".join(new)
+    cleared = [a.id for a in result.cleared_alerts]
+    if cleared:
+        statement += f" It clears {len(cleared)} alert{'s' if len(cleared) > 1 else ''}."
+    facts = [
+        Fact(
+            id="scn.result",
+            statement=statement,
+            figure=low.closing,
+            formula=Formula.SCENARIO_CLOSING,
+            operands=rows,
+            params={"scenario": text, "week": str(low.index), "band": "all"},
+            source_row_ids=rows,
+            mandatory=True,
+            materiality="the result of the scenario asked for",
+        )
+    ]
+    for w in result.after.weeks:
+        facts.append(
+            Fact(
+                id=f"scn.w{w.index:02d}.closing",
+                statement=f"With the change, week {w.index} closes at {format_eur(w.closing)}.",
+                figure=w.closing,
+                formula=Formula.SCENARIO_CLOSING,
+                operands=rows,
+                params={"scenario": text, "week": str(w.index), "band": "all"},
+                source_row_ids=rows,
+            )
+        )
+    return facts
+
+
+def tool_facts(
+    snap: LedgerSnapshot, tool: str, policy: Policy, payload: dict[str, Any] | None = None
+) -> list[Fact]:
+    """The facts one tool produces. Tools and the verifier both call this."""
+    if tool == CASH_PROJECTION:
+        return projection_facts(snap) + alert_facts(snap, policy)
+    if tool == REVENUE_CONCENTRATION:
+        return revenue_facts(snap, policy.rules.concentration_warning_share)
+    if tool == OPEN_INVOICES:
+        return open_invoice_facts(snap)
+    if tool == FINANCING_OPTIONS:
+        return financing_facts(snap)
+    if tool == FINANCIAL_SUMMARY:
+        return summary_facts(snap)
+    if tool == ANOMALIES:
+        return anomaly_facts(snap)
+    if tool == SCENARIO and payload and "scenario" in payload:
+        try:
+            return scenario_facts(snap, policy, payload["scenario"])
+        except ValueError:
+            # The payload names rows that do not exist. Payload resolution rejects
+            # the turn with the reason, so there is nothing for a claim to cite.
+            return []
+    return []
+
+
 def facts_for_turn(
     snap: LedgerSnapshot,
     kind: ActionKind | None,
     tools: Iterable[str],
-    concentration_threshold: Decimal,
+    policy: Policy,
+    payload: dict[str, Any] | None = None,
 ) -> dict[str, Fact]:
-    """Every fact a turn can cite, by id. Tools and the verifier both call this."""
+    """Every fact a turn can cite, by id."""
+    called = list(dict.fromkeys(tools))
+    if kind in CASH_KINDS and CASH_PROJECTION not in called:
+        called.append(CASH_PROJECTION)
     facts: list[Fact] = []
-    called = set(tools)
-    if kind in CASH_KINDS:
-        called.add(CASH_PROJECTION)
-    if CASH_PROJECTION in called:
-        facts += projection_facts(snap)
-    if REVENUE_CONCENTRATION in called:
-        facts += revenue_facts(snap, concentration_threshold)
-    if OPEN_INVOICES in called:
-        facts += open_invoice_facts(snap)
+    for tool in called:
+        facts += tool_facts(snap, tool, policy, payload)
     return {f.id: f for f in facts}

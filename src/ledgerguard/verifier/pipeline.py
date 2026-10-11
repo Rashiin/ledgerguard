@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from ledgerguard.analytics import financing, radar
 from ledgerguard.audit.chain import timestamp
 from ledgerguard.config import Policy
 from ledgerguard.domain.enums import Tier
@@ -158,7 +159,8 @@ class Verifier:
             snapshot,
             parsed.intent.kind,
             context.tools_called,
-            self._policy.rules.concentration_warning_share,
+            self._policy,
+            parsed.intent.payload.model_dump(mode="json"),
         )
         dry_run = CHECK_ACTION in context.tools_called
         claims, fact_errors, block_citations = _resolve_facts(model_claims, facts, dry_run)
@@ -240,12 +242,15 @@ class Verifier:
 
         # ---- stage 5: policy, and the text the user may see
         currency = snapshot.business.currency
+        # Every fact this turn's tools produced, plus the blocks. Their statements are
+        # the verifier's own text, so the numbers in them count as verified.
+        known = {**facts, **mandatory}
         presented_claims, text_fixes, guarantee_hits = self._present(
-            intent, recomps, prov, resolution, currency, mandatory
+            intent, recomps, prov, resolution, currency, mandatory, known
         )
         presented_claims = _lead_with_mandatory(presented_claims, omissions, mandatory)
         rationale, fixes = check_text(
-            "rationale", intent.rationale, self._pool(recomps, resolution, mandatory), currency
+            "rationale", intent.rationale, self._pool(recomps, resolution, known), currency
         )
         text_fixes += fixes
         rationale, hits = mask_guarantees(rationale)
@@ -336,6 +341,7 @@ class Verifier:
             ],
             "disclosures": receipt.disclosures,
             "approval": receipt.approval.model_dump(),
+            **self._capability_view(intent, snapshot),
             "receipt_id": receipt_id,
         }
         return Verification(
@@ -382,28 +388,51 @@ class Verifier:
 
     # ------------------------------------------------------------------ helpers
 
+    def _capability_view(self, intent: I.ActionIntent, snapshot: LedgerSnapshot) -> dict[str, Any]:
+        """Tables the owner sees beside the answer, computed here rather than by the model.
+
+        A scenario shows its before and after projection and the alerts it changes. A
+        financing ranking shows every option with its total cost in euros, the
+        weights used, the options ruled out and the cost of doing nothing.
+        """
+        rules = self._policy.rules
+        payload = intent.payload
+        if isinstance(payload, I.RunScenario):
+            scenario = payload.model_dump(mode="json")["scenario"]
+            result = radar.simulate(
+                snapshot,
+                scenario,
+                rules.protection_band,
+                rules.payroll_margin_warning,
+                rules.concentration_warning_share,
+            )
+            return {"scenario": result.as_dict()}
+        if isinstance(payload, I.RankFinancing):
+            return {"financing": financing.match(snapshot).as_dict()}
+        return {}
+
     @staticmethod
     def _pool(
-        recomps: list[Recomputation], resolution: Resolution, mandatory: dict[str, Fact]
+        recomps: list[Recomputation], resolution: Resolution, known: dict[str, Fact]
     ) -> Verified:
-        money = [rc.recomputed for rc in recomps if rc.recomputed is not None and not rc.is_percent]
+        money = [
+            rc.recomputed for rc in recomps if rc.recomputed is not None and rc.unit == "money"
+        ]
         money += list(resolution.figures.values())
         money += [p.amount for p in resolution.payments]
-        # Amounts in the verifier's own mandatory sentences, such as a block's
-        # "short by" figure, were computed by the rules and count as verified.
-        money += [
-            fig.value
-            for f in mandatory.values()
-            for fig in find_figures(f.statement)
-            if not fig.percent
-        ]
+        plain = [rc.recomputed for rc in recomps if rc.recomputed is not None and rc.unit == "days"]
         percents = [rc.recomputed for rc in recomps if rc.recomputed is not None and rc.is_percent]
+        # Numbers in the verifier's own fact sentences, such as a block's "short by"
+        # figure, were computed by deterministic code and count as verified.
+        for fact in known.values():
+            for fig in find_figures(fact.statement):
+                (percents if fig.percent else money).append(fig.value)
         corrections = [
             (rc.model_figure, rc.recomputed, rc.is_percent)
             for rc in recomps
             if rc.status == "mismatch" and rc.model_figure is not None and rc.recomputed is not None
         ]
-        return verified_pool(money, percents, corrections)
+        return verified_pool(money, percents, corrections, plain)
 
     def _present(
         self,
@@ -413,8 +442,9 @@ class Verifier:
         resolution: Resolution,
         currency: str,
         mandatory: dict[str, Fact],
+        known: dict[str, Fact],
     ) -> tuple[list[dict[str, Any]], list[TextFix], list[str]]:
-        pool = self._pool(recomps, resolution, mandatory)
+        pool = self._pool(recomps, resolution, known)
         claims: list[dict[str, Any]] = []
         fixes: list[TextFix] = []
         hits: list[str] = []
@@ -429,8 +459,15 @@ class Verifier:
                     }
                 )
                 continue
+            own = (
+                (rc.model_figure, rc.recomputed, rc.is_percent)
+                if rc.status == "mismatch"
+                and rc.model_figure is not None
+                and rc.recomputed is not None
+                else None
+            )
             text, claim_fixes = check_text(
-                f"claims[{rc.claim_index}].statement", claim.statement, pool, currency
+                f"claims[{rc.claim_index}].statement", claim.statement, pool, currency, own
             )
             text, claim_hits = mask_guarantees(text)
             fixes += claim_fixes

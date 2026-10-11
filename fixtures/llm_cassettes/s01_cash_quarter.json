@@ -2,14 +2,14 @@
  "cassette": "s01_cash_quarter",
  "interactions": [
   {
-   "key": "e6476cc7d2071b634f15fb5584505b9d64e67fda0b84692624cb08875555689a",
+   "key": "0b25f61093b5c3617c2189e6276f25f5a884841c4c8f7799709bd1ae887bc9ac",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected cash falls below zero in weeks 6 to 8, with the lowest point in week 7, ending 2026-12-06, at -€219,676.22.\",\n      \"fact_id\": \"proj.shortfall\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"cash for the next quarter\"\n  },\n  \"rationale\": \"The owner asked how the cash is looking for the next quarter, and the tool indicates a projected shortfall.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected cash for the next quarter starts at €182,499.93 and ends at €97,320.87, with a projected low in week 7 at -€219,676.22.\",\n      \"fact_id\": \"proj.shortfall\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"cash for the next quarter\"\n  },\n  \"rationale\": \"The owner asked for an overview of the cash situation for the next quarter.\"\n}",
    "meta": {
-    "prompt_eval_count": 2575,
+    "prompt_eval_count": 3088,
     "eval_count": 134,
     "done_reason": "stop",
-    "elapsed_ms": 15086
+    "elapsed_ms": 16358
    }
   }
  ]

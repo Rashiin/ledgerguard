@@ -56,11 +56,9 @@ EXAMPLES: dict[ActionKind, dict[str, Any]] = {
     },
     ActionKind.RUN_SCENARIO: {
         "kind": "RUN_SCENARIO",
-        "payload": {
-            "scenario": {"type": "customer_pays_late", "counterparty_id": "cp_brennan", "days": 30}
-        },
+        "payload": {"scenario": {"type": "delay_payable", "invoice_id": "inv_0652", "days": 14}},
         "claims": [],
-        "rationale": "Simulate Brennan Hospitality Group paying 30 days later than usual.",
+        "rationale": "Simulate paying this supplier invoice two weeks later.",
     },
     ActionKind.FLAG_ANOMALY: {
         "kind": "FLAG_ANOMALY",
@@ -118,16 +116,30 @@ EXAMPLES: dict[ActionKind, dict[str, Any]] = {
 
 CURRENCY_SYMBOLS = {"EUR": "€"}
 
+# Added to the system prompt when RUN_SCENARIO is allowed. It says what each
+# scenario type means and where the ids come from. It names no figures.
+SCENARIO_GUIDE = """
+Scenario types for RUN_SCENARIO. Pick the one that matches what the owner asked:
+- customer_pays_late: one customer pays its invoices some days later. The
+  counterparty_id is the last part of a rev.share fact id, such as rev.share.cp_x.
+- delay_payable: one supplier invoice is paid some days later. Use its invoice id.
+- draw_credit_line: draw an amount on the credit line on a date.
+- contracted_inflows_only: a stress view that counts only contracted receipts. Use it
+  only when the owner asks for a stress test or a worst case."""
+
 
 def system_prompt(allowed: Iterable[ActionKind], currency: str) -> str:
     kinds = sorted(set(allowed), key=lambda k: k.value)
     examples = "\n".join(json.dumps(EXAMPLES[k], ensure_ascii=False) for k in kinds)
-    return SYSTEM.format(
+    text = SYSTEM.format(
         currency=currency,
         symbol=CURRENCY_SYMBOLS.get(currency, currency),
         kinds=", ".join(k.value for k in kinds),
         examples=examples,
     )
+    if ActionKind.RUN_SCENARIO in kinds:
+        text += "\n" + SCENARIO_GUIDE
+    return text
 
 
 def tool_message(results: Iterable[ToolResult]) -> str:
@@ -168,4 +180,16 @@ def dry_run_message(blocks: Iterable[Fact]) -> str:
         "Write your final ActionIntent for the same kind of action. Cite every block by "
         "its fact_id and explain it to the owner. You may keep the same action or "
         "propose a smaller one."
+    )
+
+
+def scenario_message(result: ToolResult) -> str:
+    payload = result.for_model()
+    return (
+        "Your scenario was run on the projection without changing anything. Results "
+        "follow. The fact marked mandatory is the headline result.\n<data>\n"
+        + json.dumps(payload, ensure_ascii=False, indent=1)
+        + "\n</data>\n"
+        "Write your final ActionIntent for the same scenario. Cite the facts you rely on "
+        "by fact_id."
     )

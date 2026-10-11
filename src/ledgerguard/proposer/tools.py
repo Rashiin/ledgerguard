@@ -11,12 +11,11 @@ Tools never write. They run on the read-only snapshot.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import Decimal
 from typing import Any
 
 from ledgerguard import facts
+from ledgerguard.config import Policy
 from ledgerguard.verifier.snapshot import LedgerSnapshot
 
 
@@ -33,40 +32,44 @@ class ToolResult:
 class Tool:
     name: str
     description: str
-    run: Callable[[LedgerSnapshot, Decimal], ToolResult]
-
-
-def _cash_projection(snap: LedgerSnapshot, threshold: Decimal) -> ToolResult:
-    return ToolResult(facts.CASH_PROJECTION, facts.projection_facts(snap))
-
-
-def _revenue_concentration(snap: LedgerSnapshot, threshold: Decimal) -> ToolResult:
-    return ToolResult(facts.REVENUE_CONCENTRATION, facts.revenue_facts(snap, threshold))
-
-
-def _open_invoices(snap: LedgerSnapshot, threshold: Decimal) -> ToolResult:
-    return ToolResult(facts.OPEN_INVOICES, facts.open_invoice_facts(snap))
 
 
 TOOLS: dict[str, Tool] = {
     facts.CASH_PROJECTION: Tool(
         facts.CASH_PROJECTION,
-        "Cash on hand and the 13-week projection: each week's closing balance on the full "
-        "model and on contracted lines only, any shortfall, and what drives the worst week.",
-        _cash_projection,
+        "Cash on hand, the 13-week projection on the full model and on contracted lines only, "
+        "any shortfall and what drives the worst week, and every radar alert.",
     ),
     facts.OPEN_INVOICES: Tool(
         facts.OPEN_INVOICES,
         "Every invoice with money outstanding, both directions, with its status and due date.",
-        _open_invoices,
     ),
     facts.REVENUE_CONCENTRATION: Tool(
         facts.REVENUE_CONCENTRATION,
         "The largest customers' shares of net revenue over the last 12 months.",
-        _revenue_concentration,
+    ),
+    facts.FINANCING_OPTIONS: Tool(
+        facts.FINANCING_OPTIONS,
+        "The gap to fund, each synthetic financing option's total cost in euros, the options "
+        "ruled out and what doing nothing means.",
+    ),
+    facts.FINANCIAL_SUMMARY: Tool(
+        facts.FINANCIAL_SUMMARY,
+        "Margins, cash flow, burn, runway, DSO, DPO and the cash conversion cycle, each with "
+        "its method.",
+    ),
+    facts.ANOMALIES: Tool(
+        facts.ANOMALIES,
+        "Transactions far from their usual amount, supplier invoices that look duplicated, and "
+        "weekend manual bookings.",
     ),
 }
 
 
-def run_tools(snap: LedgerSnapshot, names: list[str], threshold: Decimal) -> list[ToolResult]:
-    return [TOOLS[name].run(snap, threshold) for name in names]
+def run_tools(snap: LedgerSnapshot, names: list[str], policy: Policy) -> list[ToolResult]:
+    return [ToolResult(name, facts.tool_facts(snap, name, policy)) for name in names]
+
+
+def scenario_result(snap: LedgerSnapshot, policy: Policy, scenario: dict[str, Any]) -> ToolResult:
+    """Run by the orchestrator on the scenario the model drafted."""
+    return ToolResult(facts.SCENARIO, facts.scenario_facts(snap, policy, scenario))

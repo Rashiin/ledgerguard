@@ -1,6 +1,7 @@
 """One turn, from the owner's words to a verified result.
 
-1. Plan. The allowed kinds and tools come from the request alone.
+1. Plan. The allowed kinds and tools come from the request alone. A plain
+   "what if" request must be answered with a scenario.
 2. Tools. They run on the read-only snapshot and return facts. Anything
    instruction-like that was stripped from ledger text is written to the audit
    log.
@@ -9,7 +10,8 @@
    unchanged. After that the turn fails visibly. Output is never repaired.
 4. Dry run. For kinds that change records or move money, the rules run on the
    draft. If anything blocks, the model sees the block as a fact it can cite and
-   writes its final answer once more.
+   writes its final answer once more. A scenario draft is run instead, and the
+   model writes its final answer with the result in front of it.
 5. Verify. The final output goes to the verifier with the turn context, which
    records the tools that actually ran. The model never sets that record.
 """
@@ -25,12 +27,12 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from ledgerguard.config import Policy
 from ledgerguard.domain.enums import ActionKind, Actor
-from ledgerguard.facts import CHECK_ACTION, block_fact
+from ledgerguard.facts import CHECK_ACTION, SCENARIO, block_fact
 from ledgerguard.proposer import prompt
 from ledgerguard.proposer.allowlist import TurnPlan, plan_turn
 from ledgerguard.proposer.client import LLMClient
 from ledgerguard.proposer.schema import intent_schema
-from ledgerguard.proposer.tools import ToolResult, run_tools
+from ledgerguard.proposer.tools import ToolResult, run_tools, scenario_result
 from ledgerguard.rules import Outcome
 from ledgerguard.service import CopilotService, TurnResult
 from ledgerguard.verifier.intent import parse_intent
@@ -92,20 +94,21 @@ class Orchestrator:
         step(
             "plan",
             kinds=sorted(k.value for k in plan.kinds),
+            required=None if plan.required is None else plan.required.value,
             tools=list(plan.tools),
             routes=list(plan.matched),
         )
         with self._reads() as session:
             snapshot = load_snapshot(session)
         currency = snapshot.business.currency
-        threshold = self._policy.rules.concentration_warning_share
-        results = run_tools(snapshot, list(plan.tools), threshold)
+        results = run_tools(snapshot, list(plan.tools), self._policy)
         self._log_stripped(results, conversation_id, step)
         step("tools", ran=list(plan.tools), facts=sum(len(r.facts) for r in results))
 
-        schema = intent_schema(plan.kinds)
-        messages = prompt.messages(request, plan.kinds, currency, results)
-        raw, ok = self._ask(messages, schema, step, phase="draft")
+        offered = {plan.required} if plan.required else plan.kinds
+        schema = intent_schema(offered)
+        messages = prompt.messages(request, frozenset(offered), currency, results)
+        raw, ok = self._ask(messages, schema, step, phase="draft", required_kind=plan.required)
         tools_called = list(plan.tools)
 
         draft = parse_intent(raw).intent if ok else None
@@ -119,24 +122,19 @@ class Orchestrator:
             ]
             step("dry_run", payload_errors=errors, blocks=[f.id for f in blocks])
             if blocks:
-                follow_up = [
-                    *messages,
-                    {"role": "assistant", "content": raw},
-                    {"role": "user", "content": prompt.dry_run_message(blocks)},
-                ]
-                # The final answer is about the same kind of action. The model may
-                # shrink it, but it cannot turn a blocked payment into a chat answer.
-                final_schema = intent_schema([draft.kind])
-                draft_raw = raw
-                raw, ok = self._ask(
-                    follow_up, final_schema, step, phase="final", required_kind=draft.kind
+                raw, ok = self._follow_up(
+                    messages, raw, draft.kind, prompt.dry_run_message(blocks), step
                 )
-                if not ok:
-                    # The model would not answer about the action it proposed. The
-                    # blocked draft goes to the verifier, so the block still reaches
-                    # the receipt, along with the omission of it.
-                    step("final_refused", fallback="draft")
-                    raw, ok = draft_raw, True
+        elif draft is not None and draft.kind is ActionKind.RUN_SCENARIO:
+            payload = draft.payload.model_dump(mode="json")
+            errors, _ = self._verifier.dry_run(draft.kind.value, payload, snapshot)
+            step("scenario", payload_errors=errors)
+            if not errors:
+                tools_called.append(SCENARIO)
+                outcome = scenario_result(snapshot, self._policy, payload["scenario"])
+                raw, ok = self._follow_up(
+                    messages, raw, draft.kind, prompt.scenario_message(outcome), step
+                )
 
         result = self._service.submit(raw, conversation_id, TurnContext(tuple(tools_called)))
         if not ok:
@@ -150,6 +148,33 @@ class Orchestrator:
         )
         record.result = result
         return record
+
+    def _follow_up(
+        self,
+        messages: list[dict[str, str]],
+        draft_raw: str,
+        kind: ActionKind,
+        message: str,
+        step: Callable[..., None],
+    ) -> tuple[str, bool]:
+        """Show the model what its draft leads to and take its final answer.
+
+        The final answer is about the same kind of action. The model may change it,
+        but it cannot turn a blocked payment or a scenario into a chat answer. If it
+        will not answer about its own draft, the draft is what gets verified.
+        """
+        follow_up = [
+            *messages,
+            {"role": "assistant", "content": draft_raw},
+            {"role": "user", "content": message},
+        ]
+        raw, ok = self._ask(
+            follow_up, intent_schema([kind]), step, phase="final", required_kind=kind
+        )
+        if not ok:
+            step("final_refused", fallback="draft")
+            return draft_raw, True
+        return raw, ok
 
     def _ask(
         self,

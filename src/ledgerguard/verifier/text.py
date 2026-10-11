@@ -138,6 +138,8 @@ class Verified:
 
     money: tuple[Decimal, ...]
     percents: tuple[Decimal, ...]
+    # Verified numbers that are neither money nor a percentage, such as days.
+    plain: tuple[Decimal, ...]
     # Each correction is the model's figure, the recomputed figure and whether it is a percent.
     corrections: tuple[tuple[Decimal, Decimal, bool], ...]
 
@@ -155,20 +157,41 @@ def foreign_currency(text: str, currency: str) -> bool:
 
 
 def check_text(
-    field: str, text: str, verified: Verified, currency: str = "EUR"
+    field: str,
+    text: str,
+    verified: Verified,
+    currency: str = "EUR",
+    own: tuple[Decimal, Decimal, bool] | None = None,
 ) -> tuple[str, list[TextFix]]:
     """Check every figure in ``text``. ``currency`` is the ledger's ISO code.
 
     A figure written in another currency is a finding in its own right. If the
     amount matches a verified figure it is shown again in the ledger's currency
     and the change is recorded. Otherwise it is masked with the rest.
+
+    ``own`` is the correction for the claim this text belongs to. It applies
+    before the pool is consulted: a claim that cites cash on hand but quotes week
+    5's closing has quoted a true number for the wrong thing.
     """
     fixes: list[TextFix] = []
     out: list[str] = []
     cursor = 0
     for fig in find_figures(text):
         foreign = fig.currency is not None and fig.currency != currency
-        pool = verified.percents if fig.percent else verified.money
+        if own is not None and own[2] == fig.percent and _same(fig, own[0]):
+            replacement = _render(own[1], own[2])
+            out.append(text[cursor : fig.start])
+            out.append(replacement)
+            cursor = fig.end
+            reason = f"model figure {own[0]} corrected to recomputed {own[1]}"
+            fixes.append(TextFix(field, fig.text, replacement, reason))
+            continue
+        if fig.percent:
+            pool = verified.percents
+        elif fig.currency is None:
+            pool = verified.money + verified.plain
+        else:
+            pool = verified.money
         match = next((v for v in pool if _same(fig, v)), None)
         if match is not None and not foreign:
             continue
@@ -198,5 +221,6 @@ def verified_pool(
     money: Iterable[Decimal],
     percents: Iterable[Decimal],
     corrections: Iterable[tuple[Decimal, Decimal, bool]],
+    plain: Iterable[Decimal] = (),
 ) -> Verified:
-    return Verified(tuple(money), tuple(percents), tuple(corrections))
+    return Verified(tuple(money), tuple(percents), tuple(plain), tuple(corrections))

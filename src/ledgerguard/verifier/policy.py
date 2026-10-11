@@ -31,8 +31,8 @@ FINANCING_KINDS = frozenset({ActionKind.RANK_FINANCING, ActionKind.ACCEPT_FINANC
 ADVISORY_KINDS = frozenset(
     {ActionKind.ANSWER_QUERY, ActionKind.DRAFT_FORECAST, ActionKind.RUN_SCENARIO, *FINANCING_KINDS}
 )
-# Formulas that state a product's total cost of capital in currency. Phase 5 adds them.
-TOTAL_COST_FORMULAS: frozenset[str] = frozenset()
+# Formulas that state a product's total cost of capital in currency.
+TOTAL_COST_FORMULAS: frozenset[str] = frozenset({"FINANCING_TOTAL_COST"})
 
 # One alternation, applied in a single pass, so a replacement is never re-scanned.
 GUARANTEE_PATTERN = re.compile(
@@ -74,8 +74,12 @@ def mask_guarantees(text: str) -> tuple[str, list[str]]:
 
 
 def financing_products_discussed(intent: ActionIntent) -> set[str]:
+    # A claim that a product is not available is not a recommendation of it.
     products = {
-        r for c in intent.claims for r in c.source_row_ids if table_of(r) == "financing_product"
+        r
+        for c in intent.claims
+        for r in c.source_row_ids
+        if table_of(r) == "financing_product" and not (c.fact_id or "").endswith(".ineligible")
     }
     if isinstance(intent.payload, AcceptFinancingOffer):
         products.add(intent.payload.product_id)

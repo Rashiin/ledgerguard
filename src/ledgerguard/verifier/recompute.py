@@ -15,17 +15,20 @@ This stage has two jobs.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
+from ledgerguard.analytics import analysis, financing, radar
 from ledgerguard.analytics.cashflow import ExpectedFlow
 from ledgerguard.db.models import (
     Account,
     Base,
     Counterparty,
+    FinancingProduct,
     Invoice,
     Transaction,
 )
@@ -65,6 +68,11 @@ class FormulaSpec:
     text: str  # shown on the Trust Receipt
     compute: Callable[[LedgerSnapshot, list[Base], dict[str, str]], Decimal]
     exactly_one: bool = False
+    # money, percent or days. A function when the unit depends on the parameters.
+    unit: str | Callable[[dict[str, str]], str] = "money"
+
+    def unit_for(self, params: dict[str, str]) -> str:
+        return self.unit(params) if callable(self.unit) else self.unit
 
 
 def _week(params: dict[str, str]) -> int:
@@ -139,6 +147,60 @@ def _share(snap: LedgerSnapshot, rows: list[Base], params: dict[str, str]) -> De
     return (share * 100).quantize(PERCENT, rounding=ROUND_HALF_UP)
 
 
+ALL_LEDGER_TABLES = frozenset(
+    {
+        "business",
+        "account",
+        "transaction",
+        "counterparty",
+        "invoice",
+        "payroll_run",
+        "obligation",
+    }
+)
+
+
+def _metric(snap: LedgerSnapshot, rows: list[Base], params: dict[str, str]) -> Decimal:
+    name = params.get("name", "")
+    if name == "financing_gap":
+        gap = financing.find_gap(snap)
+        return ZERO if gap is None else gap.amount
+    found = analysis.metrics(snap).get(name)
+    if found is None:
+        raise FormulaError(f"no metric named {name!r}")
+    return found.value
+
+
+def _scenario_closing(snap: LedgerSnapshot, rows: list[Base], params: dict[str, str]) -> Decimal:
+    try:
+        scenario = json.loads(params["scenario"])
+        flows, _, _ = radar.apply_scenario(snap, scenario)
+    except (KeyError, ValueError, TypeError) as exc:
+        raise FormulaError(f"params.scenario is not a scenario this ledger can run: {exc}") from exc
+    proj = radar.reproject(snap, flows)
+    week = proj.weeks[_week(params) - 1]
+    band = params.get("band", "all")
+    return {
+        "contracted": week.closing_contracted,
+        "with_expected": week.closing_with_expected,
+        "all": week.closing,
+    }.get(band, week.closing)
+
+
+def _financing_cost(snap: LedgerSnapshot, rows: list[Base], params: dict[str, str]) -> Decimal:
+    product = rows[0]
+    assert isinstance(product, FinancingProduct)
+    try:
+        amount = Decimal(params["amount"]).quantize(CENT)
+        days = int(params["days"])
+    except (KeyError, ValueError, ArithmeticError) as exc:
+        raise FormulaError("params.amount and params.days are required") from exc
+    if amount <= 0 or days <= 0:
+        raise FormulaError("amount and days must be positive")
+    cost, _, _ = financing.total_cost(snap, product, amount, days)
+    return cost
+
+
 FORMULAS: dict[I.Formula, FormulaSpec] = {
     I.Formula.ROW_FIELD: FormulaSpec(frozenset(MONEY_FIELDS), "row[field]", _row_field, True),
     I.Formula.INVOICE_OUTSTANDING: FormulaSpec(
@@ -163,8 +225,27 @@ FORMULAS: dict[I.Formula, FormulaSpec] = {
         "customer net revenue ÷ total, trailing 12 months, %",
         _share,
         True,
+        "percent",
+    ),
+    I.Formula.METRIC: FormulaSpec(
+        ALL_LEDGER_TABLES,
+        "financial metric, method stated on the fact",
+        _metric,
+        unit=lambda params: analysis.UNITS.get(params.get("name", ""), "money"),
+    ),
+    I.Formula.SCENARIO_CLOSING: FormulaSpec(
+        PROJECTION_TABLES | {"counterparty"},
+        "opening + Σin − Σout after the scenario's changes",
+        _scenario_closing,
+    ),
+    I.Formula.FINANCING_TOTAL_COST: FormulaSpec(
+        frozenset({"financing_product"}),
+        "interest and fees in euros over the drawdown period, or the full term",
+        _financing_cost,
+        True,
     ),
 }
+QUANTUM = {"money": CENT, "percent": PERCENT, "days": Decimal("0.1")}
 
 
 # --------------------------------------------------------------------------- claims
@@ -180,10 +261,11 @@ class Recomputation:
     formula: str | None
     operands: tuple[str, ...]
     reason: str | None = None
+    unit: str = "money"
 
     @property
     def is_percent(self) -> bool:
-        return self.formula == FORMULAS[I.Formula.REVENUE_SHARE].text
+        return self.unit == "percent"
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -249,10 +331,12 @@ def recompute_claim(
         value = spec.compute(snap, rows, d.params)
     except FormulaError as exc:
         return fail(str(exc))
-    if d.formula is not I.Formula.REVENUE_SHARE:
-        value = value.quantize(CENT, rounding=ROUND_HALF_UP)
+    unit = spec.unit_for(d.params)
+    value = value.quantize(QUANTUM[unit], rounding=ROUND_HALF_UP)
     status = "match" if value == claim.figure else "mismatch"
-    return Recomputation(index, claim.statement, status, claim.figure, value, spec.text, operands)
+    return Recomputation(
+        index, claim.statement, status, claim.figure, value, spec.text, operands, unit=unit
+    )
 
 
 # --------------------------------------------------------------------------- payloads

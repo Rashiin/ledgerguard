@@ -1,0 +1,16 @@
+{
+ "cassette": "s10_unusual_transactions",
+ "interactions": [
+  {
+   "key": "91d7629dae41242b262172879a5bac82b3b7ca13016f697c8f704f1768478890",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The fuel charge on the Fleetline Fuel Card is unusually high, significantly exceeding the typical amount.\",\n      \"fact_id\": \"anom.txn_0869\"\n    },\n    {\n      \"statement\": \"There are two nearly identical invoices from Delmar Smallwares, both for €4,312.50, issued a few days apart. One is already paid, while the other is overdue.\",\n      \"fact_id\": \"anom.dup.inv_0641.inv_0377\"\n    }\n  ],\n  \"kind\": \"FLAG_ANOMALY\",\n  \"payload\": {\n    \"transaction_ids\": [\"txn_0869\"]\n  },\n  \"rationale\": \"The tool identified two anomalies: an unusually high fuel charge and duplicate invoices with different payment statuses.\"\n}",
+   "meta": {
+    "prompt_eval_count": 598,
+    "eval_count": 183,
+    "done_reason": "stop",
+    "elapsed_ms": 10151
+   }
+  }
+ ]
+}
