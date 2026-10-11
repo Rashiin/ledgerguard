@@ -287,3 +287,43 @@ The inbox shows what approving an action would change by running the same handle
 ## D-045 · The projection chart draws three lines, not stacked areas
 
 The requirements ask for the confidence classes as distinct stacked bands. The chart draws the closing balance three times, on contracted lines, with expected lines added, and with every line, as three lines on one axis. Closing balances are cumulative, so stacking them as areas would add one balance on top of another and show a total that means nothing. Three lines keep the classes separate, never merged into one number, which is what the requirement is for. If the chart showed weekly flows instead of balances, stacked bars per class would be the right form.
+
+## D-046 · Fixture rows live in the demo ledger, out of its figures
+
+The prompt-injection fixtures are rows in the same seeded ledger the demo runs on, so scenario 11 and the fixtures run in Docker like every other scenario. They are appended after the main build with ids from 9000 up, which keeps every planted id in place, and the Executor never assigns an id from that range. Their invoices fall due after the 13-week horizon and their bookings cancel out, so the projection and every demo figure are unchanged. We gave up a clean separation: requests that read open invoices meet the injected text too, and show a containment notice. A separate adversarial ledger would avoid that but would split the demo across two databases.
+
+## D-047 · The plan's kinds are enforced in code, twice
+
+A turn's allowed action kinds came from the owner's words and reached the model only as the grammar. A test with a scripted model that ignores the grammar showed that nothing in code then stopped a payment on a read-only turn. Approval would still have been required, but the allowlist was resting on the constraint layer alone. The turn loop now rejects a kind outside the plan and retries, and the verifier, given the plan's kinds, rejects it again with `KIND_NOT_ALLOWED`. The grammar keeps its role as the first layer.
+
+## D-048 · Every sentence written by code neutralises outside text
+
+Facts neutralised names and descriptions when they were built, but rule reasons were built separately and wrote a counterparty's raw name. The a2 fixture, a supplier whose name carries an instruction, got that instruction into the dry-run prompt and into the block sentence shown in the verifier's words. Rule reasons now neutralise outside text as well. The financing catalogue and account names are the project's own configuration and are left as they are.
+
+## D-049 · Attachments are outside content, and turns carry no memory
+
+A document the owner attaches is read the way ledger text is. It is fenced in data tags, neutralised and logged, and it never feeds the allowlist, which reads only the owner's own words. The owner attaches a document but does not write it. Each turn's prompt is rebuilt from the owner's words, the attachments and the ledger, with nothing carried from earlier turns, so text planted in one turn cannot steer the next. We gave up conversational follow-ups such as "and the second one?". A turn that needs context has to restate it.
+
+## D-050 · A what-if never moves money
+
+"What if we pay the Arden invoice later" matched the payment route, so a hypothetical question allowed a payment. When the scenario route matches, the plan drops every kind that changes records or moves money. This only narrows a turn.
+
+## D-051 · The verifier states the cost of exactly what is accepted
+
+The financing ranking costs each product for the amount it can cover. When the model accepts a different amount, as it did in scenario 6 after the outbound ceiling blocked €220,000, the person typing the T3 confirmation must see the cost of the amount they confirm. The verifier now computes that cost and leads the answer with it. The model never saw this fact, so leaving it out is not counted as a material omission. Flagging it would have marked every acceptance. A cost stated by the verifier also satisfies the total-cost policy for that product, since the model cannot soften it.
+
+## D-052 · An audit-trail answer shows the live chain
+
+The audit chain grows with every turn, so its figures cannot sit in a recorded prompt. The model is shown a fixed sentence asking it to cite the chain fact, and the owner sees the verifier's own sentence, computed when the answer is checked: whether the chain is intact, its length, its head hash and the day's events. Event payloads are never shown to the model. They include the instruction-like text removed from ledger data, and echoing it would inject it again.
+
+## D-053 · Requests first, then the inbox
+
+Approving one action changes the ledger, and the next request no longer matches its recording. The demo and `scripts/export_evidence.py` therefore make every request first and work through the Approval Inbox afterwards. That is also how an operator works. The audit trail comes last so that it covers everything.
+
+## D-054 · The seed is identical per platform, not across platforms
+
+The seeded ledger is byte-identical across runs on one machine, which Phase 1 required. Inside the Docker image the file's hash differs, because SQLite lays out pages differently there. The data is the same, and the evidence for that is that every recording replays inside the image, where any difference in a fact would change a prompt and miss.
+
+## D-055 · Model error is measured as a rate, in a separate experiment
+
+One recording shows what a model did once. `scripts/robustness_probe.py` samples three figure-heavy turns 50 times at temperature 0.7, with a seed per sample, through the real verifier, and counts every time the verifier corrects, masks or removes a figure. The product and every recording stay at temperature 0, and the probe never changes a setting. Its sampled responses are not used as recordings, because they share replay keys with the recorded ones. `scripts/sample_to_cassette.py` turns a single sample into a separate recording when it has to be shown in the UI. The result is in `evidence/robustness/README.md`.

@@ -1,0 +1,120 @@
+{
+ "receipt_id": "rcp_e6b19da2990345f5",
+ "action_intent_id": "int_e6b19da2990345f5",
+ "outcome": "verified",
+ "kind": "INITIATE_PAYMENT",
+ "tier": "T3",
+ "rows_read": [
+  {
+   "table": "counterparty",
+   "id": "cp_pryce"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_9001"
+  }
+ ],
+ "schema_errors": [],
+ "recomputations": [
+  {
+   "claim_index": 0,
+   "claim": "The invoice from Pryce Freight & Logistics is outstanding for €2,287.80, due on 2027-01-29.",
+   "status": "match",
+   "model_figure": "2287.80",
+   "recomputed": "2287.80",
+   "match": true,
+   "formula": "Σ (gross − paid)",
+   "operands": [
+    "inv_9001"
+   ],
+   "reason": null
+  }
+ ],
+ "provenance": [
+  {
+   "claim_index": 0,
+   "status": "supported",
+   "reason": null
+  }
+ ],
+ "rules_evaluated": [
+  {
+   "rule": "SufficientBalance",
+   "result": "PASS",
+   "reason": "Operating account keeps €125,982.83 after this payment. Its floor is €5,000.00.",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "AmountCeiling",
+   "result": "PASS",
+   "reason": "€2,287.80 is within the €150,000.00 outbound limit.",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DuplicatePayment",
+   "result": "PASS",
+   "reason": "no payment of the same amount to the same supplier in the last 14 days",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "CounterpartyWhitelist",
+   "result": "PASS",
+   "reason": "every payee is whitelisted",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "PayrollProtection",
+   "result": "PASS",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €97,135.22 to spare",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "TaxReserveFloor",
+   "result": "PASS",
+   "reason": "cash covers each tax payment due by 2026-11-30",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DisputedInvoiceLock",
+   "result": "PASS",
+   "reason": "no disputed invoice is being settled",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "ConcentrationWarning",
+   "result": "PASS",
+   "reason": "no concentrated customer involved",
+   "flags": [],
+   "rows": []
+  }
+ ],
+ "policy": [],
+ "text_corrections": [],
+ "payload_figures": {
+  "payment_total": "2287.80"
+ },
+ "material_omissions": [],
+ "tools_called": [
+  "get_open_invoices",
+  "check_action"
+ ],
+ "risk_flags": [],
+ "disclosures": [],
+ "approval": {
+  "required": true,
+  "by": "operator",
+  "status": "pending",
+  "confirmation_phrase": "CONFIRM int_e6b19da2990345f5",
+  "not_before": "2026-10-11T15:52:49.000000+00:00"
+ },
+ "verifier_version": "1.0.0",
+ "created_at": "2026-10-11T15:51:49.000000+00:00",
+ "audit_seq": 38
+}

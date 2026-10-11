@@ -1,0 +1,64 @@
+[
+ {
+  "scenario": "a6_slow_burn",
+  "intent_id": "int_e6b19da2990345f5",
+  "decision": "declined",
+  "reason": "Arrived with a request to change bank details. Checked by phone.",
+  "audit_seq": 44
+ },
+ {
+  "scenario": "s06_accept_factoring",
+  "intent_id": "int_61e4178ae4e74d88",
+  "decision": "approved",
+  "tier": "T3",
+  "confirmation": "CONFIRM int_61e4178ae4e74d88",
+  "changes": [
+   {
+    "table": "transaction",
+    "id": "txn_0919",
+    "field": "*",
+    "before": null,
+    "after": "in 150000.00 from Synthetic Factor E (fin_if_01) on 2026-10-16"
+   }
+  ],
+  "audit_seq": 45
+ },
+ {
+  "scenario": "s07_record_brennan_payment",
+  "intent_id": "int_685eafae09f24d8b",
+  "decision": "approved",
+  "tier": "T2",
+  "confirmation": null,
+  "changes": [
+   {
+    "table": "transaction",
+    "id": "txn_0920",
+    "field": "*",
+    "before": null,
+    "after": "in 46854.00 cp_brennan on 2026-10-16"
+   },
+   {
+    "table": "invoice",
+    "id": "inv_0412",
+    "field": "paid_amount",
+    "before": "0.00",
+    "after": "46854.00"
+   },
+   {
+    "table": "invoice",
+    "id": "inv_0412",
+    "field": "status",
+    "before": "overdue",
+    "after": "paid"
+   }
+  ],
+  "audit_seq": 46
+ },
+ {
+  "scenario": "s08_pay_invoice_0377",
+  "intent_id": "int_dfecb175c6954c22",
+  "decision": "declined",
+  "reason": "Suspected duplicate of inv_0641, already paid.",
+  "audit_seq": 47
+ }
+]

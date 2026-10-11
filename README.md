@@ -47,7 +47,7 @@ LLM_CLIENT=replay uv run ledgerguard-api
 
 Open http://127.0.0.1:8000 for the UI. `LEDGERGUARD_PORT` changes the port. With `LLM_CLIENT=replay` the recorded scenarios run with no model server. Leave it out to use the local model that `config/model.yaml` names.
 
-Recordings match the exact request, including the facts drawn from the ledger. Approving an action changes the ledger, so scenarios recorded on the fresh ledger stop replaying after it. Run the read-only scenarios first and the approvals last, or seed the ledger again to start over.
+Recordings match the exact request, including the facts drawn from the ledger. Approving an action changes the ledger, so requests recorded on the fresh ledger stop replaying after it. Run the read-only scenarios and the adversarial fixtures first, then make the approval requests, and only then work through the Approval Inbox. `scripts/export_evidence.py` runs the whole demo in that order and writes `evidence/`.
 
 To run the approval scenarios a second time, seed the ledger again first with `uv run python scripts/seed.py --profile nordvik --seed 42`, or recreate the Docker container with `docker compose down` and `docker compose up`. Without that, those requests answer "no recording exists". That is risk R-22 working as designed, not a fault.
 

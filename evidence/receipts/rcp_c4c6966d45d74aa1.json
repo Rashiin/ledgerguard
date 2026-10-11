@@ -1,0 +1,159 @@
+{
+ "receipt_id": "rcp_c4c6966d45d74aa1",
+ "action_intent_id": "int_c4c6966d45d74aa1",
+ "outcome": "verified",
+ "kind": "RUN_SCENARIO",
+ "tier": "T1",
+ "rows_read": [
+  {
+   "table": "account",
+   "id": "acc_operating"
+  },
+  {
+   "table": "account",
+   "id": "acc_petty_cash"
+  },
+  {
+   "table": "counterparty",
+   "id": "cp_brennan"
+  },
+  {
+   "table": "counterparty",
+   "id": "cp_halvorsen"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0665"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0666"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0681"
+  }
+ ],
+ "schema_errors": [],
+ "recomputations": [
+  {
+   "claim_index": 0,
+   "claim": "With Halvorsen Steelworks AS invoice inv_0665 paid 30 days later, projected cash reaches its low in week 7, ending 2026-12-06, at -€77,176.22, against -€219,676.22 in week 7 without the change.",
+   "status": "match",
+   "model_figure": "-77176.22",
+   "recomputed": "-77176.22",
+   "match": true,
+   "formula": "opening + Σin − Σout after the scenario's changes",
+   "operands": [
+    "inv_0665",
+    "cp_halvorsen"
+   ],
+   "reason": null
+  }
+ ],
+ "provenance": [
+  {
+   "claim_index": 0,
+   "status": "supported",
+   "reason": null
+  }
+ ],
+ "rules_evaluated": [
+  {
+   "rule": "SufficientBalance",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "AmountCeiling",
+   "result": "PASS",
+   "reason": "no money leaves the business in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DuplicatePayment",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "CounterpartyWhitelist",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "PayrollProtection",
+   "result": "PASS",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "TaxReserveFloor",
+   "result": "PASS",
+   "reason": "cash covers each tax payment due by 2026-11-30",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DisputedInvoiceLock",
+   "result": "PASS",
+   "reason": "no disputed invoice is being settled",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "ConcentrationWarning",
+   "result": "WARN",
+   "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory.",
+   "flags": [
+    "CONCENTRATION_RISK"
+   ],
+   "rows": [
+    "cp_brennan"
+   ]
+  }
+ ],
+ "policy": [],
+ "text_corrections": [],
+ "payload_figures": {},
+ "material_omissions": [
+  {
+   "fact_id": "proj.shortfall",
+   "inserted": "Projected cash falls below zero in weeks 6 to 8. The projected low is week 7, ending 2026-12-06, at -€219,676.22. Counting contracted lines only, projected cash is below zero from week 6.",
+   "why": "a projected week closes below zero"
+  },
+  {
+   "fact_id": "rev.share.cp_brennan",
+   "inserted": "Brennan Hospitality Group is 36.89% of net revenue over the last 12 months, above the 30% concentration threshold.",
+   "why": "a customer is above the concentration threshold"
+  }
+ ],
+ "tools_called": [
+  "get_cash_projection",
+  "get_revenue_concentration",
+  "get_open_invoices",
+  "run_scenario"
+ ],
+ "risk_flags": [
+  "CONCENTRATION_RISK",
+  "MATERIAL_OMISSION"
+ ],
+ "disclosures": [],
+ "approval": {
+  "required": false,
+  "by": null,
+  "status": "not_required",
+  "confirmation_phrase": null,
+  "not_before": null
+ },
+ "verifier_version": "1.0.0",
+ "created_at": "2026-10-11T15:51:34.000000+00:00",
+ "audit_seq": 29
+}

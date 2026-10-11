@@ -1,0 +1,136 @@
+{
+ "receipt_id": "rcp_dfecb175c6954c22",
+ "action_intent_id": "int_dfecb175c6954c22",
+ "outcome": "verified",
+ "kind": "INITIATE_PAYMENT",
+ "tier": "T3",
+ "rows_read": [
+  {
+   "table": "counterparty",
+   "id": "cp_delmar"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0377"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0641"
+  },
+  {
+   "table": "transaction",
+   "id": "txn_0899"
+  }
+ ],
+ "schema_errors": [],
+ "recomputations": [
+  {
+   "claim_index": 0,
+   "claim": "The invoice from Delmar Smallwares, inv_0377, is due and must be paid.",
+   "status": "match",
+   "model_figure": "4312.50",
+   "recomputed": "4312.50",
+   "match": true,
+   "formula": "Σ (gross − paid)",
+   "operands": [
+    "inv_0377"
+   ],
+   "reason": null
+  }
+ ],
+ "provenance": [
+  {
+   "claim_index": 0,
+   "status": "supported",
+   "reason": null
+  }
+ ],
+ "rules_evaluated": [
+  {
+   "rule": "SufficientBalance",
+   "result": "PASS",
+   "reason": "Operating account keeps €123,958.13 after this payment. Its floor is €5,000.00.",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "AmountCeiling",
+   "result": "PASS",
+   "reason": "€4,312.50 is within the €150,000.00 outbound limit.",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DuplicatePayment",
+   "result": "WARN",
+   "reason": "Possible duplicate payment. The same supplier was already paid €4,312.50 for inv_0377's amount on 2026-10-08, 8 days earlier. That payment settled inv_0641. This needs a human decision.",
+   "flags": [
+    "DUPLICATE_PAYMENT"
+   ],
+   "rows": [
+    "inv_0377",
+    "txn_0899",
+    "inv_0641"
+   ]
+  },
+  {
+   "rule": "CounterpartyWhitelist",
+   "result": "PASS",
+   "reason": "every payee is whitelisted",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "PayrollProtection",
+   "result": "PASS",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "TaxReserveFloor",
+   "result": "PASS",
+   "reason": "cash covers each tax payment due by 2026-11-30",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DisputedInvoiceLock",
+   "result": "PASS",
+   "reason": "no disputed invoice is being settled",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "ConcentrationWarning",
+   "result": "PASS",
+   "reason": "no concentrated customer involved",
+   "flags": [],
+   "rows": []
+  }
+ ],
+ "policy": [],
+ "text_corrections": [],
+ "payload_figures": {
+  "payment_total": "4312.50"
+ },
+ "material_omissions": [],
+ "tools_called": [
+  "get_open_invoices",
+  "check_action"
+ ],
+ "risk_flags": [
+  "DUPLICATE_PAYMENT"
+ ],
+ "disclosures": [],
+ "approval": {
+  "required": true,
+  "by": "operator",
+  "status": "pending",
+  "confirmation_phrase": "CONFIRM int_dfecb175c6954c22",
+  "not_before": "2026-10-11T15:53:04.000000+00:00"
+ },
+ "verifier_version": "1.0.0",
+ "created_at": "2026-10-11T15:52:04.000000+00:00",
+ "audit_seq": 43
+}

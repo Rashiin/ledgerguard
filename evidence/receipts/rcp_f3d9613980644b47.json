@@ -1,0 +1,86 @@
+{
+ "receipt_id": "rcp_f3d9613980644b47",
+ "action_intent_id": "int_f3d9613980644b47",
+ "outcome": "verified",
+ "kind": "ANSWER_QUERY",
+ "tier": "T0",
+ "rows_read": [],
+ "schema_errors": [],
+ "recomputations": [],
+ "provenance": [],
+ "rules_evaluated": [
+  {
+   "rule": "SufficientBalance",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "AmountCeiling",
+   "result": "PASS",
+   "reason": "no money leaves the business in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DuplicatePayment",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "CounterpartyWhitelist",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "PayrollProtection",
+   "result": "PASS",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "TaxReserveFloor",
+   "result": "PASS",
+   "reason": "cash covers each tax payment due by 2026-11-30",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DisputedInvoiceLock",
+   "result": "PASS",
+   "reason": "no disputed invoice is being settled",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "ConcentrationWarning",
+   "result": "PASS",
+   "reason": "no concentrated customer involved",
+   "flags": [],
+   "rows": []
+  }
+ ],
+ "policy": [],
+ "text_corrections": [],
+ "payload_figures": {},
+ "material_omissions": [],
+ "tools_called": [],
+ "risk_flags": [],
+ "disclosures": [],
+ "approval": {
+  "required": false,
+  "by": null,
+  "status": "not_required",
+  "confirmation_phrase": null,
+  "not_before": null
+ },
+ "verifier_version": "1.0.0",
+ "created_at": "2026-10-11T15:51:44.000000+00:00",
+ "audit_seq": 35
+}

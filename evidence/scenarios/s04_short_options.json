@@ -1,0 +1,818 @@
+{
+ "id": "s04_short_options",
+ "turns": [
+  {
+   "turn": 1,
+   "request": "We're short in week 7 — what are our options?",
+   "attachments": [],
+   "steps": [
+    {
+     "step": "plan",
+     "kinds": [
+      "ANSWER_QUERY",
+      "DRAFT_FORECAST",
+      "RANK_FINANCING"
+     ],
+     "required": null,
+     "tools": [
+      "get_cash_projection",
+      "get_financing_options"
+     ],
+     "routes": [
+      "cash",
+      "financing"
+     ]
+    },
+    {
+     "step": "tools",
+     "ran": [
+      "get_cash_projection",
+      "get_financing_options"
+     ],
+     "facts": 53
+    },
+    {
+     "step": "model",
+     "phase": "draft",
+     "attempt": 1,
+     "elapsed_ms": 0,
+     "valid": true
+    },
+    {
+     "step": "verified",
+     "outcome": "verified",
+     "status": "executed",
+     "receipt_id": "rcp_4b4b38587edc4cd1",
+     "flags": [
+      "CONCENTRATION_RISK",
+      "MATERIAL_OMISSION"
+     ]
+    }
+   ],
+   "presented": {
+    "intent_id": "int_4b4b38587edc4cd1",
+    "kind": "RANK_FINANCING",
+    "outcome": "verified",
+    "tier": "T1",
+    "claims": [
+     {
+      "statement": "Projected cash falls below zero in weeks 6 to 8. The projected low is week 7, ending 2026-12-06, at -€219,676.22. Counting contracted lines only, projected cash is below zero from week 6.",
+      "figure": "-219676.22",
+      "status": "verified",
+      "fact_id": "proj.shortfall",
+      "mandatory": true,
+      "commentary": "Projected cash falls below zero in weeks 6 to 8, with the lowest point in week 7, ending 2026-12-06, at -€219,676.22.",
+      "sources": [
+       "acc_operating",
+       "acc_petty_cash",
+       "inv_0665",
+       "inv_0681",
+       "inv_0666"
+      ]
+     },
+     {
+      "statement": "Ranked on cost, coverage, speed, flexibility and collateral: 1. Synthetic Bank A, Existing revolving facility - drawdown, €512.05 in total for €100,000.00 of the €220,000.00 gap; 2. Synthetic Factor E, Selective invoice finance, €4,164.35 in total for €220,000.00 of the €220,000.00 gap; 3. Synthetic Factor F, Whole-ledger factoring, 12-month commitment, €6,000.00 in total for €220,000.00 of the €220,000.00 gap.",
+      "figure": null,
+      "status": "inserted_by_verifier",
+      "fact_id": "fin.ranking",
+      "mandatory": true,
+      "sources": [
+       "biz_nordvik",
+       "fin_cl_01",
+       "fin_if_01",
+       "fin_if_02"
+      ]
+     },
+     {
+      "statement": "Doing nothing: Projected cash stays below zero from 2026-11-23 to 2026-12-13, with a low of -€219,676.22 in week 7. Nothing is paid for financing, and the shortfall is not covered.",
+      "figure": null,
+      "status": "inserted_by_verifier",
+      "fact_id": "fin.do_nothing",
+      "mandatory": true,
+      "sources": [
+       "biz_nordvik"
+      ]
+     },
+     {
+      "statement": "In week 7, Payable inv_0665, due 2026-12-01, takes €142,500.00, and Order book payable inv_0681, due 2026-12-03, takes €33,953.66, and Payable inv_0666, due 2026-12-04, takes €33,904.50.",
+      "figure": "142500.00",
+      "status": "verified",
+      "model_figure": null,
+      "sources": [
+       "inv_0665"
+      ]
+     },
+     {
+      "statement": "The gap to fund is €220,000.00, from 2026-11-23 to 2026-12-13, 21 days, and it needs to be covered within 38 days.",
+      "figure": "220000.00",
+      "status": "verified",
+      "model_figure": null,
+      "sources": [
+       "biz_nordvik"
+      ]
+     },
+     {
+      "statement": "Synthetic Bank A, Existing revolving facility - drawdown, can cover 45% of the gap with a cost of €512.05 for €100,000.00, and it can be funded in 1 day.",
+      "figure": "512.05",
+      "status": "verified",
+      "model_figure": null,
+      "sources": [
+       "fin_cl_01"
+      ]
+     },
+     {
+      "statement": "Synthetic Factor E, Selective invoice finance, can cover 100% of the gap with a cost of €4,164.35 for €220,000.00, and it can be funded in 3 days.",
+      "figure": "4164.35",
+      "status": "verified",
+      "model_figure": null,
+      "sources": [
+       "fin_if_01"
+      ]
+     },
+     {
+      "statement": "Synthetic Factor F, Whole-ledger factoring, 12-month commitment, can cover 100% of the gap with a cost of €6,000.00 for €220,000.00, and it can be funded in 14 days.",
+      "figure": "6000.00",
+      "status": "verified",
+      "model_figure": null,
+      "sources": [
+       "fin_if_02"
+      ]
+     }
+    ],
+    "rationale": "The owner needs to know the options to cover the shortfall in week 7.",
+    "blocked_by": [],
+    "warnings": [
+     {
+      "rule": "ConcentrationWarning",
+      "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory."
+     }
+    ],
+    "disclosures": [
+     "Informational only: this is not regulated financial advice. Products in this sandbox are synthetic. Compare total cost of capital and terms with a qualified adviser before committing."
+    ],
+    "approval": {
+     "required": false,
+     "by": null,
+     "status": "not_required",
+     "confirmation_phrase": null,
+     "not_before": null
+    },
+    "financing": {
+     "synthetic_catalogue": true,
+     "gap": {
+      "amount": "220000.00",
+      "need_by": "2026-11-23",
+      "until": "2026-12-13",
+      "days": 21,
+      "lead_days": 38
+     },
+     "weights": {
+      "cost": "0.4000",
+      "coverage": "0.2000",
+      "speed": "0.1500",
+      "flexibility": "0.1500",
+      "collateral": "0.1000"
+     },
+     "options": [
+      {
+       "product_id": "fin_cl_01",
+       "provider": "Synthetic Bank A",
+       "name": "Existing revolving facility - drawdown",
+       "kind": "credit_line",
+       "eligible": true,
+       "reasons": [],
+       "amount": "100000.00",
+       "days": 21,
+       "full_term_months": null,
+       "total_cost": "512.05",
+       "breakdown": [
+        {
+         "item": "interest",
+         "amount": "512.05"
+        },
+        {
+         "item": "arrangement fee",
+         "amount": "0.00"
+        },
+        {
+         "item": "fee on the undrawn limit",
+         "amount": "0.00"
+        }
+       ],
+       "funded_in_days": 1,
+       "in_time": true,
+       "scores": {
+        "cost": "100.0",
+        "coverage": "45.5",
+        "speed": "98.0",
+        "flexibility": "100.0",
+        "collateral": "40.0"
+       },
+       "score": "82.8"
+      },
+      {
+       "product_id": "fin_if_01",
+       "provider": "Synthetic Factor E",
+       "name": "Selective invoice finance",
+       "kind": "invoice_factoring",
+       "eligible": true,
+       "reasons": [],
+       "amount": "220000.00",
+       "days": 21,
+       "full_term_months": null,
+       "total_cost": "4164.35",
+       "breakdown": [
+        {
+         "item": "discount fee",
+         "amount": "2750.00"
+        },
+        {
+         "item": "service fee on 2 invoices",
+         "amount": "1414.35"
+        }
+       ],
+       "funded_in_days": 3,
+       "in_time": true,
+       "scores": {
+        "cost": "27.1",
+        "coverage": "100.0",
+        "speed": "94.0",
+        "flexibility": "70.0",
+        "collateral": "100.0"
+       },
+       "score": "65.4"
+      },
+      {
+       "product_id": "fin_if_02",
+       "provider": "Synthetic Factor F",
+       "name": "Whole-ledger factoring, 12-month commitment",
+       "kind": "invoice_factoring",
+       "eligible": true,
+       "reasons": [],
+       "amount": "220000.00",
+       "days": 21,
+       "full_term_months": 12,
+       "total_cost": "6000.00",
+       "breakdown": [
+        {
+         "item": "discount fee",
+         "amount": "2090.00"
+        },
+        {
+         "item": "service fee on 2 invoices",
+         "amount": "3394.44"
+        },
+        {
+         "item": "top-up to the minimum annual fee",
+         "amount": "515.56"
+        }
+       ],
+       "funded_in_days": 14,
+       "in_time": true,
+       "scores": {
+        "cost": "18.8",
+        "coverage": "100.0",
+        "speed": "72.0",
+        "flexibility": "70.0",
+        "collateral": "100.0"
+       },
+       "score": "58.8"
+      },
+      {
+       "product_id": "fin_cl_02",
+       "provider": "Synthetic Fintech D",
+       "name": "Flexible online credit line",
+       "kind": "credit_line",
+       "eligible": true,
+       "reasons": [],
+       "amount": "75000.00",
+       "days": 21,
+       "full_term_months": null,
+       "total_cost": "1392.95",
+       "breakdown": [
+        {
+         "item": "interest",
+         "amount": "642.95"
+        },
+        {
+         "item": "drawdown fee",
+         "amount": "750.00"
+        }
+       ],
+       "funded_in_days": 2,
+       "in_time": true,
+       "scores": {
+        "cost": "27.6",
+        "coverage": "34.1",
+        "speed": "96.0",
+        "flexibility": "100.0",
+        "collateral": "100.0"
+       },
+       "score": "57.3"
+      },
+      {
+       "product_id": "fin_sc_01",
+       "provider": "Synthetic Supplier Finance G",
+       "name": "Payment-term extension, +60 days",
+       "kind": "supplier_credit",
+       "eligible": true,
+       "reasons": [],
+       "amount": "150000.00",
+       "days": 21,
+       "full_term_months": null,
+       "total_cost": "3000.00",
+       "breakdown": [
+        {
+         "item": "extension fee",
+         "amount": "3000.00"
+        }
+       ],
+       "funded_in_days": 5,
+       "in_time": true,
+       "scores": {
+        "cost": "25.6",
+        "coverage": "68.2",
+        "speed": "90.0",
+        "flexibility": "60.0",
+        "collateral": "100.0"
+       },
+       "score": "56.4"
+      },
+      {
+       "product_id": "fin_ma_01",
+       "provider": "Synthetic Merchant Funder I",
+       "name": "Revenue-based advance",
+       "kind": "merchant_advance",
+       "eligible": true,
+       "reasons": [],
+       "amount": "120000.00",
+       "days": 21,
+       "full_term_months": 9,
+       "total_cost": "19200.00",
+       "breakdown": [
+        {
+         "item": "factor charge",
+         "amount": "19200.00"
+        }
+       ],
+       "funded_in_days": 2,
+       "in_time": true,
+       "scores": {
+        "cost": "3.2",
+        "coverage": "54.5",
+        "speed": "96.0",
+        "flexibility": "30.0",
+        "collateral": "100.0"
+       },
+       "score": "41.1"
+      },
+      {
+       "product_id": "fin_tl_01",
+       "provider": "Synthetic Bank A",
+       "name": "Secured growth loan, 36 months",
+       "kind": "term_loan",
+       "eligible": true,
+       "reasons": [],
+       "amount": "220000.00",
+       "days": 21,
+       "full_term_months": 36,
+       "total_cost": "31118.81",
+       "breakdown": [
+        {
+         "item": "interest over the full 36-month term",
+         "amount": "27818.81"
+        },
+        {
+         "item": "arrangement fee",
+         "amount": "3300.00"
+        }
+       ],
+       "funded_in_days": 21,
+       "in_time": true,
+       "scores": {
+        "cost": "3.6",
+        "coverage": "100.0",
+        "speed": "58.0",
+        "flexibility": "20.0",
+        "collateral": "40.0"
+       },
+       "score": "37.1"
+      },
+      {
+       "product_id": "fin_ma_02",
+       "provider": "Synthetic Merchant Funder J",
+       "name": "Same-week cash advance",
+       "kind": "merchant_advance",
+       "eligible": true,
+       "reasons": [],
+       "amount": "60000.00",
+       "days": 21,
+       "full_term_months": 6,
+       "total_cost": "14400.00",
+       "breakdown": [
+        {
+         "item": "factor charge",
+         "amount": "14400.00"
+        }
+       ],
+       "funded_in_days": 1,
+       "in_time": true,
+       "scores": {
+        "cost": "2.1",
+        "coverage": "27.3",
+        "speed": "98.0",
+        "flexibility": "30.0",
+        "collateral": "100.0"
+       },
+       "score": "35.5"
+      },
+      {
+       "product_id": "fin_tl_02",
+       "provider": "Synthetic Bank B",
+       "name": "Unsecured SME loan, 24 months",
+       "kind": "term_loan",
+       "eligible": true,
+       "reasons": [],
+       "amount": "100000.00",
+       "days": 21,
+       "full_term_months": 24,
+       "total_cost": "14416.76",
+       "breakdown": [
+        {
+         "item": "interest over the full 24-month term",
+         "amount": "12416.76"
+        },
+        {
+         "item": "arrangement fee",
+         "amount": "2000.00"
+        }
+       ],
+       "funded_in_days": 10,
+       "in_time": true,
+       "scores": {
+        "cost": "3.6",
+        "coverage": "45.5",
+        "speed": "80.0",
+        "flexibility": "20.0",
+        "collateral": "100.0"
+       },
+       "score": "35.5"
+      },
+      {
+       "product_id": "fin_tl_03",
+       "provider": "Synthetic Credit Union C",
+       "name": "Community business loan, 12 months",
+       "kind": "term_loan",
+       "eligible": true,
+       "reasons": [],
+       "amount": "50000.00",
+       "days": 21,
+       "full_term_months": 12,
+       "total_cost": "2860.11",
+       "breakdown": [
+        {
+         "item": "interest over the full 12-month term",
+         "amount": "2610.11"
+        },
+        {
+         "item": "arrangement fee",
+         "amount": "250.00"
+        }
+       ],
+       "funded_in_days": 14,
+       "in_time": true,
+       "scores": {
+        "cost": "9.0",
+        "coverage": "22.7",
+        "speed": "72.0",
+        "flexibility": "20.0",
+        "collateral": "100.0"
+       },
+       "score": "31.9"
+      },
+      {
+       "product_id": "fin_sc_02",
+       "provider": "Synthetic Trade Finance H",
+       "name": "Reverse factoring programme",
+       "kind": "supplier_credit",
+       "eligible": false,
+       "reasons": [
+        "needs the supplier to enrol in the programme, which is not confirmed"
+       ],
+       "amount": "0.00",
+       "days": 0,
+       "full_term_months": null,
+       "total_cost": "0.00",
+       "breakdown": [],
+       "funded_in_days": 10,
+       "in_time": false,
+       "scores": {},
+       "score": null
+      },
+      {
+       "product_id": "fin_tl_04",
+       "provider": "Synthetic Development Lender K",
+       "name": "Green equipment loan, 60 months",
+       "kind": "term_loan",
+       "eligible": false,
+       "reasons": [
+        "does not lend for working capital"
+       ],
+       "amount": "0.00",
+       "days": 0,
+       "full_term_months": null,
+       "total_cost": "0.00",
+       "breakdown": [],
+       "funded_in_days": 30,
+       "in_time": false,
+       "scores": {},
+       "score": null
+      }
+     ],
+     "do_nothing": {
+      "total_cost": "0.00",
+      "consequence": "Projected cash stays below zero from 2026-11-23 to 2026-12-13, with a low of -€219,676.22 in week 7. Nothing is paid for financing, and the shortfall is not covered."
+     }
+    },
+    "receipt_id": "rcp_4b4b38587edc4cd1",
+    "status": "executed",
+    "audit_seq": 8
+   },
+   "receipt": {
+    "receipt_id": "rcp_4b4b38587edc4cd1",
+    "action_intent_id": "int_4b4b38587edc4cd1",
+    "outcome": "verified",
+    "kind": "RANK_FINANCING",
+    "tier": "T1",
+    "rows_read": [
+     {
+      "table": "account",
+      "id": "acc_operating"
+     },
+     {
+      "table": "account",
+      "id": "acc_petty_cash"
+     },
+     {
+      "table": "business",
+      "id": "biz_nordvik"
+     },
+     {
+      "table": "counterparty",
+      "id": "cp_brennan"
+     },
+     {
+      "table": "financing_product",
+      "id": "fin_cl_01"
+     },
+     {
+      "table": "financing_product",
+      "id": "fin_if_01"
+     },
+     {
+      "table": "financing_product",
+      "id": "fin_if_02"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0665"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0666"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0681"
+     }
+    ],
+    "schema_errors": [],
+    "recomputations": [
+     {
+      "claim_index": 0,
+      "claim": "Projected cash falls below zero in weeks 6 to 8, with the lowest point in week 7, ending 2026-12-06, at -€219,676.22.",
+      "status": "match",
+      "model_figure": "-219676.22",
+      "recomputed": "-219676.22",
+      "match": true,
+      "formula": "opening + Σin − Σout for the chosen band",
+      "operands": [
+       "acc_operating",
+       "acc_petty_cash",
+       "inv_0665",
+       "inv_0681",
+       "inv_0666"
+      ],
+      "reason": null
+     },
+     {
+      "claim_index": 1,
+      "claim": "In week 7, Payable inv_0665, due 2026-12-01, takes €142,500.00, and Order book payable inv_0681, due 2026-12-03, takes €33,953.66, and Payable inv_0666, due 2026-12-04, takes €33,904.50.",
+      "status": "match",
+      "model_figure": "142500.00",
+      "recomputed": "142500.00",
+      "match": true,
+      "formula": "Σ (gross − paid)",
+      "operands": [
+       "inv_0665"
+      ],
+      "reason": null
+     },
+     {
+      "claim_index": 2,
+      "claim": "The gap to fund is €220,000.00, from 2026-11-23 to 2026-12-13, 21 days, and it needs to be covered within 38 days.",
+      "status": "match",
+      "model_figure": "220000.00",
+      "recomputed": "220000.00",
+      "match": true,
+      "formula": "financial metric, method stated on the fact",
+      "operands": [
+       "biz_nordvik"
+      ],
+      "reason": null
+     },
+     {
+      "claim_index": 3,
+      "claim": "Synthetic Bank A, Existing revolving facility - drawdown, can cover 45% of the gap with a cost of €512.05 for €100,000.00, and it can be funded in 1 day.",
+      "status": "match",
+      "model_figure": "512.05",
+      "recomputed": "512.05",
+      "match": true,
+      "formula": "interest and fees in euros over the drawdown period, or the full term",
+      "operands": [
+       "fin_cl_01"
+      ],
+      "reason": null
+     },
+     {
+      "claim_index": 4,
+      "claim": "Synthetic Factor E, Selective invoice finance, can cover 100% of the gap with a cost of €4,164.35 for €220,000.00, and it can be funded in 3 days.",
+      "status": "match",
+      "model_figure": "4164.35",
+      "recomputed": "4164.35",
+      "match": true,
+      "formula": "interest and fees in euros over the drawdown period, or the full term",
+      "operands": [
+       "fin_if_01"
+      ],
+      "reason": null
+     },
+     {
+      "claim_index": 5,
+      "claim": "Synthetic Factor F, Whole-ledger factoring, 12-month commitment, can cover 100% of the gap with a cost of €6,000.00 for €220,000.00, and it can be funded in 14 days.",
+      "status": "match",
+      "model_figure": "6000.00",
+      "recomputed": "6000.00",
+      "match": true,
+      "formula": "interest and fees in euros over the drawdown period, or the full term",
+      "operands": [
+       "fin_if_02"
+      ],
+      "reason": null
+     }
+    ],
+    "provenance": [
+     {
+      "claim_index": 0,
+      "status": "supported",
+      "reason": null
+     },
+     {
+      "claim_index": 1,
+      "status": "supported",
+      "reason": null
+     },
+     {
+      "claim_index": 2,
+      "status": "supported",
+      "reason": null
+     },
+     {
+      "claim_index": 3,
+      "status": "supported",
+      "reason": null
+     },
+     {
+      "claim_index": 4,
+      "status": "supported",
+      "reason": null
+     },
+     {
+      "claim_index": 5,
+      "status": "supported",
+      "reason": null
+     }
+    ],
+    "rules_evaluated": [
+     {
+      "rule": "SufficientBalance",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "AmountCeiling",
+      "result": "PASS",
+      "reason": "no money leaves the business in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "DuplicatePayment",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "CounterpartyWhitelist",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "PayrollProtection",
+      "result": "PASS",
+      "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "TaxReserveFloor",
+      "result": "PASS",
+      "reason": "cash covers each tax payment due by 2026-11-30",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "DisputedInvoiceLock",
+      "result": "PASS",
+      "reason": "no disputed invoice is being settled",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "ConcentrationWarning",
+      "result": "WARN",
+      "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory.",
+      "flags": [
+       "CONCENTRATION_RISK"
+      ],
+      "rows": [
+       "cp_brennan"
+      ]
+     }
+    ],
+    "policy": [
+     {
+      "check": "financing_disclosure",
+      "result": "ok",
+      "detail": "non-removable disclosure attached"
+     },
+     {
+      "check": "total_cost_of_capital",
+      "result": "ok",
+      "detail": "every product discussed has a verified total cost"
+     }
+    ],
+    "text_corrections": [],
+    "payload_figures": {},
+    "material_omissions": [
+     {
+      "fact_id": "fin.ranking",
+      "inserted": "Ranked on cost, coverage, speed, flexibility and collateral: 1. Synthetic Bank A, Existing revolving facility - drawdown, €512.05 in total for €100,000.00 of the €220,000.00 gap; 2. Synthetic Factor E, Selective invoice finance, €4,164.35 in total for €220,000.00 of the €220,000.00 gap; 3. Synthetic Factor F, Whole-ledger factoring, 12-month commitment, €6,000.00 in total for €220,000.00 of the €220,000.00 gap.",
+      "why": "a financing answer always states total cost in euros"
+     },
+     {
+      "fact_id": "fin.do_nothing",
+      "inserted": "Doing nothing: Projected cash stays below zero from 2026-11-23 to 2026-12-13, with a low of -€219,676.22 in week 7. Nothing is paid for financing, and the shortfall is not covered.",
+      "why": "a financing answer always shows the do-nothing baseline"
+     }
+    ],
+    "tools_called": [
+     "get_cash_projection",
+     "get_financing_options"
+    ],
+    "risk_flags": [
+     "CONCENTRATION_RISK",
+     "MATERIAL_OMISSION"
+    ],
+    "disclosures": [
+     "Informational only: this is not regulated financial advice. Products in this sandbox are synthetic. Compare total cost of capital and terms with a qualified adviser before committing."
+    ],
+    "approval": {
+     "required": false,
+     "by": null,
+     "status": "not_required",
+     "confirmation_phrase": null,
+     "not_before": null
+    },
+    "verifier_version": "1.0.0",
+    "created_at": "2026-10-11T15:50:54.000000+00:00",
+    "audit_seq": 8
+   }
+  }
+ ]
+}

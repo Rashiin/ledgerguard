@@ -1,0 +1,494 @@
+{
+ "id": "s03_brennan_late",
+ "turns": [
+  {
+   "turn": 1,
+   "request": "What if Brennan Hospitality pays 30 days late?",
+   "attachments": [],
+   "steps": [
+    {
+     "step": "plan",
+     "kinds": [
+      "ANSWER_QUERY",
+      "RUN_SCENARIO"
+     ],
+     "required": "RUN_SCENARIO",
+     "tools": [
+      "get_cash_projection",
+      "get_revenue_concentration"
+     ],
+     "routes": [
+      "scenario"
+     ]
+    },
+    {
+     "step": "tools",
+     "ran": [
+      "get_cash_projection",
+      "get_revenue_concentration"
+     ],
+     "facts": 43
+    },
+    {
+     "step": "model",
+     "phase": "draft",
+     "attempt": 1,
+     "elapsed_ms": 0,
+     "valid": true
+    },
+    {
+     "step": "scenario",
+     "payload_errors": []
+    },
+    {
+     "step": "model",
+     "phase": "final",
+     "attempt": 1,
+     "elapsed_ms": 0,
+     "valid": true
+    },
+    {
+     "step": "verified",
+     "outcome": "verified",
+     "status": "executed",
+     "receipt_id": "rcp_662de3b8d254437a",
+     "flags": [
+      "CONCENTRATION_RISK",
+      "MATERIAL_OMISSION"
+     ]
+    }
+   ],
+   "presented": {
+    "intent_id": "int_662de3b8d254437a",
+    "kind": "RUN_SCENARIO",
+    "outcome": "verified",
+    "tier": "T1",
+    "claims": [
+     {
+      "statement": "Projected cash falls below zero in weeks 6 to 8. The projected low is week 7, ending 2026-12-06, at -€219,676.22. Counting contracted lines only, projected cash is below zero from week 6.",
+      "figure": "-219676.22",
+      "status": "inserted_by_verifier",
+      "fact_id": "proj.shortfall",
+      "mandatory": true,
+      "sources": [
+       "acc_operating",
+       "acc_petty_cash",
+       "inv_0665",
+       "inv_0681",
+       "inv_0666"
+      ]
+     },
+     {
+      "statement": "Brennan Hospitality Group is 36.89% of net revenue over the last 12 months, above the 30% concentration threshold.",
+      "figure": "36.89",
+      "status": "inserted_by_verifier",
+      "fact_id": "rev.share.cp_brennan",
+      "mandatory": true,
+      "sources": [
+       "cp_brennan"
+      ]
+     },
+     {
+      "statement": "With Brennan Hospitality Group paying 30 days later than usual, projected cash reaches its low in week 11, ending 2027-01-03, at -€424,047.56, against -€219,676.22 in week 7 without the change. New high alerts: VAT return Sep-Oct 2026, estimated from invoices issued in the period: €155,391.41 is due on 2026-11-23. Projected cash the day before is €132,920.36. Payroll pay_0027 on 2026-12-28 needs €73,576.18. Projected cash the day before is -€253,261.82, short by €326,838.00.",
+      "figure": "-424047.56",
+      "status": "verified",
+      "fact_id": "scn.result",
+      "mandatory": true,
+      "commentary": "With Brennan Hospitality Group paying 30 days later than usual, projected cash reaches its low in week 11, ending 2027-01-03, at -€424,047.56, against -€219,676.22 in week 7 without the change.",
+      "sources": [
+       "cp_brennan",
+       "inv_0412",
+       "inv_0661",
+       "inv_0678",
+       "inv_0684",
+       "inv_0685",
+       "inv_0693",
+       "inv_0697",
+       "inv_0705"
+      ]
+     }
+    ],
+    "rationale": "Simulate the impact of Brennan Hospitality paying its invoices 30 days late.",
+    "blocked_by": [],
+    "warnings": [
+     {
+      "rule": "ConcentrationWarning",
+      "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory."
+     }
+    ],
+    "disclosures": [],
+    "approval": {
+     "required": false,
+     "by": null,
+     "status": "not_required",
+     "confirmation_phrase": null,
+     "not_before": null
+    },
+    "scenario": {
+     "description": "Brennan Hospitality Group paying 30 days later than usual",
+     "before": [
+      {
+       "week": "1",
+       "closing": "182499.93",
+       "closing_contracted": "182499.93"
+      },
+      {
+       "week": "2",
+       "closing": "145253.49",
+       "closing_contracted": "145253.49"
+      },
+      {
+       "week": "3",
+       "closing": "106036.72",
+       "closing_contracted": "134341.37"
+      },
+      {
+       "week": "4",
+       "closing": "79134.50",
+       "closing_contracted": "107439.15"
+      },
+      {
+       "week": "5",
+       "closing": "179774.36",
+       "closing_contracted": "158971.99"
+      },
+      {
+       "week": "6",
+       "closing": "-20086.18",
+       "closing_contracted": "-47126.52"
+      },
+      {
+       "week": "7",
+       "closing": "-219676.22",
+       "closing_contracted": "-238915.02"
+      },
+      {
+       "week": "8",
+       "closing": "-205605.30",
+       "closing_contracted": "-255765.02"
+      },
+      {
+       "week": "9",
+       "closing": "87653.56",
+       "closing_contracted": "-13321.60"
+      },
+      {
+       "week": "10",
+       "closing": "138308.15",
+       "closing_contracted": "-13321.60"
+      },
+      {
+       "week": "11",
+       "closing": "18375.05",
+       "closing_contracted": "-101041.78"
+      },
+      {
+       "week": "12",
+       "closing": "75297.66",
+       "closing_contracted": "-102281.78"
+      },
+      {
+       "week": "13",
+       "closing": "97320.87",
+       "closing_contracted": "-102281.78"
+      }
+     ],
+     "after": [
+      {
+       "week": "1",
+       "closing": "182499.93",
+       "closing_contracted": "182499.93"
+      },
+      {
+       "week": "2",
+       "closing": "98399.49",
+       "closing_contracted": "98399.49"
+      },
+      {
+       "week": "3",
+       "closing": "59182.72",
+       "closing_contracted": "87487.37"
+      },
+      {
+       "week": "4",
+       "closing": "32280.50",
+       "closing_contracted": "60585.15"
+      },
+      {
+       "week": "5",
+       "closing": "132920.36",
+       "closing_contracted": "112117.99"
+      },
+      {
+       "week": "6",
+       "closing": "-75406.33",
+       "closing_contracted": "-102446.67"
+      },
+      {
+       "week": "7",
+       "closing": "-274996.37",
+       "closing_contracted": "-294235.17"
+      },
+      {
+       "week": "8",
+       "closing": "-260925.45",
+       "closing_contracted": "-311085.17"
+      },
+      {
+       "week": "9",
+       "closing": "-302229.05",
+       "closing_contracted": "-296191.75"
+      },
+      {
+       "week": "10",
+       "closing": "-253261.82",
+       "closing_contracted": "-240871.60"
+      },
+      {
+       "week": "11",
+       "closing": "-424047.56",
+       "closing_contracted": "-328591.78"
+      },
+      {
+       "week": "12",
+       "closing": "-367124.95",
+       "closing_contracted": "-329831.78"
+      },
+      {
+       "week": "13",
+       "closing": "-57261.99",
+       "closing_contracted": "-102281.78"
+      }
+     ],
+     "new_alerts": [
+      {
+       "id": "tax.obl_0004",
+       "kind": "TAX_RESERVE",
+       "severity": "high",
+       "headline": "VAT return Sep-Oct 2026, estimated from invoices issued in the period: €155,391.41 is due on 2026-11-23. Projected cash the day before is €132,920.36.",
+       "lead_days": 38,
+       "rows": [
+        "obl_0004"
+       ],
+       "classes": [
+        "CONTRACTED",
+        "EXPECTED"
+       ]
+      },
+      {
+       "id": "payroll.pay_0027",
+       "kind": "PAYROLL_PRESSURE",
+       "severity": "high",
+       "headline": "Payroll pay_0027 on 2026-12-28 needs €73,576.18. Projected cash the day before is -€253,261.82, short by €326,838.00.",
+       "lead_days": 73,
+       "rows": [
+        "pay_0027"
+       ],
+       "classes": [
+        "CONTRACTED",
+        "EXPECTED"
+       ]
+      }
+     ],
+     "cleared_alerts": []
+    },
+    "receipt_id": "rcp_662de3b8d254437a",
+    "status": "executed",
+    "audit_seq": 6
+   },
+   "receipt": {
+    "receipt_id": "rcp_662de3b8d254437a",
+    "action_intent_id": "int_662de3b8d254437a",
+    "outcome": "verified",
+    "kind": "RUN_SCENARIO",
+    "tier": "T1",
+    "rows_read": [
+     {
+      "table": "account",
+      "id": "acc_operating"
+     },
+     {
+      "table": "account",
+      "id": "acc_petty_cash"
+     },
+     {
+      "table": "counterparty",
+      "id": "cp_brennan"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0412"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0661"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0665"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0666"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0678"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0681"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0684"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0685"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0693"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0697"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0705"
+     }
+    ],
+    "schema_errors": [],
+    "recomputations": [
+     {
+      "claim_index": 0,
+      "claim": "With Brennan Hospitality Group paying 30 days later than usual, projected cash reaches its low in week 11, ending 2027-01-03, at -€424,047.56, against -€219,676.22 in week 7 without the change.",
+      "status": "match",
+      "model_figure": "-424047.56",
+      "recomputed": "-424047.56",
+      "match": true,
+      "formula": "opening + Σin − Σout after the scenario's changes",
+      "operands": [
+       "cp_brennan",
+       "inv_0412",
+       "inv_0661",
+       "inv_0678",
+       "inv_0684",
+       "inv_0685",
+       "inv_0693",
+       "inv_0697",
+       "inv_0705"
+      ],
+      "reason": null
+     }
+    ],
+    "provenance": [
+     {
+      "claim_index": 0,
+      "status": "supported",
+      "reason": null
+     }
+    ],
+    "rules_evaluated": [
+     {
+      "rule": "SufficientBalance",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "AmountCeiling",
+      "result": "PASS",
+      "reason": "no money leaves the business in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "DuplicatePayment",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "CounterpartyWhitelist",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "PayrollProtection",
+      "result": "PASS",
+      "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "TaxReserveFloor",
+      "result": "PASS",
+      "reason": "cash covers each tax payment due by 2026-11-30",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "DisputedInvoiceLock",
+      "result": "PASS",
+      "reason": "no disputed invoice is being settled",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "ConcentrationWarning",
+      "result": "WARN",
+      "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory.",
+      "flags": [
+       "CONCENTRATION_RISK"
+      ],
+      "rows": [
+       "cp_brennan"
+      ]
+     }
+    ],
+    "policy": [],
+    "text_corrections": [],
+    "payload_figures": {},
+    "material_omissions": [
+     {
+      "fact_id": "proj.shortfall",
+      "inserted": "Projected cash falls below zero in weeks 6 to 8. The projected low is week 7, ending 2026-12-06, at -€219,676.22. Counting contracted lines only, projected cash is below zero from week 6.",
+      "why": "a projected week closes below zero"
+     },
+     {
+      "fact_id": "rev.share.cp_brennan",
+      "inserted": "Brennan Hospitality Group is 36.89% of net revenue over the last 12 months, above the 30% concentration threshold.",
+      "why": "a customer is above the concentration threshold"
+     }
+    ],
+    "tools_called": [
+     "get_cash_projection",
+     "get_revenue_concentration",
+     "run_scenario"
+    ],
+    "risk_flags": [
+     "CONCENTRATION_RISK",
+     "MATERIAL_OMISSION"
+    ],
+    "disclosures": [],
+    "approval": {
+     "required": false,
+     "by": null,
+     "status": "not_required",
+     "confirmation_phrase": null,
+     "not_before": null
+    },
+    "verifier_version": "1.0.0",
+    "created_at": "2026-10-11T15:50:49.000000+00:00",
+    "audit_seq": 6
+   }
+  }
+ ]
+}

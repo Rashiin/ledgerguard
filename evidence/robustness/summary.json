@@ -1,0 +1,66 @@
+{
+ "model": "qwen2.5-7b-instruct",
+ "temperature": 0.7,
+ "overall": {
+  "samples": 50,
+  "samples_with_a_figure_corrected_masked_or_removed": 9,
+  "totals": {
+   "figures_checked": 134,
+   "figure_corrected": 0,
+   "figure_not_recomputable": 7,
+   "text_figure_corrected": 0,
+   "text_figure_masked": 12,
+   "currency_fixed": 0,
+   "claim_removed": 7,
+   "material_omission": 18,
+   "turn_failed": 0
+  }
+ },
+ "by_turn": {
+  "s01_cash_quarter": {
+   "samples": 17,
+   "samples_with_a_figure_corrected_masked_or_removed": 0,
+   "totals": {
+    "figures_checked": 41,
+    "figure_corrected": 0,
+    "figure_not_recomputable": 0,
+    "text_figure_corrected": 0,
+    "text_figure_masked": 0,
+    "currency_fixed": 0,
+    "claim_removed": 0,
+    "material_omission": 0,
+    "turn_failed": 0
+   }
+  },
+  "s05_factoring_vs_credit_line": {
+   "samples": 17,
+   "samples_with_a_figure_corrected_masked_or_removed": 1,
+   "totals": {
+    "figures_checked": 65,
+    "figure_corrected": 0,
+    "figure_not_recomputable": 0,
+    "text_figure_corrected": 0,
+    "text_figure_masked": 1,
+    "currency_fixed": 0,
+    "claim_removed": 7,
+    "material_omission": 17,
+    "turn_failed": 0
+   }
+  },
+  "s09_pay_all_suppliers": {
+   "samples": 16,
+   "samples_with_a_figure_corrected_masked_or_removed": 8,
+   "totals": {
+    "figures_checked": 28,
+    "figure_corrected": 0,
+    "figure_not_recomputable": 7,
+    "text_figure_corrected": 0,
+    "text_figure_masked": 11,
+    "currency_fixed": 0,
+    "claim_removed": 0,
+    "material_omission": 1,
+    "turn_failed": 0
+   }
+  }
+ }
+}

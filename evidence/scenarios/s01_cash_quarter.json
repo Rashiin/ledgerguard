@@ -1,0 +1,217 @@
+{
+ "id": "s01_cash_quarter",
+ "turns": [
+  {
+   "turn": 1,
+   "request": "How is our cash looking for the next quarter?",
+   "attachments": [],
+   "steps": [
+    {
+     "step": "plan",
+     "kinds": [
+      "ANSWER_QUERY",
+      "DRAFT_FORECAST"
+     ],
+     "required": null,
+     "tools": [
+      "get_cash_projection"
+     ],
+     "routes": [
+      "cash"
+     ]
+    },
+    {
+     "step": "tools",
+     "ran": [
+      "get_cash_projection"
+     ],
+     "facts": 38
+    },
+    {
+     "step": "model",
+     "phase": "draft",
+     "attempt": 1,
+     "elapsed_ms": 0,
+     "valid": true
+    },
+    {
+     "step": "verified",
+     "outcome": "verified",
+     "status": "executed",
+     "receipt_id": "rcp_c78049775bbd4c95",
+     "flags": []
+    }
+   ],
+   "presented": {
+    "intent_id": "int_c78049775bbd4c95",
+    "kind": "ANSWER_QUERY",
+    "outcome": "verified",
+    "tier": "T0",
+    "claims": [
+     {
+      "statement": "Projected cash falls below zero in weeks 6 to 8. The projected low is week 7, ending 2026-12-06, at -€219,676.22. Counting contracted lines only, projected cash is below zero from week 6.",
+      "figure": "-219676.22",
+      "status": "verified",
+      "fact_id": "proj.shortfall",
+      "mandatory": true,
+      "commentary": "The projected cash for the next quarter starts at €182,499.93 and ends at €97,320.87, with a projected low in week 7 at -€219,676.22.",
+      "sources": [
+       "acc_operating",
+       "acc_petty_cash",
+       "inv_0665",
+       "inv_0681",
+       "inv_0666"
+      ]
+     }
+    ],
+    "rationale": "The owner asked how the cash is looking for the next quarter, which requires a summary of the projected cash flow over the next 13 weeks.",
+    "blocked_by": [],
+    "warnings": [],
+    "disclosures": [],
+    "approval": {
+     "required": false,
+     "by": null,
+     "status": "not_required",
+     "confirmation_phrase": null,
+     "not_before": null
+    },
+    "receipt_id": "rcp_c78049775bbd4c95",
+    "status": "executed",
+    "audit_seq": 2
+   },
+   "receipt": {
+    "receipt_id": "rcp_c78049775bbd4c95",
+    "action_intent_id": "int_c78049775bbd4c95",
+    "outcome": "verified",
+    "kind": "ANSWER_QUERY",
+    "tier": "T0",
+    "rows_read": [
+     {
+      "table": "account",
+      "id": "acc_operating"
+     },
+     {
+      "table": "account",
+      "id": "acc_petty_cash"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0665"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0666"
+     },
+     {
+      "table": "invoice",
+      "id": "inv_0681"
+     }
+    ],
+    "schema_errors": [],
+    "recomputations": [
+     {
+      "claim_index": 0,
+      "claim": "The projected cash for the next quarter starts at €182,499.93 and ends at €97,320.87, with a projected low in week 7 at -€219,676.22.",
+      "status": "match",
+      "model_figure": "-219676.22",
+      "recomputed": "-219676.22",
+      "match": true,
+      "formula": "opening + Σin − Σout for the chosen band",
+      "operands": [
+       "acc_operating",
+       "acc_petty_cash",
+       "inv_0665",
+       "inv_0681",
+       "inv_0666"
+      ],
+      "reason": null
+     }
+    ],
+    "provenance": [
+     {
+      "claim_index": 0,
+      "status": "supported",
+      "reason": null
+     }
+    ],
+    "rules_evaluated": [
+     {
+      "rule": "SufficientBalance",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "AmountCeiling",
+      "result": "PASS",
+      "reason": "no money leaves the business in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "DuplicatePayment",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "CounterpartyWhitelist",
+      "result": "PASS",
+      "reason": "no outbound money in this action",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "PayrollProtection",
+      "result": "PASS",
+      "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "TaxReserveFloor",
+      "result": "PASS",
+      "reason": "cash covers each tax payment due by 2026-11-30",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "DisputedInvoiceLock",
+      "result": "PASS",
+      "reason": "no disputed invoice is being settled",
+      "flags": [],
+      "rows": []
+     },
+     {
+      "rule": "ConcentrationWarning",
+      "result": "PASS",
+      "reason": "no concentrated customer involved",
+      "flags": [],
+      "rows": []
+     }
+    ],
+    "policy": [],
+    "text_corrections": [],
+    "payload_figures": {},
+    "material_omissions": [],
+    "tools_called": [
+     "get_cash_projection"
+    ],
+    "risk_flags": [],
+    "disclosures": [],
+    "approval": {
+     "required": false,
+     "by": null,
+     "status": "not_required",
+     "confirmation_phrase": null,
+     "not_before": null
+    },
+    "verifier_version": "1.0.0",
+    "created_at": "2026-10-11T15:50:39.000000+00:00",
+    "audit_seq": 2
+   }
+  }
+ ]
+}

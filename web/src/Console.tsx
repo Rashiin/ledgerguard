@@ -47,7 +47,7 @@ function groups(c: Catalogue): { title: string; note: string; entries: Entry[] }
     },
     {
       title: "Approvals",
-      note: "Run these last. Approving changes the ledger, and earlier recordings stop replaying until it is seeded again.",
+      note: "Make these requests last, all of them, then work through the Approval Inbox. Approving changes the ledger, and later requests stop replaying until it is seeded again.",
       entries: scenario("approval"),
     },
   ];

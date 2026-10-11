@@ -1,0 +1,185 @@
+{
+ "receipt_id": "rcp_61e4178ae4e74d88",
+ "action_intent_id": "int_61e4178ae4e74d88",
+ "outcome": "verified",
+ "kind": "ACCEPT_FINANCING_OFFER",
+ "tier": "T3",
+ "rows_read": [
+  {
+   "table": "account",
+   "id": "acc_operating"
+  },
+  {
+   "table": "account",
+   "id": "acc_petty_cash"
+  },
+  {
+   "table": "business",
+   "id": "biz_nordvik"
+  },
+  {
+   "table": "financing_product",
+   "id": "fin_cl_01"
+  },
+  {
+   "table": "financing_product",
+   "id": "fin_if_01"
+  },
+  {
+   "table": "financing_product",
+   "id": "fin_if_02"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0665"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0666"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0681"
+  }
+ ],
+ "schema_errors": [],
+ "recomputations": [
+  {
+   "claim_index": 0,
+   "claim": "The projected shortfall is €219,676.22, which occurs in week 7 ending 2026-12-06.",
+   "status": "match",
+   "model_figure": "-219676.22",
+   "recomputed": "-219676.22",
+   "match": true,
+   "formula": "opening + Σin − Σout for the chosen band",
+   "operands": [
+    "acc_operating",
+    "acc_petty_cash",
+    "inv_0665",
+    "inv_0681",
+    "inv_0666"
+   ],
+   "reason": null
+  }
+ ],
+ "provenance": [
+  {
+   "claim_index": 0,
+   "status": "supported",
+   "reason": null
+  },
+  {
+   "claim_index": 1,
+   "status": "removed",
+   "reason": "it cites a block by AmountCeiling, and that rule did not block"
+  }
+ ],
+ "rules_evaluated": [
+  {
+   "rule": "SufficientBalance",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "AmountCeiling",
+   "result": "PASS",
+   "reason": "€150,000.00 is within the €150,000.00 outbound limit.",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DuplicatePayment",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "CounterpartyWhitelist",
+   "result": "PASS",
+   "reason": "no outbound money in this action",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "PayrollProtection",
+   "result": "PASS",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "TaxReserveFloor",
+   "result": "PASS",
+   "reason": "cash covers each tax payment due by 2026-11-30",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "DisputedInvoiceLock",
+   "result": "PASS",
+   "reason": "no disputed invoice is being settled",
+   "flags": [],
+   "rows": []
+  },
+  {
+   "rule": "ConcentrationWarning",
+   "result": "PASS",
+   "reason": "no concentrated customer involved",
+   "flags": [],
+   "rows": []
+  }
+ ],
+ "policy": [
+  {
+   "check": "financing_disclosure",
+   "result": "ok",
+   "detail": "non-removable disclosure attached"
+  },
+  {
+   "check": "total_cost_of_capital",
+   "result": "ok",
+   "detail": "every product discussed has a verified total cost"
+  }
+ ],
+ "text_corrections": [],
+ "payload_figures": {
+  "financing_amount": "150000.00"
+ },
+ "material_omissions": [
+  {
+   "fact_id": "fin.ranking",
+   "inserted": "Ranked on cost, coverage, speed, flexibility and collateral: 1. Synthetic Bank A, Existing revolving facility - drawdown, €512.05 in total for €100,000.00 of the €220,000.00 gap; 2. Synthetic Factor E, Selective invoice finance, €4,164.35 in total for €220,000.00 of the €220,000.00 gap; 3. Synthetic Factor F, Whole-ledger factoring, 12-month commitment, €6,000.00 in total for €220,000.00 of the €220,000.00 gap.",
+   "why": "a financing answer always states total cost in euros"
+  },
+  {
+   "fact_id": "fin.do_nothing",
+   "inserted": "Doing nothing: Projected cash stays below zero from 2026-11-23 to 2026-12-13, with a low of -€219,676.22 in week 7. Nothing is paid for financing, and the shortfall is not covered.",
+   "why": "a financing answer always shows the do-nothing baseline"
+  }
+ ],
+ "tools_called": [
+  "get_cash_projection",
+  "get_financing_options",
+  "check_action"
+ ],
+ "risk_flags": [
+  "MATERIAL_OMISSION",
+  "UNSUPPORTED_CLAIM_REMOVED"
+ ],
+ "disclosures": [
+  "Informational only: this is not regulated financial advice. Products in this sandbox are synthetic. Compare total cost of capital and terms with a qualified adviser before committing."
+ ],
+ "approval": {
+  "required": true,
+  "by": "operator",
+  "status": "pending",
+  "confirmation_phrase": "CONFIRM int_61e4178ae4e74d88",
+  "not_before": "2026-10-11T15:52:54.000000+00:00"
+ },
+ "verifier_version": "1.0.0",
+ "created_at": "2026-10-11T15:51:54.000000+00:00",
+ "audit_seq": 39
+}

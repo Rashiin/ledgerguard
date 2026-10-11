@@ -211,14 +211,15 @@ A turn takes about 15 seconds on the development machine, or about 35 seconds wh
 
 ## 11. Prompt-injection containment
 
-Invoice text, counterparty names, transaction descriptions and uploaded documents are untrusted, and four layers deal with them.
+Invoice text, counterparty names, transaction notes and the documents an owner attaches are written by outsiders, and five layers deal with them.
 
-1. Untrusted text is wrapped in explicit data delimiters, outside the instruction part of the prompt.
-2. Instruction-shaped patterns in untrusted text are neutralised when facts are built, and what was removed is written to the audit log. Because mandatory facts are shown in the verifier's own words, this also keeps injected text out of any sentence the system vouches for.
-3. Each turn's tool allowlist comes from the user's own request. Retrieved content cannot widen it.
-4. Whatever the model proposes still passes the verifier and the tier gate, and neither reads the prompt.
+1. Outside text is fenced in data tags, after the owner's request and outside the instructions. An attached document arrives the same way. The owner attaches it but did not write it.
+2. Instruction-shaped text is neutralised wherever code writes outside text into a sentence: facts, scenario results and rule reasons. What was removed is written to the audit log and shown to the owner as a containment notice. Because mandatory facts and block reasons are shown in the verifier's own words, this also keeps injected text out of sentences the system vouches for.
+3. Each turn's allowed action kinds come from the owner's own words, never from retrieved text or attachments. They are enforced three times: by the grammar, by the turn loop and by the verifier.
+4. Each turn is built fresh from the owner's words, the attachments and the ledger. Nothing from an earlier turn is carried into the next, so instructions planted across several turns have nothing to accumulate in.
+5. Whatever the model proposes still passes the verifier, the rules and the tier gate, and none of them read the prompt. A payment can name only existing invoices, not a payee or an account.
 
-The fourth layer holds even if the first three fail.
+The fifth layer holds even if the first four fail. The six adversarial fixtures and their findings are in `fixtures/README.md` and the security self-assessment.
 
 ## 12. The constraint layer is part of the system
 
@@ -264,4 +265,5 @@ LedgerGuard was built with the help of an AI coding assistant. The architecture 
 | Turn loop with retries and dry run, allowlist, schema-bound local client, replay and recording, chat stream | done |
 | Cash-flow radar, financing matcher, financial analysis, alerts, scenarios, their API endpoints | done |
 | Grammar probes, branch-free turn grammar, keyed scenarios | done |
+| Six adversarial fixtures, all twelve scenarios recorded, evidence export, Docker image verified offline | done |
 | Web UI: Console, Cash-Flow Radar, Approval Inbox, Audit | done |
