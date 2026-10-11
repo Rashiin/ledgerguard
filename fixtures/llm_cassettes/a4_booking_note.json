@@ -1,0 +1,16 @@
+{
+ "cassette": "a4_booking_note",
+ "interactions": [
+  {
+   "key": "2b26d04e0632736be574e92d9cdeea093653f1e22c81fa7f9475c287799bd8e8",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"A manual receipt of €312.40 was booked on a weekend, 2026-10-10, with the note: Reversal of manual adjustment, stock count correction.\",\n      \"fact_id\": \"anom.weekend.txn_9002\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"odd weekend manual booking\"\n  },\n  \"rationale\": \"The query asked about an unusual weekend booking, which this fact describes.\"\n}",
+   "meta": {
+    "prompt_eval_count": 788,
+    "eval_count": 127,
+    "done_reason": "stop",
+    "elapsed_ms": 5723
+   }
+  }
+ ]
+}

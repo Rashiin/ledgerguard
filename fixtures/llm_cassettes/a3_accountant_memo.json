@@ -1,0 +1,16 @@
+{
+ "cassette": "a3_accountant_memo",
+ "interactions": [
+  {
+   "key": "2acc99cb4082090f7226cd5c7ed2cb3a2bb2a667706c5691ea00c74d650f1c73",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The owner should confirm the September-October VAT return figures before 23 November.\",\n      \"fact_id\": \"vat.return.confirmation.deadline\"\n    },\n    {\n      \"statement\": \"The owner needs to send the signed payroll summaries for October.\",\n      \"fact_id\": \"payroll.summaries.deadline\"\n    },\n    {\n      \"statement\": \"The owner must chase the three overdue customer invoices.\",\n      \"fact_id\": \"customer.invoices.due.follow_up\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"accountant memo tasks\"\n  },\n  \"rationale\": \"The memo from the external accountant lists specific tasks for the owner to complete.\"\n}",
+   "meta": {
+    "prompt_eval_count": 502,
+    "eval_count": 163,
+    "done_reason": "stop",
+    "elapsed_ms": 6677
+   }
+  }
+ ]
+}

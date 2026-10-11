@@ -87,9 +87,15 @@ def financing_products_discussed(intent: ActionIntent) -> set[str]:
 
 
 def check_financing(
-    intent: ActionIntent, recomputations: list[Recomputation]
+    intent: ActionIntent,
+    recomputations: list[Recomputation],
+    verifier_costed: frozenset[str] = frozenset(),
 ) -> tuple[list[PolicyFinding], bool]:
-    """Returns findings and whether the financing disclosure applies."""
+    """Returns findings and whether the financing disclosure applies.
+
+    ``verifier_costed`` lists products whose total cost the verifier itself states
+    in a mandatory fact. That sentence is always shown, so it satisfies the rule.
+    """
     products = financing_products_discussed(intent)
     if intent.kind not in FINANCING_KINDS and not products:
         return [], False
@@ -102,7 +108,7 @@ def check_financing(
         for operand in claim.derivation.operands
     }
     findings = [PolicyFinding("financing_disclosure", "ok", "non-removable disclosure attached")]
-    uncosted = sorted(products - costed)
+    uncosted = sorted(products - costed - verifier_costed)
     if uncosted:
         findings.append(
             PolicyFinding(

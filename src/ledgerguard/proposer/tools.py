@@ -58,6 +58,10 @@ TOOLS: dict[str, Tool] = {
         "Margins, cash flow, burn, runway, DSO, DPO and the cash conversion cycle, each with "
         "its method.",
     ),
+    facts.AUDIT_TRAIL: Tool(
+        facts.AUDIT_TRAIL,
+        "Whether the audit chain verifies, how long it is, its head hash and the day's events.",
+    ),
     facts.ANOMALIES: Tool(
         facts.ANOMALIES,
         "Transactions far from their usual amount, supplier invoices that look duplicated, and "

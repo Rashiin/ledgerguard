@@ -114,7 +114,7 @@ def _monthly_net(snap: LedgerSnapshot, months: int = 3) -> Decimal:
     start = first_of_month
     for _ in range(months):
         start = (start - timedelta(days=1)).replace(day=1)
-    excluded = {"loan_drawdown", "dividend", "capex"}
+    excluded = {"loan_drawdown", "financing_drawdown", "dividend", "capex"}
     total = ZERO
     for t in snap.transactions.values():
         if start <= t.booked_on < first_of_month and t.category not in excluded:
@@ -249,6 +249,7 @@ class Anomaly:
     statement: str
     amount: Decimal
     booked_on: date
+    stripped: tuple[str, ...] = ()  # instruction-like spans removed from ledger text
 
 
 def _median(values: list[Decimal]) -> Decimal:
@@ -323,6 +324,10 @@ def anomalies(snap: LedgerSnapshot) -> list[Anomaly]:
             )
     for t in snap.transactions.values():
         if t.source is TransactionSource.MANUAL and t.booked_on.weekday() >= 5:
+            # A manual booking is explained only by its note, so the note is shown,
+            # neutralised like every other piece of ledger text.
+            note, stripped = neutralise(t.description)
+            what = "payment" if t.direction is Direction.OUT else "receipt"
             found.append(
                 Anomaly(
                     id=f"anom.weekend.{t.id}",
@@ -330,8 +335,10 @@ def anomalies(snap: LedgerSnapshot) -> list[Anomaly]:
                     rows=(t.id,),
                     amount=t.amount,
                     booked_on=t.booked_on,
-                    statement=f"A manual booking of {format_eur(t.amount)} was made on a weekend, "
-                    f"{t.booked_on}.",
+                    statement=f"A manual {what} "
+                    f"of {format_eur(t.amount)} was booked on a weekend, {t.booked_on}. Its note "
+                    f"reads: {note}",
+                    stripped=tuple(stripped),
                 )
             )
     return sorted(found, key=lambda a: (a.booked_on, a.id), reverse=True)

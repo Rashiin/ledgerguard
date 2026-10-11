@@ -422,3 +422,20 @@ def test_receipt_above_what_is_owed_is_rejected(copilot: CopilotService) -> None
         stub_proposer("RECORD_PAYMENT", {"invoice_id": "inv_0412", "amount": "46854.01"}), "c"
     )
     assert turn.outcome == "rejected"
+
+
+def test_accepting_financing_states_the_cost_of_the_amount_accepted(
+    copilot: CopilotService,
+) -> None:
+    """The verifier states the cost of exactly what is confirmed. The model never saw that
+    figure, so its absence from the answer is not an omission."""
+    turn = copilot.submit(
+        stub_proposer("ACCEPT_FINANCING_OFFER", {"product_id": "fin_if_01", "amount": "150000.00"}),
+        "conv",
+    )
+    first = turn.presented["claims"][0]
+    assert first["fact_id"] == "fin.accept.total_cost" and first["mandatory"] is True
+    assert "€150,000.00" in first["statement"]
+    assert "MATERIAL_OMISSION" not in turn.receipt["risk_flags"]
+    assert "POLICY_VIOLATION" not in turn.receipt["risk_flags"]
+    assert turn.status == "pending_approval" and turn.presented["tier"] == "T3"

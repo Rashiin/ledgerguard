@@ -35,6 +35,7 @@ from ledgerguard.db.models import (
     ActionIntentRecord,
     AuditEvent,
     Business,
+    FinancingProduct,
     Invoice,
     Transaction,
     TrustReceiptRecord,
@@ -138,9 +139,17 @@ def _resolved_money(action: VerifiedAction, key: str) -> Decimal:
 
 
 def _next_id(session: Session, model: type[Transaction] | type[Invoice], prefix: str) -> str:
-    highest = session.scalar(select(func.max(model.id)).where(model.id.like(f"{prefix}_%")))
+    # Ids from 9000 up are reserved for the adversarial fixtures, see seed/adversarial.py.
+    highest = session.scalar(
+        select(func.max(model.id)).where(
+            model.id.like(f"{prefix}_%"), model.id < f"{prefix}_{RESERVED_FROM}"
+        )
+    )
     number = int(highest.split("_")[1]) + 1 if highest else 1
     return f"{prefix}_{number:04d}"
+
+
+RESERVED_FROM = 9000
 
 
 def _operating_account(session: Session) -> Account:
@@ -285,7 +294,51 @@ def _draft_invoice(session: Session, action: VerifiedAction) -> list[Change]:
     ]
 
 
+def _accept_financing(session: Session, action: VerifiedAction) -> list[Change]:
+    """T3: the funds arrive in the operating account as a sandbox drawdown.
+
+    The product's terms are not booked as a schedule of repayments. The receipt
+    carries the total cost, and the owner accepted it with the typed phrase.
+    """
+    p = action.payload
+    product = session.get(FinancingProduct, p["product_id"])
+    if product is None:
+        raise ExecutionRefused(f"{p['product_id']} no longer exists")
+    amount = _resolved_money(action, "financing_amount")
+    booked = _ledger_date(session)
+    txn_id = _next_id(session, Transaction, "txn")
+    session.add(
+        Transaction(
+            id=txn_id,
+            account_id=_operating_account(session).id,
+            booked_on=booked,
+            value_date=booked,
+            amount=amount,
+            direction=Direction.IN,
+            counterparty_id=FINANCING_COUNTERPARTY,
+            category="financing_drawdown",
+            description=f"Drawdown: {product.provider}, {product.name}. Synthetic product, "
+            "accepted in the LedgerGuard sandbox",
+            source=TransactionSource.MANUAL,
+            reconciled=False,
+            invoice_id=None,
+        )
+    )
+    return [
+        _change(
+            "transaction",
+            txn_id,
+            "*",
+            None,
+            f"in {amount} from {product.provider} ({product.id}) on {booked}",
+        )
+    ]
+
+
+FINANCING_COUNTERPARTY = "cp_financing"
+
 HANDLERS: dict[ActionKind, Handler] = {
+    ActionKind.ACCEPT_FINANCING_OFFER: _accept_financing,
     ActionKind.DRAFT_INVOICE: _draft_invoice,
     ActionKind.MARK_DISPUTED: _mark_disputed,
     ActionKind.RECORD_PAYMENT: _record_payment,

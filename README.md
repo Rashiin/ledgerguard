@@ -49,6 +49,8 @@ Open http://127.0.0.1:8000 for the UI. `LEDGERGUARD_PORT` changes the port. With
 
 Recordings match the exact request, including the facts drawn from the ledger. Approving an action changes the ledger, so scenarios recorded on the fresh ledger stop replaying after it. Run the read-only scenarios first and the approvals last, or seed the ledger again to start over.
 
+To run the approval scenarios a second time, seed the ledger again first with `uv run python scripts/seed.py --profile nordvik --seed 42`, or recreate the Docker container with `docker compose down` and `docker compose up`. Without that, those requests answer "no recording exists". That is risk R-22 working as designed, not a fault.
+
 The UI has four screens. The Console streams each turn's steps, marked by whether code, the model or the verifier took them, and shows the verified answer with a Trust Receipt beside it. The Cash-Flow Radar shows the 13-week projection by confidence class, the alerts, the scenario simulator and the financing matcher. The Approval Inbox shows each pending action with the ledger changes approving it would make. The Audit screen walks the hash chain and lists every event.
 
 For frontend work, run the API on port 8610 and `npm run dev` in `web/`. Vite serves on port 5610 and proxies `/api` to the API.

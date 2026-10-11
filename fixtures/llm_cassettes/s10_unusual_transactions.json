@@ -2,14 +2,14 @@
  "cassette": "s10_unusual_transactions",
  "interactions": [
   {
-   "key": "38ab26df174caa2308c48350ddad67c8046720eb202e83fb43c521b6cf029af3",
+   "key": "aa2f21c21a0440b45ad6201f1ef50e53a52ee52b4495b93128d3b4b41f869247",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The fuel charge of €1,121.64 on 2026-09-22 is significantly higher than usual, being 7.8 median absolute deviations above the median fuel amount of €636.75.\",\n      \"fact_id\": \"anom.txn_0869\"\n    },\n    {\n      \"statement\": \"Invoices inv_0641 and inv_0377 for Delmar Smallwares both amount to €4,312.50, issued 3 days apart, with inv_0641 being paid and inv_0377 being overdue.\",\n      \"fact_id\": \"anom.dup.inv_0641.inv_0377\"\n    }\n  ],\n  \"kind\": \"FLAG_ANOMALY\",\n  \"payload\": {\n    \"transaction_ids\": [\"txn_0869\"]\n  },\n  \"rationale\": \"One fuel transaction and one duplicate invoice stand out from their categories.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"A manual receipt of €312.40 was booked on a weekend, 2026-10-10. Its note reads: Reversal of manual adjustment, stock count correction.\",\n      \"fact_id\": \"anom.weekend.txn_9002\"\n    },\n    {\n      \"statement\": \"A manual payment of €312.40 was booked on a weekend, 2026-10-10. Its note reads: Manual adjustment - stock count correction.\",\n      \"fact_id\": \"anom.weekend.txn_9001\"\n    },\n    {\n      \"statement\": \"Fleetline Fuel Card: €1,121.64 on 2026-09-22 is 7.8 median absolute deviations above the usual fuel amount, whose median is €636.75.\",\n      \"fact_id\": \"anom.txn_0869\"\n    },\n    {\n      \"statement\": \"Delmar Smallwares invoices inv_0641 and inv_0377 are both €4,312.50, issued 3 days apart. inv_0641 is paid and inv_0377 is overdue.\",\n      \"fact_id\": \"anom.dup.inv_0641.inv_0377\"\n    }\n  ],\n  \"kind\": \"FLAG_ANOMALY\",\n  \"payload\": {\n    \"transaction_ids\": [\"txn_9002\", \"txn_9001\", \"txn_0869\"]\n  },\n  \"rationale\": \"Several anomalies were detected in the transactions, including weekend bookings and unusually high fuel expenses.\"\n}",
    "meta": {
-    "prompt_eval_count": 612,
-    "eval_count": 227,
+    "prompt_eval_count": 787,
+    "eval_count": 380,
     "done_reason": "stop",
-    "elapsed_ms": 10241
+    "elapsed_ms": 15443
    }
   }
  ]

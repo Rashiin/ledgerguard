@@ -52,6 +52,7 @@ from ledgerguard.domain.enums import (
     TransactionSource,
 )
 from ledgerguard.money import from_cents, to_cents, to_money
+from ledgerguard.seed import adversarial
 
 AS_OF = date(2026, 10, 16)  # a Friday; projection week 1 starts Monday 2026-10-19
 HISTORY_START = date(2024, 10, 17)  # 24 months of history
@@ -146,6 +147,7 @@ OTHER_COUNTERPARTIES = (
     ("shareholders", "Shareholders - dividend account", CounterpartyType.OTHER),
     ("vehicles", "Northway Commercial Vehicles", CounterpartyType.SUPPLIER),
     ("racking", "Stackwell Warehouse Systems", CounterpartyType.SUPPLIER),
+    ("financing", "Sandbox financing provider", CounterpartyType.OTHER),
 )
 
 PETTY_CASH = Decimal("850.00")
@@ -280,6 +282,7 @@ class Manifest:
     weekly_closing: list[str] = field(default_factory=list)  # all confidence classes
     weekly_closing_with_expected: list[str] = field(default_factory=list)
     weekly_closing_contracted: list[str] = field(default_factory=list)
+    adversarial: dict[str, object] = field(default_factory=dict)  # see seed/adversarial.py
 
 
 @dataclass(frozen=True)
@@ -1163,6 +1166,7 @@ def build(seed: int, financing_catalogue: Path) -> SeedResult:
             str(as_of_balance + w.closing_with_expected) for w in a.weeks
         ],
         weekly_closing_contracted=[str(as_of_balance + w.closing_contracted) for w in a.weeks],
+        adversarial=adversarial.manifest(),
     )
 
     rows: list[Base] = [
@@ -1211,6 +1215,8 @@ def build(seed: int, financing_catalogue: Path) -> SeedResult:
     rows += a.invoices
     rows += a.transactions
     rows += b.obligations
+    # Prompt-injection fixtures, appended last with their own ids so no planted id moves.
+    rows += adversarial.rows()
     return SeedResult(rows=rows, manifest=manifest)
 
 

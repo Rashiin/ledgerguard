@@ -1,0 +1,16 @@
+{
+ "cassette": "s12_audit_trail",
+ "interactions": [
+  {
+   "key": "3cae680e73c31691f3495e6a724532d14d1bd06998b377fca8317a6519f505d8",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The audit chain is intact and has a length of 1, with the head hash being 0x1234567890abcdef and today's events recorded.\",\n      \"fact_id\": \"audit.chain\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"audit trail for today\"\n  },\n  \"rationale\": \"The owner requested to see the audit trail for today's activities.\"\n}",
+   "meta": {
+    "prompt_eval_count": 414,
+    "eval_count": 111,
+    "done_reason": "stop",
+    "elapsed_ms": 4462
+   }
+  }
+ ]
+}

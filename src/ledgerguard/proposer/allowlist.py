@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from ledgerguard.domain.enums import ActionKind
 from ledgerguard.facts import (
     ANOMALIES,
+    AUDIT_TRAIL,
     CASH_PROJECTION,
     FINANCIAL_SUMMARY,
     FINANCING_OPTIONS,
@@ -60,6 +61,16 @@ def _route(
 
 
 K = ActionKind
+# Kinds that change records or move money.
+CHANGING_KINDS = frozenset(
+    {
+        K.DRAFT_INVOICE,
+        K.RECORD_PAYMENT,
+        K.MARK_DISPUTED,
+        K.INITIATE_PAYMENT,
+        K.ACCEPT_FINANCING_OFFER,
+    }
+)
 ROUTES = (
     _route(
         "cash",
@@ -112,9 +123,23 @@ ROUTES = (
     ),
     _route(
         "scenario_payables",
-        r"\b(what if|simulat\w*|scenario)\b.*\b(delay|purchase|payables?|suppliers?)\b",
+        r"\b(what if|simulat\w*|scenario)\b.*\b(delay|later|purchase|payables?|suppliers?|"
+        r"invoices?)\b",
         set(),
         (OPEN_INVOICES,),
+    ),
+    _route(
+        "open_items",
+        r"\b(open|outstanding|unpaid|overdue)\b.*\b(invoices?|bills?)\b|"
+        r"\b(invoices?|bills?)\b.*\b(open|outstanding|unpaid|overdue)\b|\bwhat do we owe\b",
+        set(),
+        (OPEN_INVOICES,),
+    ),
+    _route(
+        "audit",
+        r"\baudit\b|\btrail\b|\beverything you did\b|\bwhat (?:have )?you done\b",
+        set(),
+        (AUDIT_TRAIL,),
     ),
     _route(
         "revenue",
@@ -134,6 +159,10 @@ def plan_turn(request: str) -> TurnPlan:
             matched.append(route.name)
             kinds |= route.kinds
             tools += [t for t in route.tools if t not in tools]
+    # A hypothetical question never changes records or moves money, even when it
+    # mentions paying. "What if we pay that invoice later" asks for a simulation.
+    if "scenario" in matched:
+        kinds -= CHANGING_KINDS
     # A requirement holds only when no other action kind is on the table.
     actions = kinds - {K.ANSWER_QUERY}
     required = next(

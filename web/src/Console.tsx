@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { chat, type Claim, type Receipt, type Step, type Turn } from "./api";
+import { api, chat, type Attachment, type Catalogue, type Claim, type Receipt, type Step, type Turn } from "./api";
 import {
   Badge,
   Card,
@@ -13,52 +13,97 @@ import {
   ruleTone,
 } from "./ui";
 
-// The requests recorded for replay. In replay mode only these can be answered.
-const SCENARIOS: { n: number; text: string }[] = [
-  { n: 1, text: "How is our cash looking for the next quarter?" },
-  { n: 2, text: "Why is week 7 so bad?" },
-  { n: 3, text: "What if Brennan Hospitality pays 30 days late?" },
-  { n: 4, text: "We're short in week 7 — what are our options?" },
-  { n: 5, text: "Compare the factoring option against the credit line over the real drawdown period" },
-  { n: 7, text: "Record that Brennan paid invoice 0412" },
-  { n: 8, text: "Pay supplier invoice 0377" },
-  { n: 9, text: "Pay all outstanding supplier invoices this week" },
-  { n: 10, text: "Anything unusual in last month's transactions?" },
-];
-
 interface Exchange {
   request: string;
+  attachments: Attachment[];
   steps: Step[];
   turn: Turn | null;
   error: string | null;
 }
 
+interface Entry {
+  key: string;
+  label: string;
+  title: string;
+  turns: { request: string; attachments: Attachment[] }[];
+}
+
+// Demo order: read-only scenarios first, then the fixtures, then the approvals.
+// Approving changes the ledger the recordings were made against (risk R-22).
+function groups(c: Catalogue): { title: string; note: string; entries: Entry[] }[] {
+  const scenario = (phase: string) =>
+    c.scenarios
+      .filter((s) => s.phase === phase)
+      .map((s) => ({ key: s.id, label: String(s.n), title: s.title, turns: s.turns }));
+  const fixtures = c.adversarial
+    .filter((a) => a.turns)
+    .map((a) => ({ key: a.id, label: a.id.slice(0, 2), title: `Injection in a ${a.where}`, turns: a.turns! }));
+  return [
+    { title: "Read-only scenarios", note: "Run these first.", entries: scenario("read") },
+    {
+      title: "Adversarial fixtures",
+      note: "Scenario 11 is the first fixture. A2 to a6 follow.",
+      entries: fixtures,
+    },
+    {
+      title: "Approvals",
+      note: "Run these last. Approving changes the ledger, and earlier recordings stop replaying until it is seeded again.",
+      entries: scenario("approval"),
+    },
+  ];
+}
+
 export function Console({ onChange }: { onChange: () => void }) {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [input, setInput] = useState("");
+  const [docName, setDocName] = useState("");
+  const [docText, setDocText] = useState("");
+  const [showDoc, setShowDoc] = useState(false);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
+  const [catalogue, setCatalogue] = useState<Catalogue | null>(null);
+  const count = useRef(0);
 
-  async function send(request: string) {
-    if (!request.trim() || busy) return;
-    setBusy(true);
-    setInput("");
-    const index = exchanges.length;
-    setExchanges((xs) => [...xs, { request, steps: [], turn: null, error: null }]);
+  useEffect(() => {
+    api.scenarios().then(setCatalogue, () => undefined);
+  }, []);
+
+  async function turn(request: string, attachments: Attachment[], conversation: string) {
+    const index = count.current++;
+    setExchanges((xs) => [...xs, { request, attachments, steps: [], turn: null, error: null }]);
     setSelected(index);
     const update = (fn: (x: Exchange) => Exchange) =>
       setExchanges((xs) => xs.map((x, i) => (i === index ? fn(x) : x)));
     try {
-      const turn = await chat(request, (step) =>
+      const result = await chat(request, attachments, conversation, (step) =>
         update((x) => ({ ...x, steps: [...x.steps, step] })),
       );
-      update((x) => ({ ...x, turn }));
+      update((x) => ({ ...x, turn: result }));
     } catch (e) {
       update((x) => ({ ...x, error: (e as Error).message }));
+    }
+  }
+
+  async function play(turns: { request: string; attachments: Attachment[] }[]) {
+    if (busy || turns.length === 0) return;
+    setBusy(true);
+    const conversation = `conv_${Date.now()}`;
+    try {
+      for (const t of turns) await turn(t.request, t.attachments, conversation);
     } finally {
       setBusy(false);
       onChange();
     }
+  }
+
+  function submit() {
+    if (!input.trim()) return;
+    const attachments = showDoc && docText.trim() ? [{ name: docName.trim() || "document", text: docText }] : [];
+    setInput("");
+    setDocText("");
+    setDocName("");
+    setShowDoc(false);
+    play([{ request: input, attachments }]);
   }
 
   const current = selected === null ? null : exchanges[selected];
@@ -66,6 +111,9 @@ export function Console({ onChange }: { onChange: () => void }) {
   useEffect(() => {
     latest.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [exchanges.length]);
+
+  const sections = catalogue ? groups(catalogue) : [];
+  const all = sections.flatMap((g) => g.entries);
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -76,19 +124,34 @@ export function Console({ onChange }: { onChange: () => void }) {
               Each request below has a recorded model response, so it runs with no model server.
               The verifier, the rules and the ledger run live.
             </p>
-            <div className="flex flex-col gap-1.5">
-              {SCENARIOS.map((s) => (
-                <button
-                  key={s.n}
-                  type="button"
-                  onClick={() => send(s.text)}
-                  className="flex items-baseline gap-3 rounded px-2 py-1.5 text-left text-sm hover:bg-slate-50"
-                >
-                  <span className="w-6 shrink-0 font-mono text-xs text-slate-400">{s.n}</span>
-                  <span>{s.text}</span>
-                </button>
-              ))}
-            </div>
+            {!catalogue && <Spinner />}
+            {sections.map((g) => (
+              <div key={g.title} className="mb-3">
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{g.title}</h3>
+                  <span className="text-xs text-slate-400">{g.note}</span>
+                </div>
+                <div className="mt-1 flex flex-col">
+                  {g.entries.map((e) => (
+                    <button
+                      key={e.key}
+                      type="button"
+                      onClick={() => play(e.turns)}
+                      className="flex items-baseline gap-3 rounded px-2 py-1.5 text-left text-sm hover:bg-slate-50"
+                    >
+                      <span className="w-6 shrink-0 font-mono text-xs text-slate-400">{e.label}</span>
+                      <span className="w-56 shrink-0 text-xs text-slate-500">{e.title}</span>
+                      <span>
+                        {e.turns.map((t) => t.request).join(" → ")}
+                        {e.turns.some((t) => t.attachments.length > 0) && (
+                          <span className="ml-1 text-xs text-slate-400">with an attached document</span>
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </Card>
         )}
         {exchanges.map((x, i) => (
@@ -97,39 +160,67 @@ export function Console({ onChange }: { onChange: () => void }) {
           </div>
         ))}
         <form
-          className="sticky bottom-0 flex gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
+          className="sticky bottom-0 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
           onSubmit={(e) => {
             e.preventDefault();
-            send(input);
+            submit();
           }}
         >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about cash, financing, invoices or the audit trail"
-            className="min-w-0 flex-1 rounded px-2 py-1.5 text-sm outline-none"
-            disabled={busy}
-          />
-          <select
-            className="w-40 rounded border border-slate-200 px-1 text-xs text-slate-600"
-            value=""
-            onChange={(e) => e.target.value && send(e.target.value)}
-            disabled={busy}
-          >
-            <option value="">Recorded requests</option>
-            {SCENARIOS.map((s) => (
-              <option key={s.n} value={s.text}>
-                {s.n}. {s.text}
-              </option>
-            ))}
-          </select>
-          <button
-            type="submit"
-            disabled={busy || !input.trim()}
-            className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
-          >
-            {busy ? <Spinner /> : "Send"}
-          </button>
+          {showDoc && (
+            <div className="flex flex-col gap-1">
+              <input
+                value={docName}
+                onChange={(e) => setDocName(e.target.value)}
+                placeholder="Document name, for example memo.pdf"
+                className="rounded border border-slate-200 px-2 py-1 text-xs"
+              />
+              <textarea
+                value={docText}
+                onChange={(e) => setDocText(e.target.value)}
+                placeholder="Text extracted from the document. It is treated as outside content, never as your instructions."
+                className="h-24 rounded border border-slate-200 px-2 py-1 text-xs"
+              />
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about cash, financing, invoices or the audit trail"
+              className="min-w-0 flex-1 rounded px-2 py-1.5 text-sm outline-none"
+              disabled={busy}
+            />
+            <button
+              type="button"
+              onClick={() => setShowDoc(!showDoc)}
+              className={`rounded border px-2 text-xs ${showDoc ? "border-accent text-accent" : "border-slate-200 text-slate-600"}`}
+            >
+              Attach text
+            </button>
+            <select
+              className="w-40 rounded border border-slate-200 px-1 text-xs text-slate-600"
+              value=""
+              onChange={(e) => {
+                const entry = all.find((x) => x.key === e.target.value);
+                if (entry) play(entry.turns);
+              }}
+              disabled={busy}
+            >
+              <option value="">Recorded requests</option>
+              {all.map((e) => (
+                <option key={e.key} value={e.key}>
+                  {e.label}. {e.turns[0].request}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={busy || !input.trim()}
+              className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
+            >
+              {busy ? <Spinner /> : "Send"}
+            </button>
+          </div>
         </form>
       </div>
       <aside className="min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)] lg:overflow-auto">
@@ -157,7 +248,7 @@ function ExchangeView({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const { request, steps, turn, error } = exchange;
+  const { request, attachments, steps, turn, error } = exchange;
   return (
     <article
       onClick={onSelect}
@@ -166,8 +257,14 @@ function ExchangeView({
       <div className="border-b border-slate-100 px-4 py-3">
         <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Owner</div>
         <div className="text-sm">{request}</div>
+        {attachments.map((a) => (
+          <div key={a.name} className="mt-1 text-xs text-slate-500">
+            Attached: <span className="font-mono">{a.name}</span>, read as outside content
+          </div>
+        ))}
       </div>
       <Steps steps={steps} running={!turn && !error} />
+      <Containment steps={steps} />
       {error && (
         <div className="m-4 rounded border border-block/30 bg-block-soft p-3 text-sm text-block">
           {error.includes("ReplayMiss")
@@ -180,12 +277,42 @@ function ExchangeView({
   );
 }
 
+/** Shown whenever instruction-like text was removed from what the model reads. */
+function Containment({ steps }: { steps: Step[] }) {
+  const spans = steps
+    .filter((s) => s.step === "neutralised")
+    .flatMap((s) => (s.spans as { source: string; removed: string[] }[]) ?? []);
+  if (spans.length === 0) return null;
+  return (
+    <div className="mx-4 mt-3 rounded border border-block/40 bg-block-soft p-3 text-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-block">Contained</div>
+      <p className="mt-1 text-slate-800">
+        Instruction-like text was found in outside content and removed before the model read it.
+        The attempt is in the audit log. The turn's allowed actions come only from your words.
+      </p>
+      <ul className="mt-2 space-y-1 text-xs">
+        {spans.map((s, i) => (
+          <li key={i}>
+            <span className="text-slate-500">{s.source}: </span>
+            {s.removed.map((r, j) => (
+              <q key={j} className="mr-2 font-mono text-block">
+                {r}
+              </q>
+            ))}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ steps
 
 function lane(step: string): { label: string; tone: "slate" | "accent" | "warn" | "block" | "ok" } {
   if (step === "model") return { label: "Model", tone: "accent" };
   if (step === "plan" || step === "tools" || step === "scenario") return { label: "Code", tone: "slate" };
   if (step === "neutralised") return { label: "Containment", tone: "block" };
+  if (step === "attachments") return { label: "Code", tone: "slate" };
   return { label: "Verifier", tone: "ok" };
 }
 
@@ -197,7 +324,9 @@ function describe(s: Step): string {
     case "tools":
       return `Tools ran on the read-only ledger and returned ${s.facts} facts.`;
     case "neutralised":
-      return `Instruction-like text in ledger data was neutralised and logged: ${JSON.stringify(s.spans)}`;
+      return "Instruction-like text in outside content was removed before the model read it, and logged.";
+    case "attachments":
+      return `Attached documents read as outside content, never as instructions: ${list(s.documents)}.`;
     case "model":
       return `${s.phase === "final" ? "Final answer" : "Draft"}, attempt ${s.attempt}, ${Number(s.elapsed_ms) === 0 ? "replayed from the recording" : `${(Number(s.elapsed_ms) / 1000).toFixed(1)} s`}: ${s.valid ? "parsed" : "did not parse"}.`;
     case "rejected":
@@ -389,7 +518,9 @@ function ClaimView({ claim, why }: { claim: Claim; why?: string }) {
     <li className={`border-l-4 ${border} rounded-r bg-slate-50/60 py-2 pl-3 pr-2`}>
       {inserted && (
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-warn">
-          Added by the verifier. The model's answer left this out{why ? `: ${why}` : ""}.
+          {why
+            ? `Added by the verifier. The model's answer left this out: ${why}.`
+            : "Added by the verifier, computed for exactly this action."}
         </div>
       )}
       {mandatory && !inserted && (

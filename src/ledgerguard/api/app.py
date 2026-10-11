@@ -15,6 +15,7 @@ import threading
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from decimal import Decimal
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
@@ -37,6 +38,7 @@ from ledgerguard.ledger import queries
 from ledgerguard.proposer.client import make_client
 from ledgerguard.proposer.orchestrator import Orchestrator
 from ledgerguard.service import CopilotService
+from ledgerguard.untrusted import Attachment
 from ledgerguard.verifier import intent as I
 from ledgerguard.verifier.pipeline import Verifier
 from ledgerguard.verifier.seal import Sealer, load_or_create_key
@@ -101,10 +103,20 @@ def _week(w: ProjectedWeek) -> dict[str, Any]:
     }
 
 
+class AttachmentBody(BaseModel):
+    """Text extracted from a document the owner attached. Treated as outside content."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=120)
+    text: str = Field(min_length=1, max_length=20000)
+
+
 class ChatBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     message: str = Field(min_length=1, max_length=2000)
+    attachments: list[AttachmentBody] = Field(default_factory=list, max_length=3)
     conversation_id: str = Field(default="conv_default", pattern=r"^[A-Za-z0-9_-]{1,40}$")
 
 
@@ -207,7 +219,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         def work() -> None:
             try:
                 record = orchestrator.run(
-                    body.message, body.conversation_id, lambda s: events.put(("step", s))
+                    body.message,
+                    body.conversation_id,
+                    lambda s: events.put(("step", s)),
+                    [Attachment(a.name, a.text) for a in body.attachments],
                 )
                 result = record.result
                 assert result is not None
@@ -303,6 +318,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 for a in analysis.anomalies(snap)
             ],
         }
+
+    @app.get("/api/demo/scenarios")
+    def demo_scenarios() -> dict[str, Any]:
+        """The recorded scenarios and fixtures, with any attachment text, for the UI."""
+        root = settings.config_dir.parent
+        catalogue: dict[str, Any] = json.loads((root / "fixtures" / "scenarios.json").read_text())
+        for entry in [*catalogue["scenarios"], *catalogue["adversarial"]]:
+            for turn in entry.get("turns", []):
+                turn["attachments"] = [
+                    {"name": Path(p).name, "text": (root / p).read_text()}
+                    for p in turn.get("attachments", [])
+                ]
+        return catalogue
 
     @app.get("/api/receipts/{receipt_id}")
     def receipt(receipt_id: str, service: Copilot) -> dict[str, Any]:

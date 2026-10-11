@@ -43,6 +43,7 @@ SCENARIO = "run_scenario"
 # The dry run: the rules evaluated on a draft action before the final answer.
 # When it ran, the model has seen any block and can cite it as block.<RuleName>.
 CHECK_ACTION = "check_action"
+AUDIT_TRAIL = "get_audit_trail"
 # Kinds that are about the cash position whatever tools ran, so the projection's
 # mandatory facts always apply to them.
 CASH_KINDS = frozenset(
@@ -67,10 +68,19 @@ class Fact:
     materiality: str | None = None  # the condition that made it mandatory
     # Instruction-like spans removed from ledger text before it entered the statement.
     stripped: tuple[str, ...] = ()
+    # What the model is shown instead of the statement, for facts whose values change
+    # between turns. The owner always sees ``statement``, computed when the answer is
+    # verified. The model sees a fixed sentence, so a recording still matches.
+    model_statement: str | None = None
+    # False for a fact the verifier computes only when it checks the answer, such as
+    # the cost of the exact amount being accepted. The model never saw it, so leaving
+    # it out is not an omission. It is still shown first.
+    seen_by_model: bool = True
 
     def as_tool_dict(self) -> dict[str, Any]:
         """What the model sees. The derivation stays on the deterministic side."""
-        out: dict[str, Any] = {"fact_id": self.id, "statement": self.statement}
+        shown = self.statement if self.model_statement is None else self.model_statement
+        out: dict[str, Any] = {"fact_id": self.id, "statement": shown}
         if self.figure is not None:
             out["figure"] = str(self.figure)
         if self.mandatory:
@@ -451,9 +461,60 @@ def anomaly_facts(snap: LedgerSnapshot) -> list[Fact]:
                 operands=(row,),
                 params={"field": field},
                 source_row_ids=a.rows,
+                stripped=a.stripped,
             )
         )
     return facts
+
+
+AUDIT_LABELS = {
+    "intent.verified": "verified turns",
+    "intent.rejected": "rejected turns",
+    "intent.blocked": "blocked actions",
+    "action.executed": "executed actions",
+    "action.refused": "refused executions",
+    "approval.declined": "declined approvals",
+    "untrusted.neutralised": "records of instruction-like text removed",
+    "intent.failed": "failed actions",
+    "system.started": "starts",
+}
+
+
+def audit_facts(snap: LedgerSnapshot) -> list[Fact]:
+    """The audit chain's state, computed fresh when the answer is verified.
+
+    The chain grows with every turn, so the model is shown a fixed sentence and
+    the owner sees the verifier's own, current one. Event payloads are never
+    shown to the model: they include the instruction-like text that was removed
+    from ledger data, and echoing it would inject it again.
+    """
+    a = snap.audit
+    if a is None:
+        return []
+    status = "intact" if a.intact else f"broken at event {a.first_bad_seq}: {a.reason}"
+    counts = ", ".join(
+        f"{n} {AUDIT_LABELS.get(kind, kind)}" for kind, n in sorted(a.counts_on_day.items())
+    )
+    statement = (
+        f"The audit chain is {status}. It holds {a.events} events, each hashed with the one "
+        f"before it, and its head hash is {a.head_hash}."
+    )
+    if a.day is not None:
+        statement += f" On {a.day}, the day of the latest event, it recorded {counts}."
+    return [
+        Fact(
+            id="audit.chain",
+            statement=statement,
+            source_row_ids=(snap.business.id,),
+            mandatory=True,
+            materiality="an answer about the audit trail always says whether the chain verifies",
+            model_statement=(
+                "The verifier states whether the audit chain is intact, its length, its head "
+                "hash and the day's events when your answer is shown. Cite this fact as "
+                "audit.chain and do not state those values yourself."
+            ),
+        )
+    ]
 
 
 def scenario_facts(snap: LedgerSnapshot, policy: Policy, scenario: dict[str, Any]) -> list[Fact]:
@@ -475,6 +536,14 @@ def scenario_facts(snap: LedgerSnapshot, policy: Policy, scenario: dict[str, Any
         f"{low.index}, ending {low.ends_on}, at {format_eur(low.closing)}, against "
         f"{format_eur(before.closing)} in week {before.index} without the change."
     )
+    # Names echoed back from the ledger are neutralised in the description. Their
+    # removed spans are recorded here, so the echo path is logged like any other.
+    involved = {r for r in result.rows if r.startswith("cp_")} | {
+        snap.invoices[r].counterparty_id for r in result.rows if r in snap.invoices
+    }
+    stripped = tuple(
+        span for cp in sorted(involved) for span in neutralise(snap.counterparties[cp].name)[1]
+    )
     new = [a.headline for a in result.new_alerts if a.high]
     if new:
         statement += " New high alerts: " + " ".join(new)
@@ -492,6 +561,7 @@ def scenario_facts(snap: LedgerSnapshot, policy: Policy, scenario: dict[str, Any
             source_row_ids=rows,
             mandatory=True,
             materiality="the result of the scenario asked for",
+            stripped=stripped,
         )
     ]
     for w in result.after.weeks:
@@ -525,6 +595,8 @@ def tool_facts(
         return summary_facts(snap)
     if tool == ANOMALIES:
         return anomaly_facts(snap)
+    if tool == AUDIT_TRAIL:
+        return audit_facts(snap)
     if tool == SCENARIO and payload and "scenario" in payload:
         try:
             return scenario_facts(snap, policy, payload["scenario"])
@@ -549,4 +621,44 @@ def facts_for_turn(
     facts: list[Fact] = []
     for tool in called:
         facts += tool_facts(snap, tool, policy, payload)
+    if kind is ActionKind.ACCEPT_FINANCING_OFFER and payload:
+        facts += accept_cost_facts(snap, payload)
     return {f.id: f for f in facts}
+
+
+def accept_cost_facts(snap: LedgerSnapshot, payload: dict[str, Any]) -> list[Fact]:
+    """The total cost of exactly what is being accepted, stated by the verifier.
+
+    The ranking costs each product for the amount it can cover. The model may
+    accept a different amount, for example after the outbound ceiling blocks
+    the first one. The person typing the T3 confirmation must see the cost of
+    the amount they are confirming, in the verifier's words.
+    """
+    product = snap.financing_products.get(str(payload.get("product_id")))
+    try:
+        amount = Decimal(str(payload.get("amount"))).quantize(Decimal("0.01"))
+    except ArithmeticError:
+        return []
+    if product is None or amount <= 0:
+        return []
+    gap = financing.find_gap(snap)
+    days = gap.days if gap is not None else 30
+    cost, _, term = financing.total_cost(snap, product, amount, days)
+    over = f"over its full {term}-month term" if term else f"over the {days} days of the gap"
+    return [
+        Fact(
+            id="fin.accept.total_cost",
+            statement=(
+                f"Accepting {product.provider}, {product.name}, for {format_eur(amount)} "
+                f"costs {format_eur(cost)} in total, {over}. This is the cost being confirmed."
+            ),
+            figure=cost,
+            formula=Formula.FINANCING_TOTAL_COST,
+            operands=(product.id,),
+            params={"amount": str(amount), "days": str(days)},
+            source_row_ids=(product.id,),
+            mandatory=True,
+            materiality="accepting financing always states the total cost of the amount accepted",
+            seen_by_model=False,
+        )
+    ]

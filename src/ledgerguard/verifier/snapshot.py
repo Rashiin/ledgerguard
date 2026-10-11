@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import UTC, date, timedelta
 from decimal import Decimal
 from typing import Any, ClassVar
 
@@ -18,6 +18,8 @@ from sqlalchemy.orm import Session
 
 from ledgerguard.analytics.cashflow import ExpectedFlow, ProjectedWeek, project
 from ledgerguard.analytics.sources import projection_flows
+from ledgerguard.audit.chain import verify
+from ledgerguard.audit.store import load_events
 from ledgerguard.db.models import (
     Account,
     Base,
@@ -72,6 +74,19 @@ class Band:
 
 
 @dataclass
+class AuditSummary:
+    """The audit chain as it stood when the snapshot was taken."""
+
+    intact: bool
+    events: int
+    head_hash: str
+    first_bad_seq: int | None
+    reason: str | None
+    day: date | None  # UTC date of the latest event
+    counts_on_day: dict[str, int]
+
+
+@dataclass
 class LedgerSnapshot:
     business: Business
     accounts: dict[str, Account]
@@ -84,6 +99,7 @@ class LedgerSnapshot:
     financing_products: dict[str, FinancingProduct]
     flows: list[ExpectedFlow]
     weeks: list[ProjectedWeek]
+    audit: AuditSummary | None = None
     _tables: dict[str, dict[str, Any]] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
@@ -198,6 +214,26 @@ def load_snapshot(session: Session) -> LedgerSnapshot:
         financing_products=_by_id(session.scalars(select(FinancingProduct))),
         flows=flows,
         weeks=project(business.data_as_of, cash, flows, WEEKS),
+        audit=_audit_summary(session),
     )
     session.expunge_all()  # detach: nothing in the snapshot can reach the database again
     return snapshot
+
+
+def _audit_summary(session: Session) -> AuditSummary:
+    events = load_events(session)
+    report = verify(events)
+    day = events[-1].occurred_at.astimezone(UTC).date() if events else None
+    counts: dict[str, int] = defaultdict(int)
+    for ev in events:
+        if ev.occurred_at.astimezone(UTC).date() == day:
+            counts[ev.event_type] += 1
+    return AuditSummary(
+        intact=report.intact,
+        events=report.events,
+        head_hash=report.head_hash,
+        first_bad_seq=report.first_bad_seq,
+        reason=report.reason,
+        day=day,
+        counts_on_day=dict(counts),
+    )

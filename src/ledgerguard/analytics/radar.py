@@ -378,7 +378,12 @@ def apply_scenario(
             replace(f, on=f.on + timedelta(days=days)) if f.source_id == invoice_id else f
             for f in flows
         ]
-        return flows, f"invoice {invoice_id} paid {days} days later", (invoice_id,)
+        supplier, _ = neutralise(snap.counterparties[target.counterparty_id].name)
+        return (
+            flows,
+            f"{supplier} invoice {invoice_id} paid {days} days later",
+            (invoice_id, target.counterparty_id),
+        )
     if kind == "draw_credit_line":
         amount = Decimal(str(scenario["amount"])).quantize(CENT)
         on = date.fromisoformat(scenario["on"])

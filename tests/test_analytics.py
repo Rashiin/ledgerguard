@@ -188,10 +188,10 @@ def test_bad_weights_are_refused(weights: dict[str, Decimal]) -> None:
 
 def test_metrics_match_hand_checked_values(snapshot: LedgerSnapshot) -> None:
     m = analysis.metrics(snapshot)
-    assert m["gross_margin"].value == Decimal("27.17")
-    assert m["net_margin"].value == Decimal("1.52")
-    assert (m["dso"].value, m["dpo"].value) == (Decimal("50.4"), Decimal("51.8"))
-    assert m["cash_conversion_cycle"].value == Decimal("-1.4")
+    assert m["gross_margin"].value == Decimal("27.11")
+    assert m["net_margin"].value == Decimal("1.46")
+    assert (m["dso"].value, m["dpo"].value) == (Decimal("50.4"), Decimal("52.1"))
+    assert m["cash_conversion_cycle"].value == Decimal("-1.7")
     assert all(metric.method for metric in m.values())
 
 
@@ -309,7 +309,7 @@ def test_a_scenario_result_is_recomputed_and_mandatory(
 
 def test_summary_and_anomaly_facts_cite_rows(snapshot: LedgerSnapshot, policy: Policy) -> None:
     summary = {f.id: f for f in tool_facts(snapshot, FINANCIAL_SUMMARY, policy)}
-    assert summary["ana.gross_margin"].figure == Decimal("27.17")
+    assert summary["ana.gross_margin"].figure == Decimal("27.11")
     anomaly = {f.id: f for f in tool_facts(snapshot, ANOMALIES, policy)}
     assert anomaly["anom.txn_0869"].source_row_ids == ("txn_0869",)
 

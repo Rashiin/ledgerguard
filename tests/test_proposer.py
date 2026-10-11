@@ -45,7 +45,11 @@ K = ActionKind
             ("get_open_invoices",),
         ),
         ("Pay supplier invoice 0377", {K.ANSWER_QUERY, K.INITIATE_PAYMENT}, ("get_open_invoices",)),
-        ("Show me the audit trail for everything you did today", {K.ANSWER_QUERY}, ()),
+        (
+            "Show me the audit trail for everything you did today",
+            {K.ANSWER_QUERY},
+            ("get_audit_trail",),
+        ),
     ],
 )
 def test_plan_comes_from_the_request(
@@ -313,5 +317,9 @@ def test_a_what_if_alongside_another_action_requires_nothing() -> None:
     from ledgerguard.proposer.allowlist import plan_turn
 
     assert plan_turn("What if Brennan pays 30 days late?").required is ActionKind.RUN_SCENARIO
-    assert plan_turn("What if we pay supplier invoice 0377 now?").required is None
+    # A what-if that mentions paying is still a simulation and can never move money.
+    hypothetical = plan_turn("What if we pay supplier invoice 0377 now?")
+    assert hypothetical.required is ActionKind.RUN_SCENARIO
+    assert ActionKind.INITIATE_PAYMENT not in hypothetical.kinds
+    assert plan_turn("Pay invoice 0377 and draft an invoice for Glenmore").required is None
     assert plan_turn("How is our cash?").required is None

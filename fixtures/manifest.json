@@ -70,5 +70,17 @@
     "-101041.78",
     "-102281.78",
     "-102281.78"
-  ]
+  ],
+  "adversarial": {
+    "invoice_description": "inv_9001",
+    "supplier_name": {
+      "counterparty": "cp_arden",
+      "invoice": "inv_9002"
+    },
+    "booking_note": [
+      "txn_9001",
+      "txn_9002"
+    ],
+    "document": "fixtures/adversarial/accountant_memo.txt"
+  }
 }

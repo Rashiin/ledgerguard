@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -35,6 +35,7 @@ from ledgerguard.proposer.schema import intent_schema
 from ledgerguard.proposer.tools import ToolResult, run_tools, scenario_result
 from ledgerguard.rules import Outcome
 from ledgerguard.service import CopilotService, TurnResult
+from ledgerguard.untrusted import Attachment
 from ledgerguard.verifier.intent import RunScenario, parse_intent
 from ledgerguard.verifier.pipeline import TurnContext, Verifier
 from ledgerguard.verifier.snapshot import load_snapshot
@@ -80,8 +81,17 @@ class Orchestrator:
         self._max_retries = max_retries
 
     def run(
-        self, request: str, conversation_id: str, on_step: Callable[[Step], None] | None = None
+        self,
+        request: str,
+        conversation_id: str,
+        on_step: Callable[[Step], None] | None = None,
+        attachments: Sequence[Attachment] = (),
     ) -> TurnRecord:
+        """Run one turn. Nothing from an earlier turn is carried into this one.
+
+        The prompt is rebuilt from the owner's words, the attachments and the
+        ledger every time, so text planted in one turn cannot steer the next.
+        """
         plan = plan_turn(request)
         record = TurnRecord(request, plan)
 
@@ -102,13 +112,24 @@ class Orchestrator:
             snapshot = load_snapshot(session)
         currency = snapshot.business.currency
         results = run_tools(snapshot, list(plan.tools), self._policy)
-        self._log_stripped(results, conversation_id, step)
+        docs: list[Attachment] = []
+        doc_spans: list[dict[str, Any]] = []
+        for a in attachments:
+            clean, removed = a.cleaned()
+            docs.append(clean)
+            if removed:
+                doc_spans.append({"source": f"attachment {clean.name}", "removed": removed})
+        if docs:
+            step("attachments", documents=[d.name for d in docs])
+        self._log_stripped(results, conversation_id, step, doc_spans)
         step("tools", ran=list(plan.tools), facts=sum(len(r.facts) for r in results))
 
         offered = {plan.required} if plan.required else plan.kinds
         schema = intent_schema(offered)
-        messages = prompt.messages(request, frozenset(offered), currency, results)
-        raw, ok = self._ask(messages, schema, step, phase="draft", required_kind=plan.required)
+        messages = prompt.messages(request, frozenset(offered), currency, results, docs)
+        raw, ok = self._ask(
+            messages, schema, step, phase="draft", required_kind=plan.required, allowed=offered
+        )
         tools_called = list(plan.tools)
 
         draft = parse_intent(raw).intent if ok else None
@@ -133,11 +154,13 @@ class Orchestrator:
                 tools_called.append(SCENARIO)
                 assert isinstance(draft.payload, RunScenario)
                 outcome = scenario_result(snapshot, self._policy, draft.payload.scenario_dict())
+                self._log_stripped([outcome], conversation_id, step)
                 raw, ok = self._follow_up(
                     messages, raw, draft.kind, prompt.scenario_message(outcome), step
                 )
 
-        result = self._service.submit(raw, conversation_id, TurnContext(tuple(tools_called)))
+        context = TurnContext(tuple(tools_called), tuple(sorted(k.value for k in offered)))
+        result = self._service.submit(raw, conversation_id, context)
         if not ok:
             result.presented["message"] = COULD_NOT
         step(
@@ -184,6 +207,7 @@ class Orchestrator:
         step: Callable[..., None],
         phase: str,
         required_kind: ActionKind | None = None,
+        allowed: Iterable[ActionKind] | None = None,
     ) -> tuple[str, bool]:
         """Ask the model, retrying a malformed answer at most ``max_retries`` times.
 
@@ -191,6 +215,7 @@ class Orchestrator:
         same thing, but not every client enforces a schema, so it is checked here too.
         """
         history = list(messages)
+        allowed_kinds = None if allowed is None else frozenset(allowed)
         raw = ""
         for attempt in range(self._max_retries + 1):
             reply = self._client.complete(history, schema)
@@ -208,7 +233,14 @@ class Orchestrator:
                 and required_kind is not None
                 and parsed.intent.kind is not required_kind
             )
-            if parsed.intent is not None and not wrong_kind:
+            # The grammar asks the runtime to keep to the plan, but not every client
+            # enforces a schema. The plan is checked here, and again by the verifier.
+            outside_plan = (
+                parsed.intent is not None
+                and allowed_kinds is not None
+                and parsed.intent.kind not in allowed_kinds
+            )
+            if parsed.intent is not None and not wrong_kind and not outside_plan:
                 return raw, True
             if wrong_kind:
                 assert parsed.intent is not None and required_kind is not None
@@ -216,6 +248,12 @@ class Orchestrator:
                     f"kind: the final answer must be a {required_kind.value} action, because "
                     f"that is what the owner asked for. You answered with "
                     f"{parsed.intent.kind.value}."
+                )
+            elif outside_plan:
+                assert parsed.intent is not None and allowed_kinds is not None
+                errors = (
+                    f"kind: {parsed.intent.kind.value} is not allowed for this request. Use one "
+                    f"of: {', '.join(sorted(k.value for k in allowed_kinds))}."
                 )
             else:
                 errors = "\n".join(f"{e.location}: {e.message}" for e in parsed.errors)
@@ -227,14 +265,18 @@ class Orchestrator:
         return raw, False
 
     def _log_stripped(
-        self, results: list[ToolResult], conversation_id: str, step: Callable[..., None]
+        self,
+        results: list[ToolResult],
+        conversation_id: str,
+        step: Callable[..., None],
+        extra: list[dict[str, Any]] | None = None,
     ) -> None:
         stripped = [
-            {"fact_id": f.id, "removed": list(f.stripped)}
+            {"source": f"fact {f.id}", "removed": list(f.stripped)}
             for r in results
             for f in r.facts
             if f.stripped
-        ]
+        ] + (extra or [])
         if stripped:
             self._service.note(
                 Actor.SYSTEM,

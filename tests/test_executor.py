@@ -277,7 +277,12 @@ def test_t0_runs_without_approval_and_changes_nothing(executor: Executor) -> Non
 
 
 def _t3() -> VerifiedAction:
-    return action(ActionKind.ACCEPT_FINANCING_OFFER, Tier.T3, {"product_id": "fin_if_01"})
+    payload = {
+        "product_id": "fin_if_01",
+        "amount": "50000.00",
+        "resolved": {"financing_amount": "50000.00"},
+    }
+    return action(ActionKind.ACCEPT_FINANCING_OFFER, Tier.T3, payload)
 
 
 def test_t3_needs_the_typed_confirmation(executor: Executor, clock: Clock) -> None:
@@ -298,9 +303,11 @@ def test_t3_cool_off_is_enforced(executor: Executor, clock: Clock, policy: Polic
     # An approval timestamp cannot be backdated past the clock either way.
     ready = T0 + timedelta(seconds=policy.t3.cool_off_seconds)
     clock.now = ready
-    with pytest.raises(ExecutionRefused, match="no executor handler"):
-        # Every gate passed; the handler for accepting offers arrives with Phase 5.
-        executor.execute(register(executor, _t3()), Approval(Actor.OPERATOR, ready, phrase))
+    result = executor.execute(register(executor, _t3()), Approval(Actor.OPERATOR, ready, phrase))
+    (drawdown,) = result.changes
+    assert drawdown["table"] == "transaction" and drawdown["after"].startswith("in 50000.00")
+    # New rows never take an id from the range reserved for the adversarial fixtures.
+    assert drawdown["id"] < "txn_9000"
 
 
 def test_every_refusal_is_audited_and_chain_stays_intact(

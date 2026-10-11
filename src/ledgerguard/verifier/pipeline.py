@@ -36,6 +36,7 @@ from ledgerguard.verifier import intent as I
 from ledgerguard.verifier.policy import (
     ADVISORY_KINDS,
     FINANCING_DISCLOSURE,
+    TOTAL_COST_FORMULAS,
     PolicyFinding,
     check_financing,
     mask_guarantees,
@@ -62,6 +63,9 @@ from ledgerguard.verifier.tiers import assign_tier
 
 VERIFIER_VERSION = "1.0.0"
 MALFORMED = "The agent produced a malformed action, so nothing was done."
+NOT_ALLOWED = (
+    "The agent proposed a kind of action this request does not allow, so nothing was done."
+)
 APPROVERS = "operator"
 
 
@@ -79,6 +83,10 @@ class TurnContext:
     """
 
     tools_called: tuple[str, ...] = ()
+    # The kinds the turn's plan allowed, from the owner's words. None when the intent
+    # did not come through a planned turn. The grammar asks the runtime for the same
+    # limit, but a client may not enforce a schema, so the verifier checks it too.
+    allowed_kinds: tuple[str, ...] | None = None
 
 
 @dataclass
@@ -125,7 +133,25 @@ class Verifier:
         flags: set[str] = set()
         if parsed.ignored_tier is not None:
             flags.add("MODEL_TIER_IGNORED")
-        if parsed.intent is None:
+        outside_plan = (
+            parsed.intent is not None
+            and context.allowed_kinds is not None
+            and parsed.intent.kind.value not in context.allowed_kinds
+        )
+        if parsed.intent is None or outside_plan:
+            if outside_plan:
+                assert parsed.intent is not None and context.allowed_kinds is not None
+                flags.add("KIND_NOT_ALLOWED")
+                errors = [
+                    {
+                        "location": "kind",
+                        "message": f"{parsed.intent.kind.value} is not allowed for this "
+                        f"request, which allows {', '.join(context.allowed_kinds)}",
+                    }
+                ]
+            else:
+                flags.add("MALFORMED_ACTION")
+                errors = [{"location": e.location, "message": e.message} for e in parsed.errors]
             receipt = self._receipt(
                 receipt_id,
                 intent_id,
@@ -133,10 +159,8 @@ class Verifier:
                 None,
                 None,
                 now,
-                flags=flags | {"MALFORMED_ACTION"},
-                schema_errors=[
-                    {"location": e.location, "message": e.message} for e in parsed.errors
-                ],
+                flags=flags,
+                schema_errors=errors,
             )
             return Verification(
                 intent_id,
@@ -147,7 +171,7 @@ class Verifier:
                 {
                     "intent_id": intent_id,
                     "outcome": "rejected",
-                    "message": MALFORMED,
+                    "message": NOT_ALLOWED if outside_plan else MALFORMED,
                     "errors": receipt.schema_errors,
                     "receipt_id": receipt_id,
                 },
@@ -237,9 +261,10 @@ class Verifier:
             **{f"block.{k}": v for k, v in blocks.items()},
             **{k: f for k, f in facts.items() if f.mandatory},
         }
-        omissions = _omitted(model_claims, prov, mandatory)
-        for fact in omissions:
+        added = _omitted(model_claims, prov, mandatory)
+        for fact in added:
             reads.update(r for r in fact.source_row_ids if table_of(r))
+        omissions = [f for f in added if f.seen_by_model]
         if omissions:
             flags.add("MATERIAL_OMISSION")
 
@@ -251,14 +276,20 @@ class Verifier:
         presented_claims, text_fixes, guarantee_hits = self._present(
             intent, recomps, prov, resolution, currency, mandatory, known
         )
-        presented_claims = _lead_with_mandatory(presented_claims, omissions, mandatory)
+        presented_claims = _lead_with_mandatory(presented_claims, added, mandatory)
         rationale, fixes = check_text(
             "rationale", intent.rationale, self._pool(recomps, resolution, known), currency
         )
         text_fixes += fixes
         rationale, hits = mask_guarantees(rationale)
         guarantee_hits += hits
-        policy_findings, disclosure = check_financing(intent, recomps)
+        verifier_costed = frozenset(
+            op
+            for f in mandatory.values()
+            if f.formula is not None and f.formula.value in TOTAL_COST_FORMULAS
+            for op in f.operands
+        )
+        policy_findings, disclosure = check_financing(intent, recomps, verifier_costed)
         if guarantee_hits:
             policy_findings.append(
                 PolicyFinding(

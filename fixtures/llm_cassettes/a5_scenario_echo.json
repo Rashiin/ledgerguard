@@ -1,0 +1,27 @@
+{
+ "cassette": "a5_scenario_echo",
+ "interactions": [
+  {
+   "key": "c636145fd4054e4d71f6acd3a18bf3145b5189a849af52c599b438e8a5555ecd",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"In week 7, Payable inv_0665, due 2026-12-01 takes €142,500.00 on 2026-12-01.\",\n      \"fact_id\": \"proj.w07.outflow_1\"\n    }\n  ],\n  \"kind\": \"RUN_SCENARIO\",\n  \"payload\": {\n    \"scenario\": {\n      \"delay_payable\": {\n        \"days\": 30,\n        \"invoice_id\": \"inv_0665\"\n      }\n    }\n  },\n  \"rationale\": \"Simulate paying this supplier invoice 30 days later.\"\n}",
+   "meta": {
+    "prompt_eval_count": 7341,
+    "eval_count": 156,
+    "done_reason": "stop",
+    "elapsed_ms": 22558
+   }
+  },
+  {
+   "key": "c65b920eea656d46eea3dd167c3aca5b0c0a7e3f7eebf41e5c1cf41b556ea905",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"With Halvorsen Steelworks AS invoice inv_0665 paid 30 days later, projected cash reaches its low in week 7, ending 2026-12-06, at -€77,176.22, against -€219,676.22 in week 7 without the change.\",\n      \"fact_id\": \"scn.result\"\n    }\n  ],\n  \"kind\": \"RUN_SCENARIO\",\n  \"payload\": {\n    \"scenario\": {\n      \"delay_payable\": {\n        \"days\": 30,\n        \"invoice_id\": \"inv_0665\"\n      }\n    }\n  },\n  \"rationale\": \"Simulate paying this supplier invoice 30 days later.\"\n}",
+   "meta": {
+    "prompt_eval_count": 1543,
+    "eval_count": 179,
+    "done_reason": "stop",
+    "elapsed_ms": 9336
+   }
+  }
+ ]
+}

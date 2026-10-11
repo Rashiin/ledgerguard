@@ -256,6 +256,9 @@ def test_financing_catalogue_is_synthetic(session: Session) -> None:
 
 def test_counterparties_whitelisting(session: Session) -> None:
     for cp in _all(session, Counterparty):
+        if cp.id == "cp_arden":  # the adversarial fixture's new supplier, never whitelisted
+            assert not cp.is_whitelisted
+            continue
         assert cp.is_whitelisted is (cp.type.value != "customer")
 
 

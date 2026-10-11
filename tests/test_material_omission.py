@@ -391,7 +391,13 @@ def _all_open_payables(snapshot: LedgerSnapshot) -> list[str]:
 def test_after_a_dry_run_a_cited_block_is_clean(snapshot: LedgerSnapshot, policy: Policy) -> None:
     claims = [
         {"statement": f"Blocked by {rule}.", "fact_id": f"block.{rule}"}
-        for rule in ("SufficientBalance", "AmountCeiling", "PayrollProtection", "TaxReserveFloor")
+        for rule in (
+            "SufficientBalance",
+            "AmountCeiling",
+            "CounterpartyWhitelist",
+            "PayrollProtection",
+            "TaxReserveFloor",
+        )
     ]
     v = verify(
         snapshot,
@@ -404,9 +410,11 @@ def test_after_a_dry_run_a_cited_block_is_clean(snapshot: LedgerSnapshot, policy
     assert v.outcome == "blocked"
     assert "MATERIAL_OMISSION" not in v.receipt.risk_flags
     ids = [c["fact_id"] for c in v.presented["claims"]]
-    assert ids[:4] == [
+    # Paying every open payable includes the adversarial fixture's unwhitelisted supplier.
+    assert ids[:5] == [
         "block.SufficientBalance",
         "block.AmountCeiling",
+        "block.CounterpartyWhitelist",
         "block.PayrollProtection",
         "block.TaxReserveFloor",
     ]

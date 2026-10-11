@@ -2,14 +2,14 @@
  "cassette": "s07_record_brennan_payment",
  "interactions": [
   {
-   "key": "20417cbad277a0d64922714a9db2fb03be3524ab2aebdc6a75deae3f4d9efb2e",
+   "key": "df4b831f85839790d648b2d35e98d58d71a6eee69463f141b45518d30a8a8698",
    "model": "qwen2.5-7b-instruct",
-   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The invoice owed by Brennan Hospitality Group has been paid in full.\",\n      \"fact_id\": \"inv.inv_0412\"\n    }\n  ],\n  \"kind\": \"RECORD_PAYMENT\",\n  \"payload\": {\n    \"invoice_id\": \"inv_0412\"\n  },\n  \"rationale\": \"The owner requested to record that Brennan paid invoice 0412.\"\n}",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"Brennan Hospitality Group has paid the invoice in full.\",\n      \"fact_id\": \"inv.inv_0412\"\n    }\n  ],\n  \"kind\": \"RECORD_PAYMENT\",\n  \"payload\": {\n    \"invoice_id\": \"inv_0412\"\n  },\n  \"rationale\": \"The owner requested to record that Brennan paid invoice 0412.\"\n}",
    "meta": {
-    "prompt_eval_count": 4011,
-    "eval_count": 96,
+    "prompt_eval_count": 4238,
+    "eval_count": 95,
     "done_reason": "stop",
-    "elapsed_ms": 13610
+    "elapsed_ms": 11706
    }
   }
  ]

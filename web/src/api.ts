@@ -187,6 +187,21 @@ export interface FinancingMatch {
   do_nothing: { total_cost: string; consequence: string };
 }
 
+export interface Attachment {
+  name: string;
+  text: string;
+}
+
+export interface CatalogueTurn {
+  request: string;
+  attachments: Attachment[];
+}
+
+export interface Catalogue {
+  scenarios: { id: string; n: number; phase: string; title: string; turns: CatalogueTurn[] }[];
+  adversarial: { id: string; where: string; attack: string; turns?: CatalogueTurn[] }[];
+}
+
 export class ApiError extends Error {}
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -204,6 +219,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   health: () => call<Record<string, unknown>>("/api/health"),
+  scenarios: () => call<Catalogue>("/api/demo/scenarios"),
   summary: () => call<Record<string, unknown>>("/api/ledger/summary"),
   row: (table: string, id: string) =>
     call<{ table: string; row: Record<string, unknown> }>(`/api/ledger/rows/${table}/${id}`),
@@ -243,12 +259,14 @@ export const api = {
 /** POST a chat message and hand each server-sent event to the callbacks. */
 export async function chat(
   message: string,
+  attachments: Attachment[],
+  conversation: string,
   onStep: (step: Step) => void,
 ): Promise<Turn> {
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, attachments, conversation_id: conversation }),
   });
   if (!response.ok || !response.body) {
     throw new ApiError(`chat failed with HTTP ${response.status}`);

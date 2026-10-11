@@ -1,0 +1,27 @@
+{
+ "cassette": "s06_accept_factoring",
+ "interactions": [
+  {
+   "key": "487dfe98c54412db1f0142e55c4ab2847170a6248ee0e430cad702eb7a27235d",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected shortfall is €219,676.22, which occurs in week 7 ending 2026-12-06.\",\n      \"fact_id\": \"proj.shortfall\"\n    }\n  ],\n  \"kind\": \"ACCEPT_FINANCING_OFFER\",\n  \"payload\": {\n    \"amount\": \"220000.00\",\n    \"product_id\": \"fin_if_01\"\n  },\n  \"rationale\": \"The financing option with the lowest total cost and full coverage of the projected shortfall is Synthetic Factor E, Selective invoice finance, which covers 100% of the gap and can be funded in 3 days.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4684,
+    "eval_count": 160,
+    "done_reason": "stop",
+    "elapsed_ms": 17389
+   }
+  },
+  {
+   "key": "df5a5ef0b7123794a4bbd74b53d821dc57209cec2ff20b8e3ade5e42266ab6f3",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected shortfall is €219,676.22, which occurs in week 7 ending 2026-12-06.\",\n      \"fact_id\": \"proj.shortfall\"\n    },\n    {\n      \"statement\": \"This action is blocked by AmountCeiling. €220,000.00 exceeds the configured outbound limit of €150,000.00. The limit is outbound_ceiling in config/policy.yaml. An owner who expects payments this large can raise it there and restart.\",\n      \"fact_id\": \"block.AmountCeiling\"\n    }\n  ],\n  \"kind\": \"ACCEPT_FINANCING_OFFER\",\n  \"payload\": {\n    \"amount\": \"150000.00\",\n    \"product_id\": \"fin_if_01\"\n  },\n  \"rationale\": \"The financing option with the lowest total cost and full coverage of the projected shortfall is Synthetic Factor E, Selective invoice finance, which covers 100% of the gap and can be funded in 3 days. However, the proposed amount of €220,000.00 exceeds the outbound limit of €150,000.00. To proceed, the outbound limit needs to be increased in the configuration.\"\n}",
+   "meta": {
+    "prompt_eval_count": 5011,
+    "eval_count": 292,
+    "done_reason": "stop",
+    "elapsed_ms": 12383
+   }
+  }
+ ]
+}

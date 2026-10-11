@@ -28,12 +28,24 @@ from ledgerguard.domain.enums import (
     ObligationKind,
 )
 from ledgerguard.money import format_eur
+from ledgerguard.untrusted import neutralise
 from ledgerguard.verifier.intent import ActionIntent
 from ledgerguard.verifier.recompute import Resolution
 from ledgerguard.verifier.snapshot import Band, LedgerSnapshot
 from ledgerguard.verifier.tiers import OUTBOUND
 
 ZERO = Decimal("0.00")
+
+
+def _clean(text: str) -> str:
+    """Outside text in a rule's reason, neutralised.
+
+    A reason reaches the model in the dry-run message and the owner in the
+    block sentence, which is shown in the verifier's own words. A supplier's
+    name must not be able to speak there. Found by the a2 fixture, see the
+    security self-assessment.
+    """
+    return neutralise(text)[0]
 
 
 class Outcome(StrEnum):
@@ -198,7 +210,7 @@ def counterparty_whitelist(ctx: RuleContext) -> RuleResult:
         }
     )
     if blocked:
-        names = ", ".join(f"{ctx.snapshot.counterparties[c].name} ({c})" for c in blocked)
+        names = ", ".join(f"{_clean(ctx.snapshot.counterparties[c].name)} ({c})" for c in blocked)
         return RuleResult(
             name,
             Outcome.BLOCK,
@@ -278,7 +290,7 @@ def tax_reserve_floor(ctx: RuleContext) -> RuleResult:
         after = ctx.cash_on(eve)
         if after < tax.amount:
             text = (
-                f"{tax.description}: {format_eur(tax.amount)} is due on {tax.due_on} and "
+                f"{_clean(tax.description)}: {format_eur(tax.amount)} is due on {tax.due_on} and "
                 f"is ring-fenced. Projected cash the day before would be "
                 f"{format_eur(after)}."
             )
@@ -330,7 +342,7 @@ def concentration_warning(ctx: RuleContext) -> RuleResult:
     heavy = sorted(c for c in involved if shares.get(c, ZERO) > threshold)
     if heavy:
         parts = [
-            f"{snap.counterparties[c].name} is {(shares[c] * 100):.1f}% of trailing "
+            f"{_clean(snap.counterparties[c].name)} is {(shares[c] * 100):.1f}% of trailing "
             f"12-month revenue, above the {threshold * 100:.0f}% threshold."
             for c in heavy
         ]
