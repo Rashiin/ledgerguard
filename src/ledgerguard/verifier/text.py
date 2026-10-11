@@ -26,6 +26,11 @@ from decimal import ROUND_HALF_UP, Decimal
 from ledgerguard.money import format_eur
 
 UNVERIFIED = "[figure removed: not verified]"
+# A corrected figure is never written into the model's sentence as if the model had
+# said it. The sentence may be about more than the cited fact: a model that cites one
+# invoice and quotes the total of three would otherwise be shown saying that three
+# invoices total one invoice's amount. The marker says what the cited fact holds.
+CORRECTED = "[figure corrected: the cited figure is {figure}]"
 
 # Currency marks the pattern recognises, and the ISO code each one means.
 CURRENCY_MARKS = {
@@ -179,7 +184,7 @@ def check_text(
     for fig in find_figures(text):
         foreign = fig.currency is not None and fig.currency != currency
         if own is not None and own[2] == fig.percent and _same(fig, own[0]):
-            replacement = _render(own[1], own[2])
+            replacement = CORRECTED.format(figure=_render(own[1], own[2]))
             out.append(text[cursor : fig.start])
             out.append(replacement)
             cursor = fig.end
@@ -204,7 +209,7 @@ def check_text(
             replacement, reason = UNVERIFIED, "no verified figure matches"
             for model, recomputed, is_pct in verified.corrections:
                 if is_pct == fig.percent and _same(fig, model):
-                    replacement = _render(recomputed, is_pct)
+                    replacement = CORRECTED.format(figure=_render(recomputed, is_pct))
                     reason = f"model figure {model} corrected to recomputed {recomputed}"
                     break
             if foreign:

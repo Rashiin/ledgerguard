@@ -10,6 +10,8 @@ Measurement says the opposite. Across 50 sampled answers at temperature 0.7, rec
 
 The reason is the fact layer. Claims now cite facts whose figures come from the ledger, so the structured fields are right before the verifier looks at them. The model's mistakes did not disappear. They moved out of the fields and into the free text around them. The check that looked like belt and braces is the one carrying the load, and it has to be held to the same standard as recomputation. The experiment, with every raw response, is in `evidence/robustness/`.
 
+Recomputation is not idle, and the one time it fired on real output it exposed a flaw of its own. In the held-out run described in section 3.4, the model answered a question about what the business owes with per-supplier totals in the claims' figure fields, and recomputation corrected six of them. One sentence read "We owe Kessling Combi Ovens a total of €106,954.71 for three overdue invoices", citing only the first invoice. The verifier wrote that invoice's €35,973.77 into the sentence in place of the model's figure, so the sentence it showed the owner said three invoices total one invoice's amount. A correction now appears as a marker, "[figure corrected: the cited figure is €35,973.77]", and is never written into the model's words as if the model had said it. A test reproduces the case.
+
 ## 2. Two times the system was routed around, and what caught it
 
 ### 2.1 The model answered around a block

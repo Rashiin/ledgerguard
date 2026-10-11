@@ -381,3 +381,30 @@ def test_analysis_endpoint(api: Any) -> None:
     body = api.get("/api/analysis").json()
     names = [m["name"] for m in body["metrics"]]
     assert "gross_margin" in names and body["anomalies"]
+
+
+def test_a_correction_never_puts_words_in_the_models_mouth(
+    snapshot: LedgerSnapshot, policy: Policy
+) -> None:
+    """Seen in the held-out h4 run: the model cited one invoice and quoted the total of
+    three. Writing the one invoice's amount into its sentence made the sentence false."""
+    v = verify(
+        snapshot,
+        policy,
+        "ANSWER_QUERY",
+        {"topic": "what we owe"},
+        [
+            {
+                "statement": "We owe Kessling Combi Ovens a total of €106,954.71 for three "
+                "overdue invoices inv_0645, inv_0652, and inv_0653.",
+                "fact_id": "inv.inv_0645",
+                "figure": "106954.71",
+            }
+        ],
+        (OPEN_INVOICES,),
+    )
+    claim = v.presented["claims"][-1]
+    assert claim["status"] == "corrected" and claim["figure"] == "35973.77"
+    assert "[figure corrected: the cited figure is €35,973.77]" in claim["statement"]
+    assert "a total of €35,973.77 for three" not in claim["statement"]
+    assert "FIGURE_MISMATCH" in v.receipt.risk_flags

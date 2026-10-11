@@ -1,22 +1,27 @@
 {
- "receipt_id": "rcp_e976762c6973411d",
- "action_intent_id": "int_e976762c6973411d",
+ "receipt_id": "rcp_d3f8ebfbeda44d55",
+ "action_intent_id": "int_d3f8ebfbeda44d55",
  "outcome": "verified",
  "kind": "ANSWER_QUERY",
  "tier": "T0",
- "rows_read": [
-  {
-   "table": "business",
-   "id": "biz_nordvik"
-  }
- ],
+ "rows_read": [],
  "schema_errors": [],
  "recomputations": [],
  "provenance": [
   {
    "claim_index": 0,
-   "status": "supported",
-   "reason": null
+   "status": "removed",
+   "reason": "it cites fact vat.return.confirmation.deadline, which no tool in this turn produced"
+  },
+  {
+   "claim_index": 1,
+   "status": "removed",
+   "reason": "it cites fact payroll.summaries.deadline, which no tool in this turn produced"
+  },
+  {
+   "claim_index": 2,
+   "status": "removed",
+   "reason": "it cites fact customer.invoices.due.follow_up, which no tool in this turn produced"
   }
  ],
  "rules_evaluated": [
@@ -51,7 +56,7 @@
   {
    "rule": "PayrollProtection",
    "result": "PASS",
-   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €296,277.02 to spare",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
    "flags": [],
    "rows": []
   },
@@ -81,10 +86,10 @@
  "text_corrections": [],
  "payload_figures": {},
  "material_omissions": [],
- "tools_called": [
-  "get_audit_trail"
+ "tools_called": [],
+ "risk_flags": [
+  "UNSUPPORTED_CLAIM_REMOVED"
  ],
- "risk_flags": [],
  "disclosures": [],
  "approval": {
   "required": false,
@@ -94,6 +99,6 @@
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T16:04:16.000000+00:00",
- "audit_seq": 48
+ "created_at": "2026-10-11T16:12:50.000000+00:00",
+ "audit_seq": 23
 }

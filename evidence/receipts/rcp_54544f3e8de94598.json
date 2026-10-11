@@ -1,6 +1,6 @@
 {
- "receipt_id": "rcp_1f492c15c6e64318",
- "action_intent_id": "int_1f492c15c6e64318",
+ "receipt_id": "rcp_54544f3e8de94598",
+ "action_intent_id": "int_54544f3e8de94598",
  "outcome": "verified",
  "kind": "RANK_FINANCING",
  "tier": "T1",
@@ -389,6 +389,6 @@
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T16:01:45.000000+00:00",
+ "created_at": "2026-10-11T16:12:25.000000+00:00",
  "audit_seq": 10
 }

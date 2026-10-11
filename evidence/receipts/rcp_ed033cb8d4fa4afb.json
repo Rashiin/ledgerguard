@@ -1,35 +1,17 @@
 {
- "receipt_id": "rcp_fc92cfa3c0c545ef",
- "action_intent_id": "int_fc92cfa3c0c545ef",
+ "receipt_id": "rcp_ed033cb8d4fa4afb",
+ "action_intent_id": "int_ed033cb8d4fa4afb",
  "outcome": "verified",
- "kind": "RECORD_PAYMENT",
- "tier": "T2",
+ "kind": "ANSWER_QUERY",
+ "tier": "T0",
  "rows_read": [
   {
-   "table": "counterparty",
-   "id": "cp_brennan"
-  },
-  {
-   "table": "invoice",
-   "id": "inv_0412"
+   "table": "business",
+   "id": "biz_nordvik"
   }
  ],
  "schema_errors": [],
- "recomputations": [
-  {
-   "claim_index": 0,
-   "claim": "Brennan Hospitality Group has paid the invoice in full.",
-   "status": "match",
-   "model_figure": "46854.00",
-   "recomputed": "46854.00",
-   "match": true,
-   "formula": "Σ (gross − paid)",
-   "operands": [
-    "inv_0412"
-   ],
-   "reason": null
-  }
- ],
+ "recomputations": [],
  "provenance": [
   {
    "claim_index": 0,
@@ -69,7 +51,7 @@
   {
    "rule": "PayrollProtection",
    "result": "PASS",
-   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €99,423.02 to spare",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €296,277.02 to spare",
    "flags": [],
    "rows": []
   },
@@ -89,39 +71,29 @@
   },
   {
    "rule": "ConcentrationWarning",
-   "result": "WARN",
-   "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory.",
-   "flags": [
-    "CONCENTRATION_RISK"
-   ],
-   "rows": [
-    "cp_brennan"
-   ]
+   "result": "PASS",
+   "reason": "no concentrated customer involved",
+   "flags": [],
+   "rows": []
   }
  ],
  "policy": [],
  "text_corrections": [],
- "payload_figures": {
-  "recorded_amount": "46854.00",
-  "outstanding_before": "46854.00"
- },
+ "payload_figures": {},
  "material_omissions": [],
  "tools_called": [
-  "get_open_invoices",
-  "check_action"
+  "get_audit_trail"
  ],
- "risk_flags": [
-  "CONCENTRATION_RISK"
- ],
+ "risk_flags": [],
  "disclosures": [],
  "approval": {
-  "required": true,
-  "by": "operator",
-  "status": "pending",
+  "required": false,
+  "by": null,
+  "status": "not_required",
   "confirmation_phrase": null,
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T16:02:45.000000+00:00",
- "audit_seq": 41
+ "created_at": "2026-10-11T16:14:56.000000+00:00",
+ "audit_seq": 48
 }

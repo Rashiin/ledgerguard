@@ -162,7 +162,7 @@ export function Rows({ ids }: { ids: string[] }) {
 }
 
 // Markers the verifier writes into text in place of what it removed.
-const MARKERS = /(\[figure removed: not verified\]|\[removed: guaranteed-outcome language\]|\[unsupported claim removed by verifier: [^\]]*\])/g;
+const MARKERS = /(\[figure removed: not verified\]|\[figure corrected: [^\]]*\]|\[removed: guaranteed-outcome language\]|\[unsupported claim removed by verifier: [^\]]*\])/g;
 
 /** Text with every verifier marker highlighted, so a removal is never invisible. */
 export function Marked({ text }: { text: string }) {
@@ -173,8 +173,8 @@ export function Marked({ text }: { text: string }) {
         i % 2 === 1 ? (
           <mark
             key={i}
-            className="rounded bg-block-soft px-1 font-medium text-block"
-            title="Removed by the verifier"
+            className={`rounded px-1 font-medium ${part.startsWith("[figure corrected") ? "bg-warn-soft text-warn" : "bg-block-soft text-block"}`}
+            title={part.startsWith("[figure corrected") ? "Corrected by the verifier" : "Removed by the verifier"}
           >
             {part}
           </mark>

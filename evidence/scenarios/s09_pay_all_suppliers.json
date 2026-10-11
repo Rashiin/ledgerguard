@@ -72,14 +72,14 @@
      "step": "verified",
      "outcome": "blocked",
      "status": "rejected",
-     "receipt_id": "rcp_da7a637e83f1490e",
+     "receipt_id": "rcp_0d15af67a37d49e2",
      "flags": [
       "PAYROLL_PROTECTION"
      ]
     }
    ],
    "presented": {
-    "intent_id": "int_da7a637e83f1490e",
+    "intent_id": "int_0d15af67a37d49e2",
     "kind": "INITIATE_PAYMENT",
     "outcome": "blocked",
     "tier": "T3",
@@ -112,13 +112,13 @@
      "confirmation_phrase": null,
      "not_before": null
     },
-    "receipt_id": "rcp_da7a637e83f1490e",
+    "receipt_id": "rcp_0d15af67a37d49e2",
     "status": "rejected",
     "audit_seq": 13
    },
    "receipt": {
-    "receipt_id": "rcp_da7a637e83f1490e",
-    "action_intent_id": "int_da7a637e83f1490e",
+    "receipt_id": "rcp_0d15af67a37d49e2",
+    "action_intent_id": "int_0d15af67a37d49e2",
     "outcome": "blocked",
     "kind": "INITIATE_PAYMENT",
     "tier": "T3",
@@ -233,7 +233,7 @@
      "not_before": null
     },
     "verifier_version": "1.0.0",
-    "created_at": "2026-10-11T16:01:50.000000+00:00",
+    "created_at": "2026-10-11T16:12:30.000000+00:00",
     "audit_seq": 13
    }
   }

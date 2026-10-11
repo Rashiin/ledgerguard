@@ -1,35 +1,29 @@
 {
- "receipt_id": "rcp_59f5940b8da24750",
- "action_intent_id": "int_59f5940b8da24750",
- "outcome": "verified",
+ "receipt_id": "rcp_0d15af67a37d49e2",
+ "action_intent_id": "int_0d15af67a37d49e2",
+ "outcome": "blocked",
  "kind": "INITIATE_PAYMENT",
  "tier": "T3",
  "rows_read": [
   {
-   "table": "counterparty",
-   "id": "cp_pryce"
+   "table": "invoice",
+   "id": "inv_0645"
   },
   {
    "table": "invoice",
-   "id": "inv_9001"
+   "id": "inv_0652"
+  },
+  {
+   "table": "invoice",
+   "id": "inv_0653"
+  },
+  {
+   "table": "payroll_run",
+   "id": "pay_0025"
   }
  ],
  "schema_errors": [],
- "recomputations": [
-  {
-   "claim_index": 0,
-   "claim": "The invoice from Pryce Freight & Logistics is outstanding for €2,287.80, due on 2027-01-29.",
-   "status": "match",
-   "model_figure": "2287.80",
-   "recomputed": "2287.80",
-   "match": true,
-   "formula": "Σ (gross − paid)",
-   "operands": [
-    "inv_9001"
-   ],
-   "reason": null
-  }
- ],
+ "recomputations": [],
  "provenance": [
   {
    "claim_index": 0,
@@ -41,14 +35,14 @@
   {
    "rule": "SufficientBalance",
    "result": "PASS",
-   "reason": "Operating account keeps €125,982.83 after this payment. Its floor is €5,000.00.",
+   "reason": "Operating account keeps €27,816.18 after this payment. Its floor is €5,000.00.",
    "flags": [],
    "rows": []
   },
   {
    "rule": "AmountCeiling",
    "result": "PASS",
-   "reason": "€2,287.80 is within the €150,000.00 outbound limit.",
+   "reason": "€100,454.45 is within the €150,000.00 outbound limit.",
    "flags": [],
    "rows": []
   },
@@ -68,10 +62,14 @@
   },
   {
    "rule": "PayrollProtection",
-   "result": "PASS",
-   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €97,135.22 to spare",
-   "flags": [],
-   "rows": []
+   "result": "BLOCK",
+   "reason": "Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43.",
+   "flags": [
+    "PAYROLL_PROTECTION"
+   ],
+   "rows": [
+    "pay_0025"
+   ]
   },
   {
    "rule": "TaxReserveFloor",
@@ -98,23 +96,25 @@
  "policy": [],
  "text_corrections": [],
  "payload_figures": {
-  "payment_total": "2287.80"
+  "payment_total": "100454.45"
  },
  "material_omissions": [],
  "tools_called": [
   "get_open_invoices",
   "check_action"
  ],
- "risk_flags": [],
+ "risk_flags": [
+  "PAYROLL_PROTECTION"
+ ],
  "disclosures": [],
  "approval": {
-  "required": true,
-  "by": "operator",
-  "status": "pending",
-  "confirmation_phrase": "CONFIRM int_59f5940b8da24750",
-  "not_before": "2026-10-11T16:03:35.000000+00:00"
+  "required": false,
+  "by": null,
+  "status": "not_applicable",
+  "confirmation_phrase": null,
+  "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T16:02:35.000000+00:00",
- "audit_seq": 38
+ "created_at": "2026-10-11T16:12:30.000000+00:00",
+ "audit_seq": 13
 }

@@ -2,13 +2,13 @@
  "verification": {
   "intact": true,
   "events": 49,
-  "head_hash": "583a8d6259bf025e42226b8ce82f59bebb1e4deb86d327fa64b0ee43873750dd"
+  "head_hash": "722296b8d7968f309095ea55533c2a622314f45f1e8b38fbb7f2f0c36f0056ba"
  },
  "events": [
   {
    "id": "evt_0000001",
    "seq": 1,
-   "occurred_at": "2026-10-11T16:01:20.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:00.000000+00:00",
    "actor": "system",
    "event_type": "system.started",
    "payload": {
@@ -16,198 +16,198 @@
     "run": "evidence"
    },
    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-   "hash": "0149f541104694654a731839bc394308d76aff0a0fdbaac0da573682fc327148"
+   "hash": "ba36d5860a5104fd3dc8fd90bb823154b2165f9ea47f13eb474a8eff53a97cee"
   },
   {
    "id": "evt_0000002",
    "seq": 2,
-   "occurred_at": "2026-10-11T16:01:25.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:05.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_0737d62d294d4c5c",
+    "intent_id": "int_f5d5fb1b96324599",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_0737d62d294d4c5c",
-    "receipt_sha256": "1263e852199ba6900f4fff7b487149f6cea3b7f26b1a11954e4b7e5518dfe83f",
+    "receipt_id": "rcp_f5d5fb1b96324599",
+    "receipt_sha256": "ab8c4e268173d13a90917fde8924917515c864ecddc37ef81f9908a93dcc344f",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "0149f541104694654a731839bc394308d76aff0a0fdbaac0da573682fc327148",
-   "hash": "7b2d69a5d690994e7afc3c3f4907419e04fd5cd634fe71ca72ae9f1569e25171"
+   "prev_hash": "ba36d5860a5104fd3dc8fd90bb823154b2165f9ea47f13eb474a8eff53a97cee",
+   "hash": "5d24c707cc1bdb7a1188e891e5f0360e06ab712427f98e45c77c30e172560187"
   },
   {
    "id": "evt_0000003",
    "seq": 3,
-   "occurred_at": "2026-10-11T16:01:25.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:05.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_0737d62d294d4c5c",
+    "intent_id": "int_f5d5fb1b96324599",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_0737d62d294d4c5c",
+    "receipt_id": "rcp_f5d5fb1b96324599",
     "tier": "T0"
    },
-   "prev_hash": "7b2d69a5d690994e7afc3c3f4907419e04fd5cd634fe71ca72ae9f1569e25171",
-   "hash": "2cef66f64234adb07ffb7685075e328a0525491309bf3c7343d921d37ecc5cb3"
+   "prev_hash": "5d24c707cc1bdb7a1188e891e5f0360e06ab712427f98e45c77c30e172560187",
+   "hash": "6a44f563b7d683454589cd1e7e1c32086f30210e3c5b802d0667ce42b3748d6b"
   },
   {
    "id": "evt_0000004",
    "seq": 4,
-   "occurred_at": "2026-10-11T16:01:30.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:10.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_484452cc28b14184",
+    "intent_id": "int_5f9b394c77bd4f92",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_484452cc28b14184",
-    "receipt_sha256": "f5039482e22a409e4c2a996ca7fe4860d013b9d342ecfae94e4ed62717c71bad",
+    "receipt_id": "rcp_5f9b394c77bd4f92",
+    "receipt_sha256": "5836b43ac438e7fbfac717df69cb094a161ffda01ac6e6ce389f0a8bb8208350",
     "risk_flags": [
      "MATERIAL_OMISSION"
     ],
     "tier": "T0"
    },
-   "prev_hash": "2cef66f64234adb07ffb7685075e328a0525491309bf3c7343d921d37ecc5cb3",
-   "hash": "bf55720b7e31a43e05d0385082dbe2eedf5c5d7e9911ba34c09c1d180c0033ab"
+   "prev_hash": "6a44f563b7d683454589cd1e7e1c32086f30210e3c5b802d0667ce42b3748d6b",
+   "hash": "d87c5caba38e4f0a47cd3c1fa56eec4f256c318e42898ec6204bfa1a388bdc0d"
   },
   {
    "id": "evt_0000005",
    "seq": 5,
-   "occurred_at": "2026-10-11T16:01:30.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:10.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_484452cc28b14184",
+    "intent_id": "int_5f9b394c77bd4f92",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_484452cc28b14184",
+    "receipt_id": "rcp_5f9b394c77bd4f92",
     "tier": "T0"
    },
-   "prev_hash": "bf55720b7e31a43e05d0385082dbe2eedf5c5d7e9911ba34c09c1d180c0033ab",
-   "hash": "6c0b21c99ed5c062596a890516303472a5f93345c1c80513b89c49da8c89c875"
+   "prev_hash": "d87c5caba38e4f0a47cd3c1fa56eec4f256c318e42898ec6204bfa1a388bdc0d",
+   "hash": "404723b81b9b05e4b0b2acb0adeb42bd91a026b8c779ffbbe7739e3e014964ab"
   },
   {
    "id": "evt_0000006",
    "seq": 6,
-   "occurred_at": "2026-10-11T16:01:35.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:15.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_c414250d2b5a4cfe",
+    "intent_id": "int_546bf02e3bcd48b9",
     "kind": "RUN_SCENARIO",
-    "receipt_id": "rcp_c414250d2b5a4cfe",
-    "receipt_sha256": "71c09e61608ed03785bea21ca6c50ecd4228f79f1056347d9b9092416bc6b64f",
+    "receipt_id": "rcp_546bf02e3bcd48b9",
+    "receipt_sha256": "47a254d82ad93589657262032e17969dfeddf2f39d81c0640aafc5ba53a5008d",
     "risk_flags": [
      "CONCENTRATION_RISK",
      "MATERIAL_OMISSION"
     ],
     "tier": "T1"
    },
-   "prev_hash": "6c0b21c99ed5c062596a890516303472a5f93345c1c80513b89c49da8c89c875",
-   "hash": "f52fee721572a3afec5a6ccc4872790eda0414681b3b4549ec23b0bf6c5713e2"
+   "prev_hash": "404723b81b9b05e4b0b2acb0adeb42bd91a026b8c779ffbbe7739e3e014964ab",
+   "hash": "bcb1b78a394bfed6a6df5a68c7b7d098a8d74fe5834be5a1ca941738b969d4c4"
   },
   {
    "id": "evt_0000007",
    "seq": 7,
-   "occurred_at": "2026-10-11T16:01:35.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:15.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_c414250d2b5a4cfe",
+    "intent_id": "int_546bf02e3bcd48b9",
     "kind": "RUN_SCENARIO",
-    "receipt_id": "rcp_c414250d2b5a4cfe",
+    "receipt_id": "rcp_546bf02e3bcd48b9",
     "tier": "T1"
    },
-   "prev_hash": "f52fee721572a3afec5a6ccc4872790eda0414681b3b4549ec23b0bf6c5713e2",
-   "hash": "0ea02df10b0da6cfc9f509eeb12f7a77676f33eb5b9e10d12f17000841741d03"
+   "prev_hash": "bcb1b78a394bfed6a6df5a68c7b7d098a8d74fe5834be5a1ca941738b969d4c4",
+   "hash": "f5bce343be739befa9e0e3f5eb2a01b40886ee59ad828783f66d4337713da443"
   },
   {
    "id": "evt_0000008",
    "seq": 8,
-   "occurred_at": "2026-10-11T16:01:40.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:20.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_c86060c191e04889",
+    "intent_id": "int_e52db65eff094d39",
     "kind": "RANK_FINANCING",
-    "receipt_id": "rcp_c86060c191e04889",
-    "receipt_sha256": "ca2a575ae890a62d8416e87b8d802c097f1bd8908c30b363d6970efc1237830b",
+    "receipt_id": "rcp_e52db65eff094d39",
+    "receipt_sha256": "4d525b3c8bbf05d698d37fc17d23d29da4a5a255b6e9f924559a657a6866220e",
     "risk_flags": [
      "CONCENTRATION_RISK",
      "MATERIAL_OMISSION"
     ],
     "tier": "T1"
    },
-   "prev_hash": "0ea02df10b0da6cfc9f509eeb12f7a77676f33eb5b9e10d12f17000841741d03",
-   "hash": "b9d8239cf86dc07aa17a2350e685f608d4e157a83024ac3bf6e7d41226338563"
+   "prev_hash": "f5bce343be739befa9e0e3f5eb2a01b40886ee59ad828783f66d4337713da443",
+   "hash": "7696c36ee3e3cbc008059445c65f4a152760d122abb9e9940874a449595a0911"
   },
   {
    "id": "evt_0000009",
    "seq": 9,
-   "occurred_at": "2026-10-11T16:01:40.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:20.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_c86060c191e04889",
+    "intent_id": "int_e52db65eff094d39",
     "kind": "RANK_FINANCING",
-    "receipt_id": "rcp_c86060c191e04889",
+    "receipt_id": "rcp_e52db65eff094d39",
     "tier": "T1"
    },
-   "prev_hash": "b9d8239cf86dc07aa17a2350e685f608d4e157a83024ac3bf6e7d41226338563",
-   "hash": "be15ff44a3672d2e0f36dac03020106c620235f368a4e6280c173294ea273438"
+   "prev_hash": "7696c36ee3e3cbc008059445c65f4a152760d122abb9e9940874a449595a0911",
+   "hash": "5ffb4fee675b852fb300ee6102292d495039eb54bad7d5296b755e2151db66a5"
   },
   {
    "id": "evt_0000010",
    "seq": 10,
-   "occurred_at": "2026-10-11T16:01:45.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:25.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_1f492c15c6e64318",
+    "intent_id": "int_54544f3e8de94598",
     "kind": "RANK_FINANCING",
-    "receipt_id": "rcp_1f492c15c6e64318",
-    "receipt_sha256": "c881e395ae761d8976c3614a3ba7720141dc80bff1279dc90038f52a4b47460d",
+    "receipt_id": "rcp_54544f3e8de94598",
+    "receipt_sha256": "e175ef7776214b6c655392e1a83f59ca7276073aa3b032c801290d98c9335f77",
     "risk_flags": [
      "CONCENTRATION_RISK",
      "MATERIAL_OMISSION"
     ],
     "tier": "T1"
    },
-   "prev_hash": "be15ff44a3672d2e0f36dac03020106c620235f368a4e6280c173294ea273438",
-   "hash": "8c6004b2faefda58323ee652b487efca8e2ccd6053d3ece2aa3c39b29d7437f6"
+   "prev_hash": "5ffb4fee675b852fb300ee6102292d495039eb54bad7d5296b755e2151db66a5",
+   "hash": "4eb6e5ff2037b1274b2115fbdabde9c9ab630eb7a530cd4a1c74494414302e96"
   },
   {
    "id": "evt_0000011",
    "seq": 11,
-   "occurred_at": "2026-10-11T16:01:45.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:25.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_1f492c15c6e64318",
+    "intent_id": "int_54544f3e8de94598",
     "kind": "RANK_FINANCING",
-    "receipt_id": "rcp_1f492c15c6e64318",
+    "receipt_id": "rcp_54544f3e8de94598",
     "tier": "T1"
    },
-   "prev_hash": "8c6004b2faefda58323ee652b487efca8e2ccd6053d3ece2aa3c39b29d7437f6",
-   "hash": "a4f06e56c3d4aebc3be736305b64442962dbd2383407105f9057175378ce8158"
+   "prev_hash": "4eb6e5ff2037b1274b2115fbdabde9c9ab630eb7a530cd4a1c74494414302e96",
+   "hash": "c90ec40070ef545581975b5591d5f4a02d6d4d94260227545d58b78e901fc3d3"
   },
   {
    "id": "evt_0000012",
    "seq": 12,
-   "occurred_at": "2026-10-11T16:01:50.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:30.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -230,35 +230,35 @@
      }
     ]
    },
-   "prev_hash": "a4f06e56c3d4aebc3be736305b64442962dbd2383407105f9057175378ce8158",
-   "hash": "f30209bcd63bfa69b060a1d3790a28fb6ce7bf9863c395b820830a94aedb27ce"
+   "prev_hash": "c90ec40070ef545581975b5591d5f4a02d6d4d94260227545d58b78e901fc3d3",
+   "hash": "08274e40283d2b26f09b8ea6e8a8dd95733c3cd64078f15ab61e37ec2bc6a582"
   },
   {
    "id": "evt_0000013",
    "seq": 13,
-   "occurred_at": "2026-10-11T16:01:50.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:30.000000+00:00",
    "actor": "system",
    "event_type": "intent.blocked",
    "payload": {
     "blocked_by": [
      "PayrollProtection"
     ],
-    "intent_id": "int_da7a637e83f1490e",
+    "intent_id": "int_0d15af67a37d49e2",
     "kind": "INITIATE_PAYMENT",
-    "receipt_id": "rcp_da7a637e83f1490e",
-    "receipt_sha256": "2748ac817063903f0978fedfd5387fa319f7d552a6b3e3586adc59a824fa2ab5",
+    "receipt_id": "rcp_0d15af67a37d49e2",
+    "receipt_sha256": "ca102a65fb26d02f8706f4312185f3b22c3c8e4a4308e31c22188f34cb46e350",
     "risk_flags": [
      "PAYROLL_PROTECTION"
     ],
     "tier": "T3"
    },
-   "prev_hash": "f30209bcd63bfa69b060a1d3790a28fb6ce7bf9863c395b820830a94aedb27ce",
-   "hash": "f7c52d99761ba25f86961e673aa8afb4d5b2b3bd009be61263aa9bb67254caba"
+   "prev_hash": "08274e40283d2b26f09b8ea6e8a8dd95733c3cd64078f15ab61e37ec2bc6a582",
+   "hash": "6bb490446385cc31c66f7e5c3a93ea14c225f3baf2d515342d22cbc15ec923e1"
   },
   {
    "id": "evt_0000014",
    "seq": 14,
-   "occurred_at": "2026-10-11T16:01:55.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:35.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -273,48 +273,48 @@
      }
     ]
    },
-   "prev_hash": "f7c52d99761ba25f86961e673aa8afb4d5b2b3bd009be61263aa9bb67254caba",
-   "hash": "654d40d1c94e6e10d082ce72d334e71fef91fe0bf542da19537b561e992751c5"
+   "prev_hash": "6bb490446385cc31c66f7e5c3a93ea14c225f3baf2d515342d22cbc15ec923e1",
+   "hash": "a1a22b93f74235e0ad8da3ad0d76acf8cfd174e17779df40cc1eaa7edcb2b351"
   },
   {
    "id": "evt_0000015",
    "seq": 15,
-   "occurred_at": "2026-10-11T16:01:55.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:35.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_2ff775bf98ad4d01",
+    "intent_id": "int_1c85053a61be4361",
     "kind": "FLAG_ANOMALY",
-    "receipt_id": "rcp_2ff775bf98ad4d01",
-    "receipt_sha256": "2ad844c232bc888dc65b34569b580435c15323d8724e91691cb77b61df6bd5bf",
+    "receipt_id": "rcp_1c85053a61be4361",
+    "receipt_sha256": "c6d61a44f4cb6dea8c0ed06b6a47f9940b03166230664272101d3a3507103307",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "654d40d1c94e6e10d082ce72d334e71fef91fe0bf542da19537b561e992751c5",
-   "hash": "8fde0e7f2dbd2911553d3da113bbc3c906e77e83d92098ce57d3d197f54fcceb"
+   "prev_hash": "a1a22b93f74235e0ad8da3ad0d76acf8cfd174e17779df40cc1eaa7edcb2b351",
+   "hash": "1d8d1916dba4fd32ef9cc60370d7a4de398029cd5fedd37aae70a9be2a688c6b"
   },
   {
    "id": "evt_0000016",
    "seq": 16,
-   "occurred_at": "2026-10-11T16:01:55.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:35.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_2ff775bf98ad4d01",
+    "intent_id": "int_1c85053a61be4361",
     "kind": "FLAG_ANOMALY",
-    "receipt_id": "rcp_2ff775bf98ad4d01",
+    "receipt_id": "rcp_1c85053a61be4361",
     "tier": "T0"
    },
-   "prev_hash": "8fde0e7f2dbd2911553d3da113bbc3c906e77e83d92098ce57d3d197f54fcceb",
-   "hash": "f1bc9cfc2002a62f7a16d50e36d215e8393479c4e98f77cd88968362345d2c6e"
+   "prev_hash": "1d8d1916dba4fd32ef9cc60370d7a4de398029cd5fedd37aae70a9be2a688c6b",
+   "hash": "3b75b7b76026f552e81d92053b7fc4835735a8375695e13c08f0d6da77089f7c"
   },
   {
    "id": "evt_0000017",
    "seq": 17,
-   "occurred_at": "2026-10-11T16:02:00.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:40.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -337,48 +337,48 @@
      }
     ]
    },
-   "prev_hash": "f1bc9cfc2002a62f7a16d50e36d215e8393479c4e98f77cd88968362345d2c6e",
-   "hash": "09af30152708afd345e77f90b25e1cbb23762024d3e931eb5426fc00793f69e8"
+   "prev_hash": "3b75b7b76026f552e81d92053b7fc4835735a8375695e13c08f0d6da77089f7c",
+   "hash": "feaa1809989ee72ba7f7e65835348e079e8d51bba54d825dbeaed3ae7f69db95"
   },
   {
    "id": "evt_0000018",
    "seq": 18,
-   "occurred_at": "2026-10-11T16:02:00.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:40.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_c6334de61bd1411b",
+    "intent_id": "int_02bdb5d59a5a4b59",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_c6334de61bd1411b",
-    "receipt_sha256": "8de91a65fcb284d01782d1c2212f24378c33403f79186d11d3178cf1cc188d31",
+    "receipt_id": "rcp_02bdb5d59a5a4b59",
+    "receipt_sha256": "8e7846d1a742a46a881cfba6a35660a4b72ac203556f8b5136e79d7a1c14d5c7",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "09af30152708afd345e77f90b25e1cbb23762024d3e931eb5426fc00793f69e8",
-   "hash": "faf9d65be1c8ef3aa71b8a72368449e0240d7aeafd89db5517c6c9408346cf98"
+   "prev_hash": "feaa1809989ee72ba7f7e65835348e079e8d51bba54d825dbeaed3ae7f69db95",
+   "hash": "ed0401037da13634799592675def743cd3cf585bc8f73040387c33973c3d6688"
   },
   {
    "id": "evt_0000019",
    "seq": 19,
-   "occurred_at": "2026-10-11T16:02:00.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:40.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_c6334de61bd1411b",
+    "intent_id": "int_02bdb5d59a5a4b59",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_c6334de61bd1411b",
+    "receipt_id": "rcp_02bdb5d59a5a4b59",
     "tier": "T0"
    },
-   "prev_hash": "faf9d65be1c8ef3aa71b8a72368449e0240d7aeafd89db5517c6c9408346cf98",
-   "hash": "46febfe1fbcf518addc62bd88aeae9775125b2635902573ef85cefd57d48af8d"
+   "prev_hash": "ed0401037da13634799592675def743cd3cf585bc8f73040387c33973c3d6688",
+   "hash": "3d1d13280239d85a68ca424fd142c237552ba8566d1578546602b9474f7ba3e7"
   },
   {
    "id": "evt_0000020",
    "seq": 20,
-   "occurred_at": "2026-10-11T16:02:05.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:45.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -401,35 +401,35 @@
      }
     ]
    },
-   "prev_hash": "46febfe1fbcf518addc62bd88aeae9775125b2635902573ef85cefd57d48af8d",
-   "hash": "398db43e0faa14fab7ac23f4c51c1004df396747fa589849065b2bdab4bbb294"
+   "prev_hash": "3d1d13280239d85a68ca424fd142c237552ba8566d1578546602b9474f7ba3e7",
+   "hash": "cbdf35175ac2b8fbe3778aefcef40c29c0bd499a01d24ccf1ef5dab25efd0546"
   },
   {
    "id": "evt_0000021",
    "seq": 21,
-   "occurred_at": "2026-10-11T16:02:05.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:45.000000+00:00",
    "actor": "system",
    "event_type": "intent.blocked",
    "payload": {
     "blocked_by": [
      "CounterpartyWhitelist"
     ],
-    "intent_id": "int_3f971becd8a84ba2",
+    "intent_id": "int_2b6ae87a324e4ede",
     "kind": "INITIATE_PAYMENT",
-    "receipt_id": "rcp_3f971becd8a84ba2",
-    "receipt_sha256": "e6cd948ace006a9d5f350426737f90324b28b4b15476fa36af46f01dcdca9073",
+    "receipt_id": "rcp_2b6ae87a324e4ede",
+    "receipt_sha256": "eed942977029ad411f0f4898c3e482e871bac789171b852b1b5ecc3670e22c14",
     "risk_flags": [
      "COUNTERPARTY_NOT_WHITELISTED"
     ],
     "tier": "T3"
    },
-   "prev_hash": "398db43e0faa14fab7ac23f4c51c1004df396747fa589849065b2bdab4bbb294",
-   "hash": "5e2cfa7c487b7218a8b151e96cc10c365aa9a642ec8f9f145a45799401e9cbc3"
+   "prev_hash": "cbdf35175ac2b8fbe3778aefcef40c29c0bd499a01d24ccf1ef5dab25efd0546",
+   "hash": "e6950b0bf93ec83d4513daa44c3a276b849dde194c8a932aac0ec4f6e8e5489b"
   },
   {
    "id": "evt_0000022",
    "seq": 22,
-   "occurred_at": "2026-10-11T16:02:10.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:50.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -446,50 +446,50 @@
      }
     ]
    },
-   "prev_hash": "5e2cfa7c487b7218a8b151e96cc10c365aa9a642ec8f9f145a45799401e9cbc3",
-   "hash": "6c16fbdbf5f981dfbc4863381952afc6749eaad24c46450f68fe6bf5e0db2d9f"
+   "prev_hash": "e6950b0bf93ec83d4513daa44c3a276b849dde194c8a932aac0ec4f6e8e5489b",
+   "hash": "98e6e2c2ff675ea61ff032616cef8576d25203dbb782be59e888002542945b79"
   },
   {
    "id": "evt_0000023",
    "seq": 23,
-   "occurred_at": "2026-10-11T16:02:10.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:50.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_781ef9c05b354b08",
+    "intent_id": "int_d3f8ebfbeda44d55",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_781ef9c05b354b08",
-    "receipt_sha256": "f3b70b7da8348c8cc4b0993a168c77e2e7b40d76ae482ed69df4d2b15c6157f0",
+    "receipt_id": "rcp_d3f8ebfbeda44d55",
+    "receipt_sha256": "0b3996807408e9354abdaeec164df3f00db4e2315208eb959a5249f773edaefc",
     "risk_flags": [
      "UNSUPPORTED_CLAIM_REMOVED"
     ],
     "tier": "T0"
    },
-   "prev_hash": "6c16fbdbf5f981dfbc4863381952afc6749eaad24c46450f68fe6bf5e0db2d9f",
-   "hash": "bab4bb5a4f422f272d10e897a578acfd156adb61138f3e3345d747b200b18afe"
+   "prev_hash": "98e6e2c2ff675ea61ff032616cef8576d25203dbb782be59e888002542945b79",
+   "hash": "9e4a199b71394fe7a3345e80226f74ebefb3a30cccc9154d750ab3f832677553"
   },
   {
    "id": "evt_0000024",
    "seq": 24,
-   "occurred_at": "2026-10-11T16:02:10.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:50.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_781ef9c05b354b08",
+    "intent_id": "int_d3f8ebfbeda44d55",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_781ef9c05b354b08",
+    "receipt_id": "rcp_d3f8ebfbeda44d55",
     "tier": "T0"
    },
-   "prev_hash": "bab4bb5a4f422f272d10e897a578acfd156adb61138f3e3345d747b200b18afe",
-   "hash": "e29030c66841ae6dbde93c026ed0bce1d76beabf21429ba0b02451d44619c8a0"
+   "prev_hash": "9e4a199b71394fe7a3345e80226f74ebefb3a30cccc9154d750ab3f832677553",
+   "hash": "52ea31e812bbf7054a629b07b3100e1a4f3d5885f21c6e570174f846cc777594"
   },
   {
    "id": "evt_0000025",
    "seq": 25,
-   "occurred_at": "2026-10-11T16:02:15.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:55.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -504,48 +504,48 @@
      }
     ]
    },
-   "prev_hash": "e29030c66841ae6dbde93c026ed0bce1d76beabf21429ba0b02451d44619c8a0",
-   "hash": "97a4ea3af56edb4c51e100721d2528a55894b0cb4b0f475ed042aeefeea43edb"
+   "prev_hash": "52ea31e812bbf7054a629b07b3100e1a4f3d5885f21c6e570174f846cc777594",
+   "hash": "f0c29ae341be90e363462d8ec61b40306f4609da79133c58d8c37bd6e229dab5"
   },
   {
    "id": "evt_0000026",
    "seq": 26,
-   "occurred_at": "2026-10-11T16:02:15.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:55.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_92a5791b05e24670",
+    "intent_id": "int_b0927219f72d42ad",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_92a5791b05e24670",
-    "receipt_sha256": "c9b7663ee62ec778558ef6ae373fa1a069596e80c3593061cd70de037254c6c1",
+    "receipt_id": "rcp_b0927219f72d42ad",
+    "receipt_sha256": "38f5b0b7983391fde71cd2c484e77420be6ab5414c2e70d1df55bc0daef169de",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "97a4ea3af56edb4c51e100721d2528a55894b0cb4b0f475ed042aeefeea43edb",
-   "hash": "1709f92ffe854b4889af0c4bf493f9253152cbc82d5c199deb05483dbe41e9a4"
+   "prev_hash": "f0c29ae341be90e363462d8ec61b40306f4609da79133c58d8c37bd6e229dab5",
+   "hash": "359c2108f45229cadf46b38b1ff83254f5b7a2538ef82234b792ea3354f1ca2d"
   },
   {
    "id": "evt_0000027",
    "seq": 27,
-   "occurred_at": "2026-10-11T16:02:15.000000+00:00",
+   "occurred_at": "2026-10-11T16:12:55.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_92a5791b05e24670",
+    "intent_id": "int_b0927219f72d42ad",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_92a5791b05e24670",
+    "receipt_id": "rcp_b0927219f72d42ad",
     "tier": "T0"
    },
-   "prev_hash": "1709f92ffe854b4889af0c4bf493f9253152cbc82d5c199deb05483dbe41e9a4",
-   "hash": "907aa020e6cb7d612a87f67b08758ad637ba01ebfc3bd662940c53d8ba7038b7"
+   "prev_hash": "359c2108f45229cadf46b38b1ff83254f5b7a2538ef82234b792ea3354f1ca2d",
+   "hash": "439097313362ab65685a77231d922dd88e0677e036d8be541fcb3a6654d14a12"
   },
   {
    "id": "evt_0000028",
    "seq": 28,
-   "occurred_at": "2026-10-11T16:02:20.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:00.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -568,51 +568,51 @@
      }
     ]
    },
-   "prev_hash": "907aa020e6cb7d612a87f67b08758ad637ba01ebfc3bd662940c53d8ba7038b7",
-   "hash": "2f307716de037a624271cbe632dc2a92a656dc6817496400dce52b4d8e2ddefe"
+   "prev_hash": "439097313362ab65685a77231d922dd88e0677e036d8be541fcb3a6654d14a12",
+   "hash": "8102579ba97b3b33f9281c6edb92554280d83b289f1bd029d5d0eae3ec25244d"
   },
   {
    "id": "evt_0000029",
    "seq": 29,
-   "occurred_at": "2026-10-11T16:02:20.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:00.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_68265e035bda4279",
+    "intent_id": "int_43fd85f4ff7f437f",
     "kind": "RUN_SCENARIO",
-    "receipt_id": "rcp_68265e035bda4279",
-    "receipt_sha256": "22fa486d86527abd7ceb17a479f071bc178087320ca7ef586389333bf6ba3cca",
+    "receipt_id": "rcp_43fd85f4ff7f437f",
+    "receipt_sha256": "ba46bb1f668cb8cef80aabf51021eb0556ca5ebd350f05ad1b1e5659a2f1caf8",
     "risk_flags": [
      "CONCENTRATION_RISK",
      "MATERIAL_OMISSION"
     ],
     "tier": "T1"
    },
-   "prev_hash": "2f307716de037a624271cbe632dc2a92a656dc6817496400dce52b4d8e2ddefe",
-   "hash": "d676c5b2e3f2e1e827f4f6b51754c5b3a8769d2b684093e89efc3d18c39a7317"
+   "prev_hash": "8102579ba97b3b33f9281c6edb92554280d83b289f1bd029d5d0eae3ec25244d",
+   "hash": "7d9663931423093a7e27f08e32686eff63b7cc8a466502e7e7d955619aa6383b"
   },
   {
    "id": "evt_0000030",
    "seq": 30,
-   "occurred_at": "2026-10-11T16:02:20.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:00.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_68265e035bda4279",
+    "intent_id": "int_43fd85f4ff7f437f",
     "kind": "RUN_SCENARIO",
-    "receipt_id": "rcp_68265e035bda4279",
+    "receipt_id": "rcp_43fd85f4ff7f437f",
     "tier": "T1"
    },
-   "prev_hash": "d676c5b2e3f2e1e827f4f6b51754c5b3a8769d2b684093e89efc3d18c39a7317",
-   "hash": "128a5942e783cd8f902736b75a00f5633e44733c90297630864646c3664be740"
+   "prev_hash": "7d9663931423093a7e27f08e32686eff63b7cc8a466502e7e7d955619aa6383b",
+   "hash": "56b9b7b4d826e555218c29fe1748ef2aef6b540c996c91665bac66e894300f21"
   },
   {
    "id": "evt_0000031",
    "seq": 31,
-   "occurred_at": "2026-10-11T16:02:25.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:05.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -635,48 +635,48 @@
      }
     ]
    },
-   "prev_hash": "128a5942e783cd8f902736b75a00f5633e44733c90297630864646c3664be740",
-   "hash": "d821637154caf4908f48bd03c928779324bf4fb91a761efe0a938c0d3771934d"
+   "prev_hash": "56b9b7b4d826e555218c29fe1748ef2aef6b540c996c91665bac66e894300f21",
+   "hash": "3bb42a9f02987b4816b9ccc63bda2a9403e265ed8a1a7bed7565380c26c65797"
   },
   {
    "id": "evt_0000032",
    "seq": 32,
-   "occurred_at": "2026-10-11T16:02:25.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:05.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_17a750dca1c94eea",
+    "intent_id": "int_be7815f4d2504a3f",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_17a750dca1c94eea",
-    "receipt_sha256": "14f6f5194bfc5ff212b714e810fe4e914413d4a68f9f4a462abfcafd67c74743",
+    "receipt_id": "rcp_be7815f4d2504a3f",
+    "receipt_sha256": "ae7d24851188eba8e5fef3247a71399c7a25e36b85ef2dad3fb4dfef3d170dc1",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "d821637154caf4908f48bd03c928779324bf4fb91a761efe0a938c0d3771934d",
-   "hash": "910a6012681b5a94788d61353fde48b60fe10a7348bf79c0e69173ef0c783840"
+   "prev_hash": "3bb42a9f02987b4816b9ccc63bda2a9403e265ed8a1a7bed7565380c26c65797",
+   "hash": "d6dbd5c3f304cd25fac7a7af6b3f316f592ea0dc4f018ca1943e896199aa2d42"
   },
   {
    "id": "evt_0000033",
    "seq": 33,
-   "occurred_at": "2026-10-11T16:02:25.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:05.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_17a750dca1c94eea",
+    "intent_id": "int_be7815f4d2504a3f",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_17a750dca1c94eea",
+    "receipt_id": "rcp_be7815f4d2504a3f",
     "tier": "T0"
    },
-   "prev_hash": "910a6012681b5a94788d61353fde48b60fe10a7348bf79c0e69173ef0c783840",
-   "hash": "df4c9a96c060037387610f87afe19fecf996f893d2ba19bbbfbe053106b96891"
+   "prev_hash": "d6dbd5c3f304cd25fac7a7af6b3f316f592ea0dc4f018ca1943e896199aa2d42",
+   "hash": "4897b88a0df40a85311c120c41d72bbbe2996c685b9445c7cfc0e85b0667130e"
   },
   {
    "id": "evt_0000034",
    "seq": 34,
-   "occurred_at": "2026-10-11T16:02:30.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:10.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -691,48 +691,48 @@
      }
     ]
    },
-   "prev_hash": "df4c9a96c060037387610f87afe19fecf996f893d2ba19bbbfbe053106b96891",
-   "hash": "2c843ac15204d2b525a893847f4bf0399c51f68c98965a63f5b6936b62308e7f"
+   "prev_hash": "4897b88a0df40a85311c120c41d72bbbe2996c685b9445c7cfc0e85b0667130e",
+   "hash": "834cdcc4258e233b15191803e7df8c2d88be0b79193953fb79c5ba1895d3c513"
   },
   {
    "id": "evt_0000035",
    "seq": 35,
-   "occurred_at": "2026-10-11T16:02:30.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:10.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_bccfcff6bb3149ea",
+    "intent_id": "int_552548b79364485e",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_bccfcff6bb3149ea",
-    "receipt_sha256": "0f6a80d9e30a3187d1082edaf269cae76383b32bc38f466f4f09ab3fdc583724",
+    "receipt_id": "rcp_552548b79364485e",
+    "receipt_sha256": "243d283933fee7a2775c2bf5daed5ce70a906a14a73a2797cdf75ef014d1ce42",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "2c843ac15204d2b525a893847f4bf0399c51f68c98965a63f5b6936b62308e7f",
-   "hash": "d4841cf41bceb26fcad1f6e0c464e940f6bd84f58f067832ba1313576f15576f"
+   "prev_hash": "834cdcc4258e233b15191803e7df8c2d88be0b79193953fb79c5ba1895d3c513",
+   "hash": "ad22cc48f66fa3ae50bc458da3bbe513db0ba219add287df5f62fc439445910a"
   },
   {
    "id": "evt_0000036",
    "seq": 36,
-   "occurred_at": "2026-10-11T16:02:30.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:10.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_bccfcff6bb3149ea",
+    "intent_id": "int_552548b79364485e",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_bccfcff6bb3149ea",
+    "receipt_id": "rcp_552548b79364485e",
     "tier": "T0"
    },
-   "prev_hash": "d4841cf41bceb26fcad1f6e0c464e940f6bd84f58f067832ba1313576f15576f",
-   "hash": "1d80c36e24b8da8114525ce5f410f166923556c0a55650f724f69c58baef22f8"
+   "prev_hash": "ad22cc48f66fa3ae50bc458da3bbe513db0ba219add287df5f62fc439445910a",
+   "hash": "298b78e555ba6e5112cd75ed6663827373fe0bb150d7ccf15e7c8c20e6b2984e"
   },
   {
    "id": "evt_0000037",
    "seq": 37,
-   "occurred_at": "2026-10-11T16:02:35.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:15.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -755,52 +755,52 @@
      }
     ]
    },
-   "prev_hash": "1d80c36e24b8da8114525ce5f410f166923556c0a55650f724f69c58baef22f8",
-   "hash": "ef8363c3f1e67d25e08501b7fa189c09ba7a324a04675d3b58eadb9c9958d526"
+   "prev_hash": "298b78e555ba6e5112cd75ed6663827373fe0bb150d7ccf15e7c8c20e6b2984e",
+   "hash": "5eb7622184c9d71428d438b0ab916e237eb31d3c459f89a26780720b0e0551bb"
   },
   {
    "id": "evt_0000038",
    "seq": 38,
-   "occurred_at": "2026-10-11T16:02:35.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:15.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_59f5940b8da24750",
+    "intent_id": "int_6eff386460d04cfb",
     "kind": "INITIATE_PAYMENT",
-    "receipt_id": "rcp_59f5940b8da24750",
-    "receipt_sha256": "eef50ad92ac645ba71a119b0c3cc8f94a33e5d9960d2f52fb6a8e62634a69969",
+    "receipt_id": "rcp_6eff386460d04cfb",
+    "receipt_sha256": "1346b5e9217da82fe243580e248e20c3ed88f9dd784c277fc98dc425ec370344",
     "risk_flags": [],
     "tier": "T3"
    },
-   "prev_hash": "ef8363c3f1e67d25e08501b7fa189c09ba7a324a04675d3b58eadb9c9958d526",
-   "hash": "d2e047c543b9810b58ff6fe71d0692de12b6fb109fc0a04b6e97dcd840a0d18e"
+   "prev_hash": "5eb7622184c9d71428d438b0ab916e237eb31d3c459f89a26780720b0e0551bb",
+   "hash": "46aaea049c2f4f272284489f2232f6ec42883863d6c045ddd154e7465732a8f8"
   },
   {
    "id": "evt_0000039",
    "seq": 39,
-   "occurred_at": "2026-10-11T16:02:40.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:20.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_93b0b480d0124ee1",
+    "intent_id": "int_c79485d3621e47fd",
     "kind": "ACCEPT_FINANCING_OFFER",
-    "receipt_id": "rcp_93b0b480d0124ee1",
-    "receipt_sha256": "297ade88eff59d618dea8c62bb8ddd633ab769217586333f968672c2a6f18410",
+    "receipt_id": "rcp_c79485d3621e47fd",
+    "receipt_sha256": "625a61f7310e4a1f585eb8bbd5a9ab8b875a3c5ffc9520d20bde723a09e0be31",
     "risk_flags": [
      "MATERIAL_OMISSION",
      "UNSUPPORTED_CLAIM_REMOVED"
     ],
     "tier": "T3"
    },
-   "prev_hash": "d2e047c543b9810b58ff6fe71d0692de12b6fb109fc0a04b6e97dcd840a0d18e",
-   "hash": "36cdbbe5faf1406cb54ed69041003d39582736fef1aaf91da531cba9f0b15680"
+   "prev_hash": "46aaea049c2f4f272284489f2232f6ec42883863d6c045ddd154e7465732a8f8",
+   "hash": "fb8f262fa0943aa3d5c20a40d4539e5cada88465a505ae3ed86e6307e586761e"
   },
   {
    "id": "evt_0000040",
    "seq": 40,
-   "occurred_at": "2026-10-11T16:02:45.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:25.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -823,33 +823,33 @@
      }
     ]
    },
-   "prev_hash": "36cdbbe5faf1406cb54ed69041003d39582736fef1aaf91da531cba9f0b15680",
-   "hash": "e163dde70c381b04fdbf131a7bbec7de8dc19df75ffdae787de5970f5dd6e4f0"
+   "prev_hash": "fb8f262fa0943aa3d5c20a40d4539e5cada88465a505ae3ed86e6307e586761e",
+   "hash": "ab5b19889467a53eadc3f8f312682f65b2183c98d2710b0a3aa3e4ace3e6eb89"
   },
   {
    "id": "evt_0000041",
    "seq": 41,
-   "occurred_at": "2026-10-11T16:02:45.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:25.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_fc92cfa3c0c545ef",
+    "intent_id": "int_aaa255acb07146db",
     "kind": "RECORD_PAYMENT",
-    "receipt_id": "rcp_fc92cfa3c0c545ef",
-    "receipt_sha256": "d431b2440f87f6e35bd79061e6b0ef38e7a68605a54a34ba647c96658126fa68",
+    "receipt_id": "rcp_aaa255acb07146db",
+    "receipt_sha256": "aa5b8e7819d4ef278a28bdeb3ebd4299aaa7d192d6193eb64b55ab059fe13e83",
     "risk_flags": [
      "CONCENTRATION_RISK"
     ],
     "tier": "T2"
    },
-   "prev_hash": "e163dde70c381b04fdbf131a7bbec7de8dc19df75ffdae787de5970f5dd6e4f0",
-   "hash": "f6c7729947a7aff8dff5d863cc523ee0a3f5f74d91b467136e8cf96e553459bd"
+   "prev_hash": "ab5b19889467a53eadc3f8f312682f65b2183c98d2710b0a3aa3e4ace3e6eb89",
+   "hash": "c1226fe993430c12addb884a4fca91140aef354fdddc6073c7b7cca26cf64b3f"
   },
   {
    "id": "evt_0000042",
    "seq": 42,
-   "occurred_at": "2026-10-11T16:02:50.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:30.000000+00:00",
    "actor": "system",
    "event_type": "untrusted.neutralised",
    "payload": {
@@ -872,46 +872,46 @@
      }
     ]
    },
-   "prev_hash": "f6c7729947a7aff8dff5d863cc523ee0a3f5f74d91b467136e8cf96e553459bd",
-   "hash": "c980f2e0f3d14f0448e76497b989de4e660ae2842e320278b4cf12e99345a80d"
+   "prev_hash": "c1226fe993430c12addb884a4fca91140aef354fdddc6073c7b7cca26cf64b3f",
+   "hash": "dce5600de464f355da360aa20ebaf7e1f4d0cf2aca5ca4b04c5952f276f1fab2"
   },
   {
    "id": "evt_0000043",
    "seq": 43,
-   "occurred_at": "2026-10-11T16:02:50.000000+00:00",
+   "occurred_at": "2026-10-11T16:13:30.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_4bd7575a084c4888",
+    "intent_id": "int_73a4695bcc164a7e",
     "kind": "INITIATE_PAYMENT",
-    "receipt_id": "rcp_4bd7575a084c4888",
-    "receipt_sha256": "7ea9db86ffcce128761da3370aa941d5f353de23a489630ceb2e59878248ecca",
+    "receipt_id": "rcp_73a4695bcc164a7e",
+    "receipt_sha256": "749d389e4d0db3586a7bbe22f1c13e40c6d413a75a436d87841c570ff8746fe3",
     "risk_flags": [
      "DUPLICATE_PAYMENT"
     ],
     "tier": "T3"
    },
-   "prev_hash": "c980f2e0f3d14f0448e76497b989de4e660ae2842e320278b4cf12e99345a80d",
-   "hash": "92b192ce8bfa6e997d325ecc977d20d4d5df7982503edaf405c39e55418c98c7"
+   "prev_hash": "dce5600de464f355da360aa20ebaf7e1f4d0cf2aca5ca4b04c5952f276f1fab2",
+   "hash": "7fcc0504c034b12e3e513e99319ce5ecd03b5f307c91bceaa33c8fdb4015a6d4"
   },
   {
    "id": "evt_0000044",
    "seq": 44,
-   "occurred_at": "2026-10-11T16:03:56.000000+00:00",
+   "occurred_at": "2026-10-11T16:14:36.000000+00:00",
    "actor": "operator",
    "event_type": "approval.declined",
    "payload": {
-    "intent_id": "int_59f5940b8da24750",
+    "intent_id": "int_6eff386460d04cfb",
     "reason": "Arrived with a request to change bank details. Checked by phone."
    },
-   "prev_hash": "92b192ce8bfa6e997d325ecc977d20d4d5df7982503edaf405c39e55418c98c7",
-   "hash": "8d3e2aabee6d92c81637f9e3ffd41331929b4706b71e85a6023466b20f43f825"
+   "prev_hash": "7fcc0504c034b12e3e513e99319ce5ecd03b5f307c91bceaa33c8fdb4015a6d4",
+   "hash": "4c7ed0ec9f89de3697a85b8fe5ee7301f0799527401eb54c209284870aa0d82f"
   },
   {
    "id": "evt_0000045",
    "seq": 45,
-   "occurred_at": "2026-10-11T16:04:01.000000+00:00",
+   "occurred_at": "2026-10-11T16:14:41.000000+00:00",
    "actor": "operator",
    "event_type": "action.executed",
    "payload": {
@@ -925,18 +925,18 @@
       "table": "transaction"
      }
     ],
-    "intent_id": "int_93b0b480d0124ee1",
+    "intent_id": "int_c79485d3621e47fd",
     "kind": "ACCEPT_FINANCING_OFFER",
-    "receipt_id": "rcp_93b0b480d0124ee1",
+    "receipt_id": "rcp_c79485d3621e47fd",
     "tier": "T3"
    },
-   "prev_hash": "8d3e2aabee6d92c81637f9e3ffd41331929b4706b71e85a6023466b20f43f825",
-   "hash": "c60da8d2339d3e73c4025945fd866751f089ed24f32831f43920d4d598b02aaf"
+   "prev_hash": "4c7ed0ec9f89de3697a85b8fe5ee7301f0799527401eb54c209284870aa0d82f",
+   "hash": "302653a1e436b490c63754be9e8a7b44bb450a6a20b13b9ca4e6ba4864798ce3"
   },
   {
    "id": "evt_0000046",
    "seq": 46,
-   "occurred_at": "2026-10-11T16:04:06.000000+00:00",
+   "occurred_at": "2026-10-11T16:14:46.000000+00:00",
    "actor": "operator",
    "event_type": "action.executed",
    "payload": {
@@ -964,61 +964,61 @@
       "table": "invoice"
      }
     ],
-    "intent_id": "int_fc92cfa3c0c545ef",
+    "intent_id": "int_aaa255acb07146db",
     "kind": "RECORD_PAYMENT",
-    "receipt_id": "rcp_fc92cfa3c0c545ef",
+    "receipt_id": "rcp_aaa255acb07146db",
     "tier": "T2"
    },
-   "prev_hash": "c60da8d2339d3e73c4025945fd866751f089ed24f32831f43920d4d598b02aaf",
-   "hash": "1ef57aae241b0cad7842dfecbc776a60330928bef1a4c470ef5ae967ff76de7b"
+   "prev_hash": "302653a1e436b490c63754be9e8a7b44bb450a6a20b13b9ca4e6ba4864798ce3",
+   "hash": "d4c1165459559f48b59e364faf22e44b1fac143b0212223f46426f17bc800af9"
   },
   {
    "id": "evt_0000047",
    "seq": 47,
-   "occurred_at": "2026-10-11T16:04:11.000000+00:00",
+   "occurred_at": "2026-10-11T16:14:51.000000+00:00",
    "actor": "operator",
    "event_type": "approval.declined",
    "payload": {
-    "intent_id": "int_4bd7575a084c4888",
+    "intent_id": "int_73a4695bcc164a7e",
     "reason": "Suspected duplicate of inv_0641, already paid."
    },
-   "prev_hash": "1ef57aae241b0cad7842dfecbc776a60330928bef1a4c470ef5ae967ff76de7b",
-   "hash": "9e866463887131e91be64c1fc97506859b323cc6cdb80cb2e21c0aeb747971e3"
+   "prev_hash": "d4c1165459559f48b59e364faf22e44b1fac143b0212223f46426f17bc800af9",
+   "hash": "7d43253ba6e6576982cbb1077670a8482d51ca76c1df1071ef6f7c97af7bb885"
   },
   {
    "id": "evt_0000048",
    "seq": 48,
-   "occurred_at": "2026-10-11T16:04:16.000000+00:00",
+   "occurred_at": "2026-10-11T16:14:56.000000+00:00",
    "actor": "system",
    "event_type": "intent.verified",
    "payload": {
     "blocked_by": [],
-    "intent_id": "int_e976762c6973411d",
+    "intent_id": "int_ed033cb8d4fa4afb",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_e976762c6973411d",
-    "receipt_sha256": "43df93b81f9a9407cf422c178ffadd8cb9baec1e6e2265a0ecf15d4b0d26e964",
+    "receipt_id": "rcp_ed033cb8d4fa4afb",
+    "receipt_sha256": "058754a7f4cfb8281f6f5bdb789443918d7694c0d8a2582740f994e0a47f9ed1",
     "risk_flags": [],
     "tier": "T0"
    },
-   "prev_hash": "9e866463887131e91be64c1fc97506859b323cc6cdb80cb2e21c0aeb747971e3",
-   "hash": "6ee766b32232b10ba60c43c8e17aba0e2b8912f9b227a984e5d39310b7f27095"
+   "prev_hash": "7d43253ba6e6576982cbb1077670a8482d51ca76c1df1071ef6f7c97af7bb885",
+   "hash": "3c08586e0ef3c1ecee180c6cd70c30c127af05fd134ea8313d1046ba505def87"
   },
   {
    "id": "evt_0000049",
    "seq": 49,
-   "occurred_at": "2026-10-11T16:04:16.000000+00:00",
+   "occurred_at": "2026-10-11T16:14:56.000000+00:00",
    "actor": "system",
    "event_type": "action.executed",
    "payload": {
     "approved_by": null,
     "changes": [],
-    "intent_id": "int_e976762c6973411d",
+    "intent_id": "int_ed033cb8d4fa4afb",
     "kind": "ANSWER_QUERY",
-    "receipt_id": "rcp_e976762c6973411d",
+    "receipt_id": "rcp_ed033cb8d4fa4afb",
     "tier": "T0"
    },
-   "prev_hash": "6ee766b32232b10ba60c43c8e17aba0e2b8912f9b227a984e5d39310b7f27095",
-   "hash": "583a8d6259bf025e42226b8ce82f59bebb1e4deb86d327fa64b0ee43873750dd"
+   "prev_hash": "3c08586e0ef3c1ecee180c6cd70c30c127af05fd134ea8313d1046ba505def87",
+   "hash": "722296b8d7968f309095ea55533c2a622314f45f1e8b38fbb7f2f0c36f0056ba"
   }
  ]
 }

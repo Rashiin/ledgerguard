@@ -327,3 +327,7 @@ The seeded ledger is byte-identical across runs on one machine, which Phase 1 re
 ## D-055 · Model error is measured as a rate, in a separate experiment
 
 One recording shows what a model did once. `scripts/robustness_probe.py` samples three figure-heavy turns 50 times at temperature 0.7, with a seed per sample, through the real verifier, and counts every time the verifier corrects, masks or removes a figure. The product and every recording stay at temperature 0, and the probe never changes a setting. Its sampled responses are not used as recordings, because they share replay keys with the recorded ones. `scripts/sample_to_cassette.py` turns a single sample into a separate recording when it has to be shown in the UI. The result is in `evidence/robustness/README.md`.
+
+## D-056 · A correction is shown as a marker, never written into the model's sentence
+
+The verifier used to replace a mismatched figure in a claim's sentence with the recomputed one. That assumes the sentence is about the cited fact. In the held-out h4 run the model cited one invoice and quoted the total of three, and the substitution produced a false sentence presented as corrected. A correction now reads "[figure corrected: the cited figure is €X]" in place of the model's number, the claim's figure field carries the recomputed value, and the receipt records both. We gave up a smoother sentence. A corrected sentence that might be false is worse than a visibly corrected one.

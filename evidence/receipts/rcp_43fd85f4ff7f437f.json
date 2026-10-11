@@ -1,9 +1,9 @@
 {
- "receipt_id": "rcp_0737d62d294d4c5c",
- "action_intent_id": "int_0737d62d294d4c5c",
+ "receipt_id": "rcp_43fd85f4ff7f437f",
+ "action_intent_id": "int_43fd85f4ff7f437f",
  "outcome": "verified",
- "kind": "ANSWER_QUERY",
- "tier": "T0",
+ "kind": "RUN_SCENARIO",
+ "tier": "T1",
  "rows_read": [
   {
    "table": "account",
@@ -12,6 +12,14 @@
   {
    "table": "account",
    "id": "acc_petty_cash"
+  },
+  {
+   "table": "counterparty",
+   "id": "cp_brennan"
+  },
+  {
+   "table": "counterparty",
+   "id": "cp_halvorsen"
   },
   {
    "table": "invoice",
@@ -30,18 +38,15 @@
  "recomputations": [
   {
    "claim_index": 0,
-   "claim": "The projected cash for the next quarter starts at €182,499.93 and ends at €97,320.87, with a projected low in week 7 at -€219,676.22.",
+   "claim": "With Halvorsen Steelworks AS invoice inv_0665 paid 30 days later, projected cash reaches its low in week 7, ending 2026-12-06, at -€77,176.22, against -€219,676.22 in week 7 without the change.",
    "status": "match",
-   "model_figure": "-219676.22",
-   "recomputed": "-219676.22",
+   "model_figure": "-77176.22",
+   "recomputed": "-77176.22",
    "match": true,
-   "formula": "opening + Σin − Σout for the chosen band",
+   "formula": "opening + Σin − Σout after the scenario's changes",
    "operands": [
-    "acc_operating",
-    "acc_petty_cash",
     "inv_0665",
-    "inv_0681",
-    "inv_0666"
+    "cp_halvorsen"
    ],
    "reason": null
   }
@@ -105,20 +110,41 @@
   },
   {
    "rule": "ConcentrationWarning",
-   "result": "PASS",
-   "reason": "no concentrated customer involved",
-   "flags": [],
-   "rows": []
+   "result": "WARN",
+   "reason": "Brennan Hospitality Group is 36.9% of trailing 12-month revenue, above the 30% threshold. This is advisory.",
+   "flags": [
+    "CONCENTRATION_RISK"
+   ],
+   "rows": [
+    "cp_brennan"
+   ]
   }
  ],
  "policy": [],
  "text_corrections": [],
  "payload_figures": {},
- "material_omissions": [],
- "tools_called": [
-  "get_cash_projection"
+ "material_omissions": [
+  {
+   "fact_id": "proj.shortfall",
+   "inserted": "Projected cash falls below zero in weeks 6 to 8. The projected low is week 7, ending 2026-12-06, at -€219,676.22. Counting contracted lines only, projected cash is below zero from week 6.",
+   "why": "a projected week closes below zero"
+  },
+  {
+   "fact_id": "rev.share.cp_brennan",
+   "inserted": "Brennan Hospitality Group is 36.89% of net revenue over the last 12 months, above the 30% concentration threshold.",
+   "why": "a customer is above the concentration threshold"
+  }
  ],
- "risk_flags": [],
+ "tools_called": [
+  "get_cash_projection",
+  "get_revenue_concentration",
+  "get_open_invoices",
+  "run_scenario"
+ ],
+ "risk_flags": [
+  "CONCENTRATION_RISK",
+  "MATERIAL_OMISSION"
+ ],
  "disclosures": [],
  "approval": {
   "required": false,
@@ -128,6 +154,6 @@
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T16:01:25.000000+00:00",
- "audit_seq": 2
+ "created_at": "2026-10-11T16:13:00.000000+00:00",
+ "audit_seq": 29
 }

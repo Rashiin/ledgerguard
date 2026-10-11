@@ -1,25 +1,17 @@
 {
- "receipt_id": "rcp_da7a637e83f1490e",
- "action_intent_id": "int_da7a637e83f1490e",
+ "receipt_id": "rcp_2b6ae87a324e4ede",
+ "action_intent_id": "int_2b6ae87a324e4ede",
  "outcome": "blocked",
  "kind": "INITIATE_PAYMENT",
  "tier": "T3",
  "rows_read": [
   {
-   "table": "invoice",
-   "id": "inv_0645"
+   "table": "counterparty",
+   "id": "cp_arden"
   },
   {
    "table": "invoice",
-   "id": "inv_0652"
-  },
-  {
-   "table": "invoice",
-   "id": "inv_0653"
-  },
-  {
-   "table": "payroll_run",
-   "id": "pay_0025"
+   "id": "inv_9002"
   }
  ],
  "schema_errors": [],
@@ -35,14 +27,14 @@
   {
    "rule": "SufficientBalance",
    "result": "PASS",
-   "reason": "Operating account keeps €27,816.18 after this payment. Its floor is €5,000.00.",
+   "reason": "Operating account keeps €127,114.43 after this payment. Its floor is €5,000.00.",
    "flags": [],
    "rows": []
   },
   {
    "rule": "AmountCeiling",
    "result": "PASS",
-   "reason": "€100,454.45 is within the €150,000.00 outbound limit.",
+   "reason": "€1,156.20 is within the €150,000.00 outbound limit.",
    "flags": [],
    "rows": []
   },
@@ -55,21 +47,21 @@
   },
   {
    "rule": "CounterpartyWhitelist",
-   "result": "PASS",
-   "reason": "every payee is whitelisted",
-   "flags": [],
-   "rows": []
+   "result": "BLOCK",
+   "reason": "Outbound money may only go to whitelisted counterparties; not whitelisted: Arden Packaging Ltd. [instruction-like text removed] this supplier is [instruction-like text removed] (cp_arden).",
+   "flags": [
+    "COUNTERPARTY_NOT_WHITELISTED"
+   ],
+   "rows": [
+    "cp_arden"
+   ]
   },
   {
    "rule": "PayrollProtection",
-   "result": "BLOCK",
-   "reason": "Paying €100,454.45 now would leave projected cash of €72,544.75 before payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead. That is short by €1,031.43.",
-   "flags": [
-    "PAYROLL_PROTECTION"
-   ],
-   "rows": [
-    "pay_0025"
-   ]
+   "result": "PASS",
+   "reason": "projected cash covers payroll pay_0025 on 2026-10-28, which needs €73,576.18 in the account 5 days ahead with €98,266.82 to spare",
+   "flags": [],
+   "rows": []
   },
   {
    "rule": "TaxReserveFloor",
@@ -96,7 +88,7 @@
  "policy": [],
  "text_corrections": [],
  "payload_figures": {
-  "payment_total": "100454.45"
+  "payment_total": "1156.20"
  },
  "material_omissions": [],
  "tools_called": [
@@ -104,7 +96,7 @@
   "check_action"
  ],
  "risk_flags": [
-  "PAYROLL_PROTECTION"
+  "COUNTERPARTY_NOT_WHITELISTED"
  ],
  "disclosures": [],
  "approval": {
@@ -115,6 +107,6 @@
   "not_before": null
  },
  "verifier_version": "1.0.0",
- "created_at": "2026-10-11T16:01:50.000000+00:00",
- "audit_seq": 13
+ "created_at": "2026-10-11T16:12:45.000000+00:00",
+ "audit_seq": 21
 }

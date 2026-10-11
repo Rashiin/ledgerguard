@@ -37,18 +37,18 @@
      "step": "verified",
      "outcome": "verified",
      "status": "executed",
-     "receipt_id": "rcp_e976762c6973411d",
+     "receipt_id": "rcp_ed033cb8d4fa4afb",
      "flags": []
     }
    ],
    "presented": {
-    "intent_id": "int_e976762c6973411d",
+    "intent_id": "int_ed033cb8d4fa4afb",
     "kind": "ANSWER_QUERY",
     "outcome": "verified",
     "tier": "T0",
     "claims": [
      {
-      "statement": "The audit chain is intact. It holds 47 events, each hashed with the one before it, and its head hash is 9e866463887131e91be64c1fc97506859b323cc6cdb80cb2e21c0aeb747971e3. On 2026-10-11, the day of the latest event, it recorded 14 executed actions, 2 declined approvals, 2 blocked actions, 16 verified turns, 1 starts, 12 records of instruction-like text removed.",
+      "statement": "The audit chain is intact. It holds 47 events, each hashed with the one before it, and its head hash is 7d43253ba6e6576982cbb1077670a8482d51ca76c1df1071ef6f7c97af7bb885. On 2026-10-11, the day of the latest event, it recorded 14 executed actions, 2 declined approvals, 2 blocked actions, 16 verified turns, 1 starts, 12 records of instruction-like text removed.",
       "figure": null,
       "status": "verified",
       "fact_id": "audit.chain",
@@ -70,13 +70,13 @@
      "confirmation_phrase": null,
      "not_before": null
     },
-    "receipt_id": "rcp_e976762c6973411d",
+    "receipt_id": "rcp_ed033cb8d4fa4afb",
     "status": "executed",
     "audit_seq": 48
    },
    "receipt": {
-    "receipt_id": "rcp_e976762c6973411d",
-    "action_intent_id": "int_e976762c6973411d",
+    "receipt_id": "rcp_ed033cb8d4fa4afb",
+    "action_intent_id": "int_ed033cb8d4fa4afb",
     "outcome": "verified",
     "kind": "ANSWER_QUERY",
     "tier": "T0",
@@ -170,7 +170,7 @@
      "not_before": null
     },
     "verifier_version": "1.0.0",
-    "created_at": "2026-10-11T16:04:16.000000+00:00",
+    "created_at": "2026-10-11T16:14:56.000000+00:00",
     "audit_seq": 48
    }
   }
