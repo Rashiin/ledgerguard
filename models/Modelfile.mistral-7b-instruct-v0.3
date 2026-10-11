@@ -1,0 +1,7 @@
+# Builds the second model for scripts/model_swap_demo.py from a GGUF on Hugging Face.
+# The file is bartowski's Q4_K_M quantisation of mistralai/Mistral-7B-Instruct-v0.3,
+# Apache-2.0. Run from the directory holding it:
+#   ollama create mistral-7b-instruct-v0.3 -f Modelfile.mistral-7b-instruct-v0.3
+# Nothing else is set, as for the default model: no template, no system prompt and no
+# parameters of our own. Whatever the model needs beyond this is a finding of the demo.
+FROM ./Mistral-7B-Instruct-v0.3-Q4_K_M.gguf

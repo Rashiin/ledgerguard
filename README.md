@@ -106,6 +106,21 @@ docker compose up
 
 Open http://localhost:8080 for the UI. `LEDGERGUARD_HOST_PORT` changes the host port. The image contains the seeded ledger and starts with `LLM_CLIENT=replay`, so it needs no model server and no network. The Docker path is verified in Phase 7.
 
+## Reproducing the results
+
+Every number in the documents comes from a script. The first two need nothing but the repository. The rest need Ollama with the model they name.
+
+| Script | What it does |
+|---|---|
+| `uv run python scripts/export_evidence.py` | Runs all twelve scenarios and the fixtures offline in demo order, works the Approval Inbox, and writes `evidence/` |
+| `uv run python scripts/build_docs.py` | Builds the documentation, the self-assessment and the deck to PDF, with headless Chrome |
+| `uv run python scripts/record_turn.py --scenario ID` | Records one catalogued scenario against the local model |
+| `uv run python scripts/probe_grammar.py OUT_DIR` | Measures how Ollama's grammar orders properties and whether it biases the model's choices |
+| `uv run python scripts/robustness_probe.py OUT_DIR` | Samples three figure-heavy turns 50 times at temperature 0.7 and counts the verifier's corrections |
+| `uv run python scripts/heldout_run.py` | Runs the four held-out injection fixtures once, and refuses if the neutraliser has changed |
+| `uv run python scripts/model_swap_demo.py --replay` | Replays scenario 9 as answered by each local model, offline |
+| `node scripts/capture_screens.mjs …` and `uv run python scripts/build_video.py` | Capture the screens from the running app and build the video |
+
 ## The sandbox ledger
 
 All data is synthetic. Nordvik Supply Co. is an invented kitchen-equipment distributor with about €4M revenue, 18 employees, seasonal demand and customers who pay late. The same seed always produces a byte-identical database.
