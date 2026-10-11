@@ -204,7 +204,7 @@ Before the dry run existed, every blocked action also carried `MATERIAL_OMISSION
 
 ## D-029 · Retries live in the orchestrator, not in LocalClient
 
-The requirements place the two-retry rule inside `LocalClient`. We put it in the orchestrator instead, so that every client gets the same behaviour, including the replay client, whose recordings then include any retries exactly as they happened. The rule itself is unchanged: at most two retries, the parser's errors sent back verbatim, then a visible failure. This is a deliberate departure from the letter of the requirement. If retries had to differ per client, they would move back into the clients.
+The requirements first placed the two-retry rule inside `LocalClient`. We put it in the orchestrator instead, so that every client gets the same behaviour, including the replay client, whose recordings then include any retries exactly as they happened. The rule itself is unchanged: at most two retries, the parser's errors sent back verbatim, then a visible failure. The requirements were later updated to match. If retries ever had to differ per client, they would move back into the clients.
 
 ## D-030 · The allowlist is a short list of patterns over the owner's words
 
@@ -219,3 +219,7 @@ Counterparty names, invoice descriptions and obligation labels pass through `neu
 ## D-032 · Recordings are matched by a fingerprint of the exact request
 
 A cassette entry is keyed by the SHA-256 of the model name, the messages and the schema. Replay answers only a request it has seen byte for byte. Changing a prompt therefore breaks the recordings, and the tests fail until the turns are recorded again. We preferred that to a looser match that could replay an answer to a different question. Recordings are made by `scripts/record_turn.py` on a fresh copy of the seeded ledger, so the facts in the prompt are exactly the ones a replay sees, and they are stored unedited.
+
+## D-033 · The final answer after a block is pinned to the draft's kind, in code
+
+The dry run's follow-up schema allows only the draft's kind, but a schema is a request to the runtime. The OpenAI-compatible client falls back to plain JSON mode for some turns, and replay returns whatever was recorded. So the orchestrator also rejects a final answer of a different kind and retries it like any malformed output. If the model keeps answering around the action, the blocked draft is verified instead, so the block reaches the receipt with `MATERIAL_OMISSION`. The incident that led to this is written up in the security self-assessment.

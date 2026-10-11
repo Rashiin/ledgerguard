@@ -127,7 +127,16 @@ class Orchestrator:
                 # The final answer is about the same kind of action. The model may
                 # shrink it, but it cannot turn a blocked payment into a chat answer.
                 final_schema = intent_schema([draft.kind])
-                raw, ok = self._ask(follow_up, final_schema, step, phase="final")
+                draft_raw = raw
+                raw, ok = self._ask(
+                    follow_up, final_schema, step, phase="final", required_kind=draft.kind
+                )
+                if not ok:
+                    # The model would not answer about the action it proposed. The
+                    # blocked draft goes to the verifier, so the block still reaches
+                    # the receipt, along with the omission of it.
+                    step("final_refused", fallback="draft")
+                    raw, ok = draft_raw, True
 
         result = self._service.submit(raw, conversation_id, TurnContext(tuple(tools_called)))
         if not ok:
@@ -148,8 +157,13 @@ class Orchestrator:
         schema: dict[str, Any],
         step: Callable[..., None],
         phase: str,
+        required_kind: ActionKind | None = None,
     ) -> tuple[str, bool]:
-        """Ask the model, retrying a malformed answer at most ``max_retries`` times."""
+        """Ask the model, retrying a malformed answer at most ``max_retries`` times.
+
+        ``required_kind`` pins the kind of action. The schema asks the runtime for the
+        same thing, but not every client enforces a schema, so it is checked here too.
+        """
         history = list(messages)
         raw = ""
         for attempt in range(self._max_retries + 1):
@@ -163,9 +177,22 @@ class Orchestrator:
                 elapsed_ms=reply.elapsed_ms,
                 valid=parsed.intent is not None,
             )
-            if parsed.intent is not None:
+            wrong_kind = (
+                parsed.intent is not None
+                and required_kind is not None
+                and parsed.intent.kind is not required_kind
+            )
+            if parsed.intent is not None and not wrong_kind:
                 return raw, True
-            errors = "\n".join(f"{e.location}: {e.message}" for e in parsed.errors)
+            if wrong_kind:
+                assert parsed.intent is not None and required_kind is not None
+                errors = (
+                    f"kind: the final answer must be a {required_kind.value} action, because "
+                    f"that is what the owner asked for. You answered with "
+                    f"{parsed.intent.kind.value}."
+                )
+            else:
+                errors = "\n".join(f"{e.location}: {e.message}" for e in parsed.errors)
             step("rejected", phase=phase, attempt=attempt + 1, errors=errors)
             history += [
                 {"role": "assistant", "content": raw},

@@ -245,3 +245,39 @@ def test_chat_streams_steps_then_the_verified_turn(api: TestClient) -> None:
 def test_chat_ends_with_an_error_event_when_a_turn_fails(api: TestClient) -> None:
     events = _events(api.post("/api/chat", json={"message": "Nobody recorded this"}).text)
     assert events[-1][0] == "error" and "ReplayMiss" in events[-1][1]["message"]
+
+
+def test_a_model_that_answers_around_a_block_cannot_hide_it(make_orchestrator: Any) -> None:
+    """The first live recording of scenario 9: told its payment was blocked, the model
+    answered with a chat reply instead, which kept the block off the receipt. The final
+    answer must be the same kind of action. If the model keeps refusing, the blocked
+    draft is what gets verified, so the block is recorded anyway."""
+    draft = intent_json("RECORD_PAYMENT", {"invoice_id": "inv_0620"})
+    dodge = intent_json(
+        "ANSWER_QUERY", {"topic": "payment"}, rationale="The payment cannot go ahead right now."
+    )
+    orchestrator, client = make_orchestrator([draft, dodge, dodge, dodge])
+    record = orchestrator.run("Record that Harbourview paid invoice 0620", "c")
+    result = record.result
+    assert result is not None
+    assert result.outcome == "blocked"
+    assert [b["rule"] for b in result.presented["blocked_by"]] == ["DisputedInvoiceLock"]
+    assert result.presented["claims"][0]["fact_id"] == "block.DisputedInvoiceLock"
+    assert "MATERIAL_OMISSION" in result.receipt["risk_flags"]
+    steps = [s["step"] for s in record.steps]
+    assert steps.count("rejected") == 3 and "final_refused" in steps
+    assert "must be a RECORD_PAYMENT action" in client.seen[2][-1]["content"]
+
+
+def test_a_model_that_comes_back_to_the_action_is_accepted(make_orchestrator: Any) -> None:
+    draft = intent_json("RECORD_PAYMENT", {"invoice_id": "inv_0620"})
+    dodge = intent_json("ANSWER_QUERY", {"topic": "payment"})
+    final = intent_json(
+        "RECORD_PAYMENT",
+        {"invoice_id": "inv_0620"},
+        [{"statement": "Disputed.", "fact_id": "block.DisputedInvoiceLock"}],
+    )
+    orchestrator, _ = make_orchestrator([draft, dodge, final])
+    result = orchestrator.run("Record that Harbourview paid invoice 0620", "c").result
+    assert result is not None and result.outcome == "blocked"
+    assert "MATERIAL_OMISSION" not in result.receipt["risk_flags"]
