@@ -14,7 +14,7 @@ dist/
 data/*.sqlite
 data/*.sqlite-*
 
-# Local working notes and the full build spec. Never committed.
+# Local working notes. Never committed.
 .ledgerguard/
 data/*.key
 docs/technical_documentation.html

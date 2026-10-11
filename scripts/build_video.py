@@ -129,11 +129,17 @@ SCENES: list[tuple[str | None, int, str, str]] = [
         "added the invoices up to €124,147.48. The payment is €98,970.61. The wrong figure never reaches the owner.",
     ),
     (
+        "17a_correction_before_fix.png",
+        12,
+        "The verifier's own mistake",
+        "First time recomputation fired on real output, it wrote one invoice's €35,973.77 into a sentence about three invoices. The safety layer made the sentence false.",
+    ),
+    (
         "17_figure_corrected.png",
         15,
-        "A figure, corrected",
-        "The model quoted €106,954.71 for one cited invoice. "
-        "The verifier marks the correction and shows the recomputed €35,973.77.",
+        "After the fix: a correction is a marker",
+        "The model's €106,954.71 is struck through, the cited figure is stated in a marker, "
+        "and nothing is put in the model's mouth. A regression test reproduces the case.",
     ),
     (
         "14_audit_chain_intact.png",

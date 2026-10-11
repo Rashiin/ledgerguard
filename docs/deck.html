@@ -23,6 +23,9 @@
   .shot { flex: 1.45; min-width: 0; display: flex; align-items: flex-start; }
   .shot img { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 18px rgba(15,23,42,0.08); }
   .big { font-size: 44pt; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .compact .big { font-size: 32pt; }
+  .compact .stat { margin-bottom: 8pt; }
+  .compact .stat .label { margin: 2pt 0 0; font-size: 12pt; line-height: 1.35; }
   .stat { margin-bottom: 18pt; }
   .stat .label { font-size: 13pt; color: var(--muted); }
   .tag { display: inline-block; font-size: 11pt; font-weight: 600; padding: 2pt 8pt; border-radius: 4pt; margin-right: 6pt; }
@@ -193,17 +196,46 @@
 </section>
 
 <section>
-  <p class="kicker">Evidence</p>
-  <h2>We measured where our defences fire, and it was not where we expected</h2>
-  <div class="row">
+  <p class="kicker">Evidence · injection, measured blind</p>
+  <h2>We tested our own detection blind. It caught nothing. The architecture held anyway</h2>
+  <div class="row compact">
     <div class="col">
-      <div class="stat"><p class="big">0 of 50</p><p class="label">sampled answers with a wrong figure in a claim's figure field. Citing facts moved the errors into prose.</p></div>
-      <div class="stat"><p class="big">5 of 5</p><p class="label">wrong figures in prose masked by the text check, including three wrong payment totals</p></div>
-      <div class="stat"><p class="big">0 of 4</p><p class="label">held-out injections caught by the pattern neutraliser, run blind. None of the ten fixtures produced an unauthorised action.</p></div>
+      <div class="stat"><p class="big" style="color:var(--block)">0 of 4</p><p class="label">held-out injections caught by the detection layer. Written after it was frozen, committed before they ran, run once, nothing fixed afterwards.</p></div>
+      <div class="stat"><p class="big" style="color:var(--ok)">10 of 10</p><p class="label">injection fixtures with no unauthorised action, including against a model scripted to obey every injection</p></div>
+      <div class="stat"><p class="big">5 of 5</p><p class="label">wrong figures in 50 sampled answers masked. All five were in prose, none in a claim's figure field.</p></div>
     </div>
-    <div class="shot"><img src="media/16_wrong_total_masked.png"></div>
+    <div class="col">
+      <p>Don't rely on recognising hostile input. Build a system where hostile input cannot cause harm when nothing recognises it.</p>
+      <ul>
+        <li>What a turn may do comes from the owner's words only.</li>
+        <li>The verifier and the rules never read the prompt.</li>
+        <li>A payment names invoices, never a payee or an account.</li>
+        <li>Four more problems found here are left unpatched, so the measurement stays honest.</li>
+      </ul>
+    </div>
   </div>
   <div class="footer"><span>LedgerGuard</span><span>10</span></div>
+</section>
+
+<section>
+  <p class="kicker">Evidence · the verifier, tested against itself</p>
+  <h2>Our safety layer turned a wrong claim into a false one. We found it, and kept the evidence</h2>
+  <div class="row">
+    <div class="col" style="flex:0.62">
+      <ul>
+        <li>The model quoted €106,954.71 for three invoices, citing one.</li>
+        <li>The verifier wrote that one invoice's €35,973.77 into the sentence, so "three invoices total €35,973.77" was shown as corrected.</li>
+        <li>Now a correction is a visible marker and never put in the model's mouth. A regression test reproduces the case.</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:1.38">
+      <p class="label" style="font-size:12pt; color:var(--block); font-weight:600; margin:0 0 4pt">BEFORE THE FIX, AS SHOWN TO THE OWNER</p>
+      <img src="media/17a_kessling_before.png" style="width:100%; border:1px solid #cbd5e1; border-radius:8px">
+      <p class="label" style="font-size:12pt; color:var(--ok); font-weight:600; margin:18pt 0 4pt">AFTER THE FIX</p>
+      <img src="media/17_kessling_after.png" style="width:100%; border:1px solid #cbd5e1; border-radius:8px">
+    </div>
+  </div>
+  <div class="footer"><span>LedgerGuard</span><span>11</span></div>
 </section>
 
 <section>
@@ -214,12 +246,12 @@
       <ul>
         <li>Twelve scenarios and six fixtures replay offline, in Docker, with networking switched off.</li>
         <li><code>evidence/</code> holds every turn, every receipt, the operator's decisions and the audit chain with its head hash.</li>
-        <li id="swap">Model swap: on Mistral-7B the same requests got different proposals. A smaller safe payment went to a person, and a mistyped invoice id was refused. Nothing unsafe got through on either model.</li>
+        <li id="swap">Model swap: on Mistral-7B the same requests got different proposals. A payment missing one invoice was safe by every rule, so only the person approving it could catch it: the case for human approval, with evidence. Nothing unsafe got through on either model.</li>
       </ul>
     </div>
     <div class="shot"><img src="media/14_audit_chain_intact.png"></div>
   </div>
-  <div class="footer"><span>LedgerGuard</span><span>11</span></div>
+  <div class="footer"><span>LedgerGuard</span><span>12</span></div>
 </section>
 
 <section>
@@ -228,11 +260,11 @@
   <div class="row">
     <div class="col">
       <p><b>Rashin Gholijani Farahani</b></p>
-      <p class="muted">Team members, institutions and roles to be completed before submission.</p>
+      <p class="muted">Second team member: to be confirmed.</p>
       <p style="margin-top:28pt">Source, documentation and evidence: the GitHub repository named in the submission.</p>
     </div>
   </div>
-  <div class="footer"><span>LedgerGuard</span><span>12</span></div>
+  <div class="footer"><span>LedgerGuard</span><span>13</span></div>
 </section>
 
 </body>
