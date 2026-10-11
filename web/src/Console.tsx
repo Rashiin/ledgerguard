@@ -263,8 +263,8 @@ function ExchangeView({
           </div>
         ))}
       </div>
-      <Steps steps={steps} running={!turn && !error} />
-      <Containment steps={steps} />
+      {turn && <Verdict turn={turn} steps={steps} />}
+      {!turn && <Steps steps={steps} running={!error} />}
       {error && (
         <div className="m-4 rounded border border-block/30 bg-block-soft p-3 text-sm text-block">
           {error.includes("ReplayMiss")
@@ -273,6 +273,21 @@ function ExchangeView({
         </div>
       )}
       {turn && <TurnView turn={turn} />}
+      {turn && (
+        <details className="group border-t border-slate-100">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800">
+            <span className="transition group-open:rotate-90">▸</span>
+            How this was decided, step by step
+            <span className="font-normal normal-case tracking-normal text-slate-400">
+              {steps.filter((x) => x.step === "model").length} model step
+              {steps.filter((x) => x.step === "model").length === 1 ? "" : "s"},{" "}
+              {steps.filter((x) => x.step !== "model").length} code steps
+            </span>
+          </summary>
+          <Steps steps={steps} running={false} />
+          <Containment steps={steps} />
+        </details>
+      )}
     </article>
   );
 }
@@ -302,6 +317,160 @@ function Containment({ steps }: { steps: Step[] }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ what the verifier did
+
+interface Act {
+  tone: "block" | "warn" | "ok";
+  text: string;
+}
+
+/** Everything code did to the model's proposal, counted from the receipt and the steps. */
+function acts(turn: Turn, steps: Step[]): Act[] {
+  const r = turn.receipt;
+  const out: Act[] = [];
+  const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+  for (const b of turn.blocked_by) out.push({ tone: "block", text: `Stopped the action: ${b.rule}` });
+  if (r.risk_flags.includes("KIND_NOT_ALLOWED"))
+    out.push({ tone: "block", text: "Refused an action this request does not allow" });
+  const contained = steps
+    .filter((s) => s.step === "neutralised")
+    .flatMap((s) => (s.spans as { removed: string[] }[]) ?? [])
+    .reduce((t, x) => t + x.removed.length, 0);
+  if (contained)
+    out.push({ tone: "block", text: `Removed ${n(contained, "instruction", "instructions")} hidden in outside text before the model read it` });
+  if (r.material_omissions.length)
+    out.push({ tone: "warn", text: `Put back ${n(r.material_omissions.length, "fact", "facts")} the model left out` });
+  const corrected = r.recomputations.filter((x) => x.status === "mismatch").length;
+  if (corrected) out.push({ tone: "warn", text: `Corrected ${n(corrected, "figure", "figures")} the model got wrong` });
+  const masked = r.text_corrections.filter((x) => x.replacement.startsWith("[figure removed")).length;
+  if (masked) out.push({ tone: "warn", text: `Masked ${n(masked, "unverified figure", "unverified figures")} in the text` });
+  const removed = r.provenance.filter((x) => x.status === "removed").length;
+  if (removed) out.push({ tone: "warn", text: `Removed ${n(removed, "unsupported claim", "unsupported claims")}` });
+  const retries = steps.filter((s) => s.step === "rejected").length;
+  if (retries) out.push({ tone: "warn", text: `Sent malformed output back ${n(retries, "time", "times")}` });
+  const matched = r.recomputations.filter((x) => x.status === "match").length;
+  if (matched) out.push({ tone: "ok", text: `Recomputed ${n(matched, "figure", "figures")} from the ledger: matched` });
+  const passed = r.rules_evaluated.filter((x) => x.result === "PASS").length;
+  if (r.rules_evaluated.length)
+    out.push({ tone: "ok", text: `Ran ${r.rules_evaluated.length} rules: ${passed} passed` });
+  return out;
+}
+
+const ACT_STYLE = {
+  block: "border-red-200 bg-red-50 text-block",
+  warn: "border-amber-200 bg-amber-50 text-warn",
+  ok: "border-emerald-200 bg-emerald-50 text-ok",
+} as const;
+
+/** The first thing under the request: what code decided, before any of the model's words. */
+function Verdict({ turn, steps }: { turn: Turn; steps: Step[] }) {
+  const list = acts(turn, steps);
+  const stopped = turn.outcome === "blocked" || turn.outcome === "rejected";
+  const changed = list.some((a) => a.tone !== "ok");
+  const waiting = turn.approval.required;
+  const headline = stopped
+    ? turn.outcome === "blocked"
+      ? "Code stopped this action. Nothing moved."
+      : "Code refused this output. Nothing was done."
+    : waiting
+      ? `Code checked this action. It now waits for a person${turn.tier === "T3" ? ", a typed phrase and a cool-off" : ""}.`
+      : changed
+        ? "Code checked this answer and changed what you see."
+        : "Code checked this answer. Nothing needed changing.";
+  return (
+    <div className={`border-b px-4 py-3 ${stopped ? "border-red-100 bg-red-50/40" : changed || waiting ? "border-amber-100 bg-amber-50/30" : "border-emerald-100 bg-emerald-50/30"}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-sm font-semibold ${stopped ? "text-block" : changed || waiting ? "text-warn" : "text-ok"}`}>
+          {headline}
+        </span>
+        <TierBadge tier={turn.tier} />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {list.map((a, i) => (
+          <span key={i} className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${ACT_STYLE[a.tone]}`}>
+            {a.text}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ a blocked action
+
+const RULE_PURPOSE: Record<string, string> = {
+  SufficientBalance: "keeps the bank account above its floor",
+  AmountCeiling: "caps how much can leave the business in one action",
+  CounterpartyWhitelist: "pays only counterparties on the approved list",
+  PayrollProtection: "keeps enough cash for the next payroll",
+  TaxReserveFloor: "keeps tax that falls due soon set aside",
+  DisputedInvoiceLock: "never settles an invoice that is in dispute",
+  DuplicatePayment: "stops paying the same supplier the same amount twice",
+  Policy: "requires financing to state its total cost",
+};
+
+const KIND_WORDS: Record<string, string> = {
+  INITIATE_PAYMENT: "Pay suppliers",
+  ACCEPT_FINANCING_OFFER: "Accept a financing offer",
+  RECORD_PAYMENT: "Record a payment received",
+  MARK_DISPUTED: "Mark an invoice disputed",
+  DRAFT_INVOICE: "Draft an invoice",
+};
+
+/** A block shown as a decision: what was proposed, what stopped it, why, and what now. */
+function BlockedDecision({ turn }: { turn: Turn }) {
+  const r = turn.receipt;
+  const amount = r.payload_figures
+    ? Object.values(r.payload_figures)[0]
+    : undefined;
+  const rows = r.rows_read.map((x) => x.id);
+  const passed = r.rules_evaluated.filter((x) => x.result === "PASS").map((x) => x.rule);
+  return (
+    <div className="overflow-hidden rounded-lg border border-red-200">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+        <div className="bg-blue-50/60 p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">The model proposed</div>
+          <div className="mt-1 text-sm font-semibold text-slate-900">{KIND_WORDS[turn.kind ?? ""] ?? turn.kind}</div>
+          {amount && <div className="mt-0.5 text-lg font-semibold tabular-nums text-slate-900">{eur(amount)}</div>}
+          <div className="mt-1 text-[11px] text-slate-500">computed by the verifier, not the model</div>
+        </div>
+        <div className="hidden items-center px-1 text-slate-300 md:flex">→</div>
+        <div className="bg-white p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Code checked it</div>
+          <div className="mt-1 text-sm text-slate-800">
+            {r.rules_evaluated.length} rules against the ledger as it stands
+          </div>
+          <div className="mt-1 text-[11px] text-ok">{passed.length} passed</div>
+        </div>
+        <div className="hidden items-center px-1 text-slate-300 md:flex">→</div>
+        <div className="bg-red-50 p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-block">Decision: not allowed</div>
+          {turn.blocked_by.map((b) => (
+            <div key={b.rule} className="mt-1">
+              <div className="text-sm font-semibold text-block">{b.rule}</div>
+              <div className="text-[11px] text-slate-600">{RULE_PURPOSE[b.rule] ?? "a business rule"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {turn.blocked_by.map((b) => (
+        <div key={b.rule} className="border-t border-red-100 bg-white p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Why, in the ledger's numbers</div>
+          <p className="mt-1 text-[15px] leading-relaxed text-slate-900">{b.reason}</p>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-red-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        <span className="font-semibold text-slate-800">Nothing moved.</span>
+        <span>No approval can override a block. A smaller action can be proposed instead.</span>
+        <span className="ml-auto flex flex-wrap items-center gap-1">
+          <span className="text-slate-400">rows checked</span>
+          <Rows ids={rows} />
+        </span>
+      </div>
     </div>
   );
 }
@@ -442,15 +611,14 @@ function TurnView({ turn }: { turn: Turn }) {
   );
   return (
     <div className="space-y-3 px-4 py-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={outcomeTone(turn.outcome)}>{turn.outcome}</Badge>
-        <TierBadge tier={turn.tier} />
-        {turn.kind && <span className="font-mono text-[11px] text-slate-500">{turn.kind}</span>}
-        <span className="text-[11px] text-slate-400">{turn.status.replace("_", " ")}</span>
+      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+        <span className="font-mono">{turn.kind}</span>
+        <span>·</span>
+        <span>{turn.status.replace("_", " ")}</span>
         {turn.receipt.risk_flags.map((f) => (
-          <Badge key={f} tone={f === "MATERIAL_OMISSION" || f.includes("MISMATCH") || f.includes("MASKED") ? "warn" : "slate"}>
+          <span key={f} className="font-mono">
             {f}
-          </Badge>
+          </span>
         ))}
       </div>
 
@@ -469,23 +637,13 @@ function TurnView({ turn }: { turn: Turn }) {
         </div>
       )}
 
-      {turn.blocked_by.map((b) => (
-        <div key={b.rule} className="rounded border border-block/40 bg-block-soft p-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-block">
-            Blocked by {b.rule}
-            {blockClaims.has(b.rule) && (
-              <span className="font-normal normal-case tracking-normal text-slate-500">
-                {blockClaims.get(b.rule) === "inserted_by_verifier"
-                  ? "The model's answer left this out. The verifier put it back."
-                  : "The model cited this block in its answer."}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-sm text-slate-900">{b.reason}</p>
-          <p className="mt-1 text-xs text-slate-600">
-            Nothing was done. A block cannot be overridden by any approval.
-          </p>
-        </div>
+      {turn.blocked_by.length > 0 && <BlockedDecision turn={turn} />}
+      {[...blockClaims.entries()].map(([rule, status]) => (
+        <p key={rule} className="text-[11px] text-slate-500">
+          {status === "inserted_by_verifier"
+            ? `The model's answer left out the ${rule} block. The verifier put it back.`
+            : `The model cited the ${rule} block in its answer, after the dry run showed it.`}
+        </p>
       ))}
 
       <ul className="space-y-2">
