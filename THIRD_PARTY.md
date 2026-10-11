@@ -58,14 +58,14 @@ The two MPL-2.0 packages are used unmodified by the test and type-check tools. T
 
 ## Language models
 
-Model weights are third-party components too. The exact Ollama tag and digest of each model go here when it is pulled in Phase 4.
+Model weights are third-party components too. They are not in this repository or in the Docker image. The owner downloads them separately, and the README describes how.
 
-| Model | Ollama tag | Licence | Role |
+| Model | Source and build | Licence | Role |
 |---|---|---|---|
-| Qwen2.5-7B-Instruct | `qwen2.5:7b-instruct`, digest recorded in Phase 4 | Apache-2.0 | default `LocalClient` model |
-| Mistral-7B-Instruct v0.3 | `mistral:7b-instruct`, digest recorded in Phase 4 | Apache-2.0 | second model for `scripts/model_swap_demo.py` |
+| Qwen2.5-7B-Instruct, q4_k_m | The two GGUF shards from [Qwen/Qwen2.5-7B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF), built with Ollama 0.40.2 as `qwen2.5-7b-instruct` from `models/Modelfile.qwen2.5-7b-instruct`. The Ollama model id is `2cf59abf1e1b7009121b2aa7006d792d668c57ee476d6c9c9737685988f370fe`. The README lists the shard digests. | Apache-2.0 | default `LocalClient` model |
+| Mistral-7B-Instruct v0.3 | Not installed yet. It is the second model for `scripts/model_swap_demo.py`. | Apache-2.0, to be confirmed against the files used | second model for the model-swap demonstration |
 
-Both licences must be checked against the model card of the exact tag pulled. Licences differ between sizes within the same model family.
+The Qwen2.5 licence was checked against the LICENSE file distributed with the 7B weights, which is the Apache License 2.0. Licences differ between sizes in the Qwen2.5 family. The 3B and 72B models use other terms, so the licence must be checked again if the model size changes.
 
 ## Data
 

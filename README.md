@@ -8,11 +8,27 @@ It was built for FinTechathon 2026, International Track, Topic E.
 
 ## Runs offline, on your own hardware
 
-LedgerGuard runs on the business owner's machine against an open-weight model served locally by [Ollama](https://ollama.com). Invoices, bank transactions and payroll figures are never sent to a model provider. Every figure and every decision is checked by deterministic code, so a smaller local model can make the copilot less helpful but cannot let it do something unsafe. Pull the default model with:
+LedgerGuard runs on the business owner's machine against an open-weight model served locally by [Ollama](https://ollama.com). Invoices, bank transactions and payroll figures are never sent to a model provider. Every figure and every decision is checked by deterministic code, so a smaller local model can make the copilot less helpful but cannot let it do something unsafe.
+
+The default model is Qwen2.5-7B-Instruct at q4_k_m, about 4.7 GB, and LedgerGuard expects it under the name `qwen2.5-7b-instruct`. Where the Ollama registry is reachable, pull it and give it that name:
 
 ```bash
 ollama pull qwen2.5:7b-instruct
+ollama cp qwen2.5:7b-instruct qwen2.5-7b-instruct
 ```
+
+The Ollama registry is not reachable from every region or network. The fallback is to build the model from the official GGUF files on Hugging Face, which is how it was installed for development. Download both shards of the q4_k_m quant from [Qwen/Qwen2.5-7B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF) into one directory, copy `models/Modelfile.qwen2.5-7b-instruct` from this repository next to them, and build:
+
+```bash
+ollama create qwen2.5-7b-instruct -f Modelfile.qwen2.5-7b-instruct
+```
+
+The Modelfile names both shards. Naming only the first fails with "has 1 shards, expected 2". The shards used in development have these SHA-256 digests:
+
+| File | Bytes | SHA-256 |
+|---|---|---|
+| `qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf` | 3,993,201,344 | `dfce12e3862a5283ccfb88221b48480e58745165de856439950d0f22590580db` |
+| `qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf` | 689,872,288 | `539cf93f78e887edea1c04e2d7d8cdaca9d01dae9c9025bcb8accbe29df3d72a` |
 
 The model is needed only for live local runs, from Phase 4. The tests, the demo and the Docker image replay recorded model responses with `LLM_CLIENT=replay`. They need no model server, no API key and no network.
 

@@ -10,7 +10,7 @@ max_intent_retries: 2
 
 local:
   base_url: http://localhost:11434
-  model: qwen2.5:7b-instruct
+  model: qwen2.5-7b-instruct
   request_timeout_seconds: 120
   temperature: 0
   num_ctx: 8192

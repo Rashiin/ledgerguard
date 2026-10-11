@@ -1,0 +1,7 @@
+# Builds the default LedgerGuard model from the official Qwen GGUF files when the
+# Ollama registry cannot be reached. Run from the directory holding both shards:
+#   ollama create qwen2.5-7b-instruct -f Modelfile.qwen2.5-7b-instruct
+# The q4_k_m quant is split in two. A single FROM line fails with
+# "has 1 shards, expected 2", so both shards are named.
+FROM ./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
+FROM ./qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf
