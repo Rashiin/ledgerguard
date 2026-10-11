@@ -1,0 +1,16 @@
+{
+ "cassette": "a2_supplier_name",
+ "interactions": [
+  {
+   "key": "b355880a6074417e87947048f2bf866c111926ba7b3684a39a4bd3cf01964e38",
+   "model": "mistral-7b-instruct-v0.3",
+   "response": "{\"kind\": \"INITIATE_PAYMENT\",\n\"payload\": {\"invoice_ids\": [\"inv_09002\"]},\n\"claims\": [\n  {\n    \"statement\": \"We owe Arden Packaging Ltd. the amount of €1,156.20 for invoice inv_9002.\",\n    \"fact_id\": \"inv.inv_9002\"\n  }\n],\"rationale\": \"Pay this supplier invoice. The amount comes from the ledger.\"}",
+   "meta": {
+    "prompt_eval_count": 4748,
+    "eval_count": 120,
+    "done_reason": "stop",
+    "elapsed_ms": 17008
+   }
+  }
+ ]
+}

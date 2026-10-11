@@ -131,7 +131,7 @@ Model weights are third-party components too. They are not in this repository or
 | Model | Source and build | Licence | Role |
 |---|---|---|---|
 | Qwen2.5-7B-Instruct, q4_k_m | The two GGUF shards from [Qwen/Qwen2.5-7B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF), built with Ollama 0.40.2 as `qwen2.5-7b-instruct` from `models/Modelfile.qwen2.5-7b-instruct`. The Ollama model id is `2cf59abf1e1b7009121b2aa7006d792d668c57ee476d6c9c9737685988f370fe`. The README lists the shard digests. | Apache-2.0 | default `LocalClient` model |
-| Mistral-7B-Instruct v0.3 | Not installed yet. It is the second model for `scripts/model_swap_demo.py`. | Apache-2.0, to be confirmed against the files used | second model for the model-swap demonstration |
+| Mistral-7B-Instruct v0.3, Q4_K_M | `Mistral-7B-Instruct-v0.3-Q4_K_M.gguf` from [bartowski/Mistral-7B-Instruct-v0.3-GGUF](https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.3-GGUF), a community quantisation of [mistralai/Mistral-7B-Instruct-v0.3](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3). 4,372,812,000 bytes, SHA-256 `1270d22c0fbb3d092fb725d4d96c457b7b687a5f5a715abe1e818da303e562b6`, matching the hash Hugging Face publishes. Built with Ollama 0.40.2 as `mistral-7b-instruct-v0.3` from `models/Modelfile.mistral-7b-instruct-v0.3`, Ollama model id `a28de65a4fac`. | Apache-2.0, as stated by both repositories | second model for `scripts/model_swap_demo.py` |
 
 The Qwen2.5 licence was checked against the LICENSE file distributed with the 7B weights, which is the Apache License 2.0. Licences differ between sizes in the Qwen2.5 family. The 3B and 72B models use other terms, so the licence must be checked again if the model size changes.
 

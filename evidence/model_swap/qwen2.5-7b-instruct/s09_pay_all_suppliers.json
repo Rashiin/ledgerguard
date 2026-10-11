@@ -1,0 +1,27 @@
+{
+ "cassette": "s09_pay_all_suppliers",
+ "interactions": [
+  {
+   "key": "9b756656be006d8e9b69ebcab63977ff4b985529835ce00560a956d6112c1327",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The business owes Kessling Combi Ovens an invoice due on or before 1 November, inv_0645, for €35,973.77.\",\n      \"fact_id\": \"inv.inv_0645\"\n    },\n    {\n      \"statement\": \"The business owes Kessling Combi Ovens an invoice due on or before 1 November, inv_0652, for €30,503.50.\",\n      \"fact_id\": \"inv.inv_0652\"\n    },\n    {\n      \"statement\": \"The business owes Vantor Refrigeration an invoice due on or before 1 November, inv_0653, for €33,977.18.\",\n      \"fact_id\": \"inv.inv_0653\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\"inv_0645\", \"inv_0652\", \"inv_0653\"]\n  },\n  \"rationale\": \"The owner requested to pay Kessling and Vantor invoices due on or before 1 November.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4250,
+    "eval_count": 265,
+    "done_reason": "stop",
+    "elapsed_ms": 20994
+   }
+  },
+  {
+   "key": "0b4d7b3684f32f2d241bdb701ee6c9de40b1bb5be946ffbe9663d8b67698e48a",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"This action is blocked by PayrollProtection. Paying the Kessling and Vantor invoices would leave the business with €72,544.75 before the payroll payment on 2026-10-28, which requires €73,576.18 in the account 5 days ahead. That is short by €1,031.43.\",\n      \"fact_id\": \"block.PayrollProtection\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\"inv_0645\", \"inv_0652\", \"inv_0653\"]\n  },\n  \"rationale\": \"The action is blocked by the PayrollProtection rule. The business does not have sufficient funds to cover the invoices and the upcoming payroll payment.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4711,
+    "eval_count": 195,
+    "done_reason": "stop",
+    "elapsed_ms": 8474
+   }
+  }
+ ]
+}

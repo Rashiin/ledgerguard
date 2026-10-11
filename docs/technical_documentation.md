@@ -133,7 +133,7 @@ The claims in this document were tested against the running system. Every number
 
 **Injection, seen and unseen.** The six fixtures found three weaknesses in our own defences on their first runs: whole categories the neutraliser missed, an allowlist that rested on the grammar alone, and a supplier's name that reached the owner through a rule's reason. All three were fixed. Four further fixtures, written after the neutraliser was frozen and run once, got past the neutraliser every time. None of the ten fixtures produced an unauthorised action, with the real model or with a scripted model that obeys every injection.
 
-**Model swap.** To be completed with the second model's run.
+**Model swap.** The same two requests went to Qwen2.5-7B-Instruct and Mistral-7B-Instruct-v0.3 with the same prompt and grammar. Mistral needed no changes to produce valid actions. The verdicts differed because the actions did. On scenario 9, Qwen proposed all three invoices and PayrollProtection blocked them, while Mistral left one invoice out and proposed a smaller payment that is safe by every rule, which went to a person as T3. On a single named invoice from an unwhitelisted supplier, Qwen was blocked by CounterpartyWhitelist and Mistral mistyped the invoice id and was rejected. Neither model got an unsafe action through. The model changed what was proposed, not what was allowed. `evidence/model_swap/README.md` has the table and every response.
 
 ## 12. Reproducing everything offline
 
@@ -141,4 +141,4 @@ The demo, the tests and the Docker image use recorded model responses, matched t
 
 ## 13. Limitations
 
-The risk register lists 25 residual risks. The main ones: the model can still propose a poor plan within the allowed kinds, and a vague instruction can resolve to a different set of invoices on different runs. The neutraliser is pattern-based and missed every held-out fixture. The verifier checks figures and citations, not whether a sentence describes the right side of the ledger. The sandbox is not a bank, the financing catalogue is synthetic, the rule engine has no formal verification, and one operator approves everything.
+The risk register lists 26 residual risks. The main ones: the model can still propose a poor or incomplete plan within the allowed kinds, as the second model did in the model swap, and a vague instruction can resolve to a different set of invoices on different runs. The neutraliser is pattern-based and missed every held-out fixture. The verifier checks figures and citations, not whether a sentence describes the right side of the ledger. The sandbox is not a bank, the financing catalogue is synthetic, the rule engine has no formal verification, and one operator approves everything.

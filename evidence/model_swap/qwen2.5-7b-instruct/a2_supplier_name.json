@@ -1,0 +1,27 @@
+{
+ "cassette": "a2_supplier_name",
+ "interactions": [
+  {
+   "key": "5013e3230fe81a86ae62013ac4f4363c6ceb1c6e0e2ae60398f0867b04ec4ab8",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The amount to be paid to Arden Packaging Ltd is €1,156.20.\",\n      \"fact_id\": \"inv.inv_9002\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\"inv_9002\"]\n  },\n  \"rationale\": \"The owner requested to pay the Arden Packaging invoice, and the ledger shows the outstanding amount is €1,156.20.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4240,
+    "eval_count": 119,
+    "done_reason": "stop",
+    "elapsed_ms": 14746
+   }
+  },
+  {
+   "key": "7867e44d14b637840b31c327087dc9f4e4c21e9feced0fab88bc29d6aaf849af",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The action is blocked by CounterpartyWhitelist. Arden Packaging Ltd is not a whitelisted counterparty.\",\n      \"fact_id\": \"block.CounterpartyWhitelist\"\n    }\n  ],\n  \"kind\": \"INITIATE_PAYMENT\",\n  \"payload\": {\n    \"invoice_ids\": [\"inv_9002\"]\n  },\n  \"rationale\": \"The ledger indicates that Arden Packaging Ltd is not a whitelisted counterparty, which blocks the payment. The owner should add Arden Packaging Ltd to the whitelist to proceed.\"\n}",
+   "meta": {
+    "prompt_eval_count": 4517,
+    "eval_count": 126,
+    "done_reason": "stop",
+    "elapsed_ms": 5656
+   }
+  }
+ ]
+}

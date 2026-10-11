@@ -1,0 +1,16 @@
+{
+ "cassette": "s09_pay_all_suppliers",
+ "interactions": [
+  {
+   "key": "c2ef641aec9991f414e8634f977604df9d1bb0579a553aef4075eff812f866d9",
+   "model": "mistral-7b-instruct-v0.3",
+   "response": "{\"kind\": \"INITIATE_PAYMENT\",\n\"payload\": {\n  \"invoice_ids\": [\"inv_0645\", \"inv_0652\"]\n},\n\"claims\": [\n  {\n    \"statement\": \"We owe Kessling Combi Ovens: invoice inv_0645, sent, due 2026-10-25, €35,973.77 outstanding.\",\n    \"fact_id\": \"inv.inv_0645\"\n  },\n  {\n    \"statement\": \"We owe Kessling Combi Ovens: invoice inv_0652, sent, due 2026-10-30, €30,503.50 outstanding.\",\n    \"fact_id\": \"inv.inv_0652\"\n  }\n],\n\"rationale\": \"Pay these invoices due on or before 1 November as they have not been paid yet.\"}",
+   "meta": {
+    "prompt_eval_count": 4759,
+    "eval_count": 229,
+    "done_reason": "stop",
+    "elapsed_ms": 21441
+   }
+  }
+ ]
+}
