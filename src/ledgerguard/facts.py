@@ -21,6 +21,7 @@ from typing import Any
 
 from ledgerguard.domain.enums import AccountType, ActionKind, Direction
 from ledgerguard.money import format_eur
+from ledgerguard.untrusted import neutralise
 from ledgerguard.verifier.intent import Formula
 from ledgerguard.verifier.snapshot import LedgerSnapshot
 
@@ -30,6 +31,10 @@ ZERO = Decimal("0.00")
 # called, and the verifier uses that record to decide which facts are mandatory.
 CASH_PROJECTION = "get_cash_projection"
 REVENUE_CONCENTRATION = "get_revenue_concentration"
+OPEN_INVOICES = "get_open_invoices"
+# The dry run: the rules evaluated on a draft action before the final answer.
+# When it ran, the model has seen any block and can cite it as block.<RuleName>.
+CHECK_ACTION = "check_action"
 # Kinds that are about the cash position whatever tools ran, so the projection's
 # mandatory facts always apply to them.
 CASH_KINDS = frozenset(
@@ -52,6 +57,8 @@ class Fact:
     source_row_ids: tuple[str, ...] = ()
     mandatory: bool = False
     materiality: str | None = None  # the condition that made it mandatory
+    # Instruction-like spans removed from ledger text before it entered the statement.
+    stripped: tuple[str, ...] = ()
 
     def as_tool_dict(self) -> dict[str, Any]:
         """What the model sees. The derivation stays on the deterministic side."""
@@ -131,11 +138,14 @@ def shortfall_fact(snap: LedgerSnapshot) -> Fact | None:
     span = _span(weeks)
     contracted = [w.index for w in snap.weeks if w.closing_contracted < 0]
     text = (
-        f"Projected cash falls below zero in {span}. The lowest point is week "
+        f"Projected cash falls below zero in {span}. The projected low is week "
         f"{worst.index}, ending {worst.ends_on}, at {format_eur(worst.closing)}."
     )
     if contracted:
-        text += f" Counting contracted lines only, cash is below zero from week {contracted[0]}."
+        text += (
+            " Counting contracted lines only, projected cash is below zero from week "
+            f"{contracted[0]}."
+        )
     rows = (*_cash_accounts(snap), *_week_rows(snap, worst.index))
     return Fact(
         id="proj.shortfall",
@@ -160,18 +170,31 @@ def driver_facts(snap: LedgerSnapshot, index: int, limit: int = 3) -> list[Fact]
     facts = []
     for rank, f in enumerate(outflows, start=1):
         formula, params = _row_formula(snap, f.source_table, f.source_id)
+        label, stripped = neutralise(f.label)
         facts.append(
             Fact(
                 id=f"proj.w{index:02d}.outflow_{rank}",
-                statement=f"In week {index}, {f.label} takes {format_eur(f.amount)} on {f.on}.",
+                statement=f"In week {index}, {label} takes {format_eur(f.amount)} on {f.on}.",
                 figure=f.amount,
                 formula=formula,
                 operands=(f.source_id,),
                 params=params,
                 source_row_ids=(f.source_id,),
+                stripped=tuple(stripped),
             )
         )
     return facts
+
+
+def block_fact(rule: str, reason: str, rows: Iterable[str]) -> Fact:
+    """A rule's BLOCK on the action under discussion. Always mandatory."""
+    return Fact(
+        id=f"block.{rule}",
+        statement=f"This action is blocked by {rule}. {reason}",
+        source_row_ids=tuple(rows),
+        mandatory=True,
+        materiality="a rule blocks the action under discussion",
+    )
 
 
 def _row_formula(snap: LedgerSnapshot, table: str, row_id: str) -> tuple[Formula, dict[str, str]]:
@@ -188,7 +211,7 @@ def revenue_facts(snap: LedgerSnapshot, threshold: Decimal) -> list[Fact]:
     facts = []
     for cp_id, share in sorted(shares.items(), key=lambda kv: (-kv[1], kv[0]))[:5]:
         percent = (share * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        name = snap.counterparties[cp_id].name
+        name, stripped = neutralise(snap.counterparties[cp_id].name)
         heavy = share > threshold
         facts.append(
             Fact(
@@ -201,8 +224,38 @@ def revenue_facts(snap: LedgerSnapshot, threshold: Decimal) -> list[Fact]:
                 formula=Formula.REVENUE_SHARE,
                 operands=(cp_id,),
                 source_row_ids=(cp_id,),
+                stripped=tuple(stripped),
                 mandatory=heavy,
                 materiality="a customer is above the concentration threshold" if heavy else None,
+            )
+        )
+    return facts
+
+
+def open_invoice_facts(snap: LedgerSnapshot) -> list[Fact]:
+    """Every invoice that still has money outstanding, issued or disputed.
+
+    Counterparty names and descriptions come from outside the business, so they
+    pass through ``neutralise`` before they enter a statement.
+    """
+    facts = []
+    for inv in sorted(snap.invoices.values(), key=lambda i: (i.type.value, i.due_on, i.id)):
+        owed = inv.gross_amount - inv.paid_amount
+        if owed <= 0 or inv.status.value in ("draft", "paid"):
+            continue
+        name, s1 = neutralise(snap.counterparties[inv.counterparty_id].name)
+        what, s2 = neutralise(inv.description)
+        side = "Owed to us by" if inv.type.value == "receivable" else "We owe"
+        facts.append(
+            Fact(
+                id=f"inv.{inv.id}",
+                statement=f"{side} {name}: invoice {inv.id}, {inv.status.value}, due {inv.due_on}, "
+                f"{format_eur(owed)} outstanding. Description: {what}",
+                figure=owed,
+                formula=Formula.INVOICE_OUTSTANDING,
+                operands=(inv.id,),
+                source_row_ids=(inv.id, inv.counterparty_id),
+                stripped=tuple(s1 + s2),
             )
         )
     return facts
@@ -231,4 +284,6 @@ def facts_for_turn(
         facts += projection_facts(snap)
     if REVENUE_CONCENTRATION in called:
         facts += revenue_facts(snap, concentration_threshold)
+    if OPEN_INVOICES in called:
+        facts += open_invoice_facts(snap)
     return {f.id: f for f in facts}

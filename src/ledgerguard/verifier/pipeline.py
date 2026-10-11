@@ -29,7 +29,7 @@ from typing import Any
 from ledgerguard.audit.chain import timestamp
 from ledgerguard.config import Policy
 from ledgerguard.domain.enums import Tier
-from ledgerguard.facts import Fact, facts_for_turn
+from ledgerguard.facts import CHECK_ACTION, Fact, block_fact, facts_for_turn
 from ledgerguard.rules import NEVER_AUTO_PASS, Outcome, RuleContext, RuleResult, evaluate
 from ledgerguard.verifier import intent as I
 from ledgerguard.verifier.policy import (
@@ -53,6 +53,7 @@ from ledgerguard.verifier.text import (
     TextFix,
     Verified,
     check_text,
+    find_figures,
     foreign_currency,
     verified_pool,
 )
@@ -159,7 +160,8 @@ class Verifier:
             context.tools_called,
             self._policy.rules.concentration_warning_share,
         )
-        claims, fact_errors = _resolve_facts(model_claims, facts)
+        dry_run = CHECK_ACTION in context.tools_called
+        claims, fact_errors, block_citations = _resolve_facts(model_claims, facts, dry_run)
         intent = parsed.intent.model_copy(update={"claims": claims})
         reads: set[str] = set()
 
@@ -216,7 +218,21 @@ class Verifier:
                 flags.update(r.flags)
 
         # ---- stage 4b: material omission. What mattered must have been said.
-        omissions = _omitted(model_claims, prov, facts, rules)
+        blocks = {
+            r.rule: block_fact(r.rule, r.reason, r.rows) for r in rules if r.result is Outcome.BLOCK
+        }
+        for i, rule in block_citations.items():
+            if rule in blocks:
+                prov[i] = ProvenanceFinding(i, "supported")
+            else:
+                prov[i] = ProvenanceFinding(
+                    i, "removed", f"it cites a block by {rule}, and that rule did not block"
+                )
+        mandatory = {
+            **{f"block.{k}": v for k, v in blocks.items()},
+            **{k: f for k, f in facts.items() if f.mandatory},
+        }
+        omissions = _omitted(model_claims, prov, mandatory)
         for fact in omissions:
             reads.update(r for r in fact.source_row_ids if table_of(r))
         if omissions:
@@ -225,11 +241,11 @@ class Verifier:
         # ---- stage 5: policy, and the text the user may see
         currency = snapshot.business.currency
         presented_claims, text_fixes, guarantee_hits = self._present(
-            intent, recomps, prov, resolution, currency
+            intent, recomps, prov, resolution, currency, mandatory
         )
-        presented_claims = [_inserted(f) for f in omissions] + presented_claims
+        presented_claims = _lead_with_mandatory(presented_claims, omissions, mandatory)
         rationale, fixes = check_text(
-            "rationale", intent.rationale, self._pool(recomps, resolution), currency
+            "rationale", intent.rationale, self._pool(recomps, resolution, mandatory), currency
         )
         text_fixes += fixes
         rationale, hits = mask_guarantees(rationale)
@@ -326,6 +342,27 @@ class Verifier:
             intent_id, outcome, tier, receipt, action, presented, intent, raw_text, rules
         )
 
+    def dry_run(
+        self, kind: str, payload: dict[str, Any], snapshot: LedgerSnapshot
+    ) -> tuple[list[str], list[RuleResult]]:
+        """Resolve a draft action's payload and run every rule on it, changing nothing.
+
+        Returns payload errors and rule results. The proposer uses this before its
+        final answer so the model can see a block and cite it. The approval-time
+        re-check uses it too.
+        """
+        payload = {k: v for k, v in payload.items() if k != "resolved"}
+        parsed = I.parse_intent(
+            json.dumps({"kind": kind, "payload": payload, "claims": [], "rationale": "dry run"})
+        )
+        if parsed.intent is None:
+            return ["the draft action does not parse"], []
+        resolution = resolve_payload(snapshot, parsed.intent, set())
+        if resolution.errors:
+            return resolution.errors, []
+        ctx = RuleContext(parsed.intent, resolution, snapshot, self._policy, frozenset())
+        return [], evaluate(ctx)
+
     def recheck(self, kind: str, payload: dict[str, Any], snapshot: LedgerSnapshot) -> list[str]:
         """Re-run payload resolution and the rules against the ledger as it is now.
 
@@ -334,34 +371,32 @@ class Verifier:
         cover. It returns the reasons the action must now be refused, and an
         empty list if it is still fine.
         """
-        payload = {k: v for k, v in payload.items() if k != "resolved"}
-        parsed = I.parse_intent(
-            json.dumps(
-                {
-                    "kind": kind,
-                    "payload": payload,
-                    "claims": [],
-                    "rationale": "approval-time re-check",
-                }
+        errors, rules = self.dry_run(kind, payload, snapshot)
+        if errors:
+            return (
+                ["stored action no longer parses"]
+                if errors == ["the draft action does not parse"]
+                else errors
             )
-        )
-        if parsed.intent is None:
-            return ["stored action no longer parses"]
-        resolution = resolve_payload(snapshot, parsed.intent, set())
-        if resolution.errors:
-            return resolution.errors
-        rules = evaluate(
-            RuleContext(parsed.intent, resolution, snapshot, self._policy, frozenset())
-        )
         return [f"{r.rule}: {r.reason}" for r in rules if r.result is Outcome.BLOCK]
 
     # ------------------------------------------------------------------ helpers
 
     @staticmethod
-    def _pool(recomps: list[Recomputation], resolution: Resolution) -> Verified:
+    def _pool(
+        recomps: list[Recomputation], resolution: Resolution, mandatory: dict[str, Fact]
+    ) -> Verified:
         money = [rc.recomputed for rc in recomps if rc.recomputed is not None and not rc.is_percent]
         money += list(resolution.figures.values())
         money += [p.amount for p in resolution.payments]
+        # Amounts in the verifier's own mandatory sentences, such as a block's
+        # "short by" figure, were computed by the rules and count as verified.
+        money += [
+            fig.value
+            for f in mandatory.values()
+            for fig in find_figures(f.statement)
+            if not fig.percent
+        ]
         percents = [rc.recomputed for rc in recomps if rc.recomputed is not None and rc.is_percent]
         corrections = [
             (rc.model_figure, rc.recomputed, rc.is_percent)
@@ -377,8 +412,9 @@ class Verifier:
         prov: list[ProvenanceFinding],
         resolution: Resolution,
         currency: str,
+        mandatory: dict[str, Fact],
     ) -> tuple[list[dict[str, Any]], list[TextFix], list[str]]:
-        pool = self._pool(recomps, resolution)
+        pool = self._pool(recomps, resolution, mandatory)
         claims: list[dict[str, Any]] = []
         fixes: list[TextFix] = []
         hits: list[str] = []
@@ -399,6 +435,22 @@ class Verifier:
             text, claim_hits = mask_guarantees(text)
             fixes += claim_fixes
             hits += claim_hits
+            fact = mandatory.get(claim.fact_id or "")
+            if fact is not None:
+                # The verifier's own sentence carries the fact. The model's sentence
+                # is kept as commentary beside it and can add, but not soften.
+                claims.append(
+                    {
+                        "statement": fact.statement,
+                        "figure": None if fact.figure is None else str(fact.figure),
+                        "status": "verified",
+                        "fact_id": fact.id,
+                        "mandatory": True,
+                        "commentary": text,
+                        "sources": list(fact.source_row_ids),
+                    }
+                )
+                continue
             figure = None if pf.status == "figure_removed" else rc.recomputed
             claims.append(
                 {
@@ -503,18 +555,29 @@ __all__ = ["VERIFIER_VERSION", "TurnContext", "Verification", "Verifier", "t3_ph
 
 
 def _resolve_facts(
-    claims: list[I.Claim], facts: dict[str, Fact]
-) -> tuple[list[I.Claim], dict[int, str]]:
+    claims: list[I.Claim], facts: dict[str, Fact], dry_run: bool
+) -> tuple[list[I.Claim], dict[int, str], dict[int, str]]:
     """Replace each fact citation with the fact's own derivation and rows.
 
     The model's statement is kept. Its figure is kept too when it gave one, so a
     wrong figure still shows up as a mismatch. A citation of a fact this turn did
     not produce is reported so provenance can remove the claim visibly.
+
+    A citation of ``block.<RuleName>`` can only be checked after the rules run, so
+    it is returned separately. It is valid only when the dry run ran this turn.
     """
     resolved: list[I.Claim] = []
     errors: dict[int, str] = {}
+    blocks: dict[int, str] = {}
     for i, claim in enumerate(claims):
         if claim.fact_id is None:
+            resolved.append(claim)
+            continue
+        if claim.fact_id.startswith("block."):
+            if dry_run:
+                blocks[i] = claim.fact_id.removeprefix("block.")
+            else:
+                errors[i] = f"it cites {claim.fact_id}, but no dry run ran this turn"
             resolved.append(claim)
             continue
         fact = facts.get(claim.fact_id)
@@ -538,39 +601,34 @@ def _resolve_facts(
                 source_row_ids=list(dict.fromkeys([*fact.source_row_ids, *claim.source_row_ids])),
             )
         )
-    return resolved, errors
+    return resolved, errors, blocks
 
 
 def _omitted(
-    model_claims: list[I.Claim],
-    prov: list[ProvenanceFinding],
-    facts: dict[str, Fact],
-    rules: list[RuleResult],
+    model_claims: list[I.Claim], prov: list[ProvenanceFinding], mandatory: dict[str, Fact]
 ) -> list[Fact]:
-    """Mandatory facts the response left out, in a stable order.
-
-    A mandatory fact counts as said only when a surviving claim cites its id. A
-    BLOCK on the action is always mandatory. The model can cite it as
-    ``block.<RuleName>`` once a tool has shown it the dry run.
-    """
+    """Mandatory facts the response left out. A fact counts as said only when a
+    surviving claim cites its id."""
     said = {
         c.fact_id
         for c, p in zip(model_claims, prov, strict=True)
         if c.fact_id is not None and p.status != "removed"
     }
-    required = [f for f in facts.values() if f.mandatory]
-    required += [
-        Fact(
-            id=f"block.{r.rule}",
-            statement=f"This action is blocked by {r.rule}. {r.reason}",
-            source_row_ids=tuple(r.rows),
-            mandatory=True,
-            materiality="a rule blocks the action under discussion",
-        )
-        for r in rules
-        if r.result is Outcome.BLOCK
-    ]
-    return [f for f in required if f.id not in said]
+    return [f for f in mandatory.values() if f.id not in said]
+
+
+def _lead_with_mandatory(
+    claims: list[dict[str, Any]], omissions: list[Fact], mandatory: dict[str, Fact]
+) -> list[dict[str, Any]]:
+    """Mandatory facts come first, blocks before the rest, each once. Then the model's claims."""
+    leading: dict[str, dict[str, Any]] = {}
+    for c in claims:
+        if c.get("mandatory"):
+            leading.setdefault(c["fact_id"], c)
+    for f in omissions:
+        leading[f.id] = _inserted(f)
+    rest = [c for c in claims if not c.get("mandatory")]
+    return [leading[k] for k in mandatory if k in leading] + rest
 
 
 def _inserted(fact: Fact) -> dict[str, Any]:
@@ -579,5 +637,6 @@ def _inserted(fact: Fact) -> dict[str, Any]:
         "figure": None if fact.figure is None else str(fact.figure),
         "status": "inserted_by_verifier",
         "fact_id": fact.id,
+        "mandatory": True,
         "sources": list(fact.source_row_ids),
     }

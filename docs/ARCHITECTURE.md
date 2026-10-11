@@ -68,24 +68,28 @@ The local model client may retry a malformed intent twice, sending the schema er
 | 5 | Policy | Requires total cost of capital and a fixed disclosure on financing content, and removes guaranteed-outcome language | Financing without a verified total cost is blocked. Guarantee phrases are masked visibly |
 | 6 | Tier assignment | Sets the tier from the action kind | A tier supplied by the model is discarded and recorded |
 
-Numbers inside sentences get the same treatment as claimed figures. A figure or a mention in any currency other than the ledger's raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros, and any other amount is masked.
+Numbers inside sentences get the same treatment as claimed figures. Every money-like number in the model's prose must equal a figure the verifier computed. A figure the verifier corrected is replaced with the recomputed value, and any other number is replaced by a visible marker. A wrong amount cannot survive inside a sentence. A figure or a mention in any currency other than the ledger's raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros, and any other amount is masked.
 
 ### Facts and material omission
 
-Tools give the model facts rather than raw rows. A fact has a stable id, a statement written by code, a figure and the derivation behind it. The model cites a fact by id and writes the sentence in its own words. The verifier does not trust the fact as the model echoes it. It recomputes the turn's facts from its own snapshot, resolves each cited id there and checks the figure.
+Tools give the model facts rather than raw rows. A fact has a stable id, a statement written by code, a figure and the derivation behind it. The model cites a fact by id and writes its sentence in its own words. The verifier does not trust a fact as the model echoes it. It recomputes the turn's facts from its own snapshot, resolves each cited id there and checks the figure.
 
-Some facts are mandatory, because leaving them out would mislead. A fact becomes mandatory when a declared condition holds:
+Some facts are mandatory, because leaving them out would mislead the owner. A fact becomes mandatory when a declared condition holds:
 
 * a projected week closes below zero within the 13 weeks;
 * a rule blocks the action under discussion;
 * a customer is above the concentration threshold and the answer concerns revenue;
 * an alert is at severity high or above, once alerts exist.
 
-A response that omits a mandatory fact is not passed as given. The verifier puts the fact at the top of the answer in its own words, records `MATERIAL_OMISSION` on the receipt and keeps the model's phrasing for everything else. A fact counts as said only when a surviving claim cites it. Mentioning it in passing is not enough.
+A mandatory fact is always shown in the verifier's own sentence, word for word, and it comes first. The model's sentence about it is kept beside it as commentary. The model can add to the fact. It cannot replace it, soften it or turn a projection into a promise. A model that cites the shortfall and then says it should resolve itself passes a citation check, and code cannot reliably detect that kind of minimising language. Showing the fact in the verifier's words makes detecting it unnecessary.
 
-Which facts a turn could cite, and which were mandatory, depends on the tools the orchestrator ran. The orchestrator records that list, and the model's output never sets it. Forecasts, scenarios and financing rankings are about cash whatever tools ran, so the shortfall is mandatory for them anyway.
+If a response leaves a mandatory fact out, the verifier puts it in anyway and records `MATERIAL_OMISSION` on the receipt. A fact counts as said only when a surviving claim cites it. Mentioning it in passing is not enough.
 
-Most guardrails check whether what was said is true. This stage checks whether what mattered was said at all, because an omission is how a financial assistant does real harm. Every money-like number in the model's prose must equal a figure the verifier computed. A figure the verifier corrected is substituted with the recomputed value. Any other number is replaced by a visible marker. A wrong amount cannot survive inside a sentence.
+Which facts a turn could cite, and which were mandatory, depends on the tools the orchestrator ran. The orchestrator records that list, and the model's output never sets it. Forecasts, scenarios and financing rankings are about cash whatever tools ran, so the shortfall is mandatory for them anyway. A block becomes citeable once the dry run described in section 10 has shown it to the model.
+
+This stage is defence in depth. The tool layer is shaped so that an omission is unlikely: the material fact arrives as its own fact, marked mandatory. The verifier enforces it anyway, because unlikely is not never. In live runs the local model has led with the shortfall every time it was given facts, even with the mandatory marker hidden from it. So `MATERIAL_OMISSION` should fire rarely, and that is the intended result. A backstop that fired on most turns would mean the primary design had failed.
+
+Most guardrails check whether what was said is true. This stage also checks whether what mattered was said, because an omission is how a financial assistant does real harm.
 
 ### Business rules
 
@@ -191,14 +195,26 @@ The default model client talks to an open-weight model served by Ollama on the o
 | `OpenAICompatibleClient` | Optional, for any OpenAI-style endpoint. Nothing requires it |
 | `ReplayClient` | Replays recorded responses. The tests, the demo and the Docker image use it with no model server and no network |
 
-The schema is built for each turn from the action kinds the turn allows. A kind outside the allowlist cannot be expressed, and neither can an amount on a payment. Schema enforcement removes malformed output as a failure class. It does not make output correct, which is still the verifier's job. A run on this machine takes about 15 seconds a turn, which is why the demo replays recorded turns.
+The schema is built for each turn from the action kinds the turn allows. A kind outside the allowlist cannot be expressed, and neither can an amount on a payment. Schema enforcement removes malformed output as a failure class. It does not make output correct, which is still the verifier's job.
+
+### One turn
+
+1. The plan, meaning the allowed action kinds and tools, comes from the owner's request alone, through a short list of readable patterns. A request that matches nothing can only be answered, not acted on.
+2. The tools run on the read-only snapshot and return facts. Ledger text inside a fact is neutralised first, and anything stripped is written to the audit log.
+3. The model drafts an ActionIntent under the turn's schema. A draft that fails the strict parser is retried at most twice, with the parser's errors sent back unchanged. After that the turn fails visibly with "The agent could not produce a valid action". Output is never repaired.
+4. For actions that change records or move money, the rules run on the draft without changing anything. If a rule blocks, the model sees the block as a mandatory fact and writes its final answer once more, for the same kind of action. It may shrink the action, but it cannot turn a blocked payment into a chat answer.
+5. The final output goes to the verifier with the list of tools that actually ran.
+
+`POST /api/chat` streams each of these steps as a server-sent event, then the verified result with its receipt.
+
+A turn takes about 15 seconds on the development machine, or about 35 seconds when a dry run adds a second call. The demo and the Docker image therefore replay recorded turns. A recording is matched by a fingerprint of the exact request. If the prompt, the facts or the schema change, the replay fails loudly instead of answering a different question with an old reply. Recordings are made against a fresh copy of the seeded ledger and are stored unedited.
 
 ## 11. Prompt-injection containment
 
 Invoice text, counterparty names, transaction descriptions and uploaded documents are untrusted, and four layers deal with them.
 
 1. Untrusted text is wrapped in explicit data delimiters, outside the instruction part of the prompt.
-2. Instruction-shaped patterns in untrusted text are neutralised before the prompt is built, and what was removed is logged.
+2. Instruction-shaped patterns in untrusted text are neutralised when facts are built, and what was removed is written to the audit log. Because mandatory facts are shown in the verifier's own words, this also keeps injected text out of any sentence the system vouches for.
 3. Each turn's tool allowlist comes from the user's own request. Retrieved content cannot widen it.
 4. Whatever the model proposes still passes the verifier and the tier gate, and neither reads the prompt.
 
@@ -215,7 +231,7 @@ LedgerGuard was built with the help of an AI coding assistant. The architecture 
 | Money, configuration, data model, migrations, seeder, projection with confidence classes | done |
 | Ledger read API, Executor with sealed actions and tier gates, audit chain | done |
 | The six verification stages, eight rules, tiers, Trust Receipt, approval queue with re-check | done |
-| Facts with materiality, stage 4b, currency check, schema-constrained local client, prompts | done |
-| Turn loop with retries, replay client, allowlist derivation | in progress |
+| Facts with materiality, stage 4b with verbatim mandatory facts, currency check | done |
+| Turn loop with retries and dry run, allowlist, schema-bound local client, replay and recording, chat stream | done |
 | Cash-flow radar, financing matcher, financial analysis, alerts, scenarios | planned |
 | Web UI | planned |

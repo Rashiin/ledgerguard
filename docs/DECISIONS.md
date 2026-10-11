@@ -187,3 +187,35 @@ Which facts are mandatory depends on the tools the turn ran. The orchestrator re
 ## D-026 · Currency is its own finding
 
 The first probe wrote dollars for a euro ledger. Any figure or mention in another currency raises `CURRENCY_MISMATCH`. A matching amount is shown again in euros and the change is recorded. A non-matching amount is masked with its symbol, so a stray "$" never survives next to a masked figure. A model that writes the wrong currency in a financial answer has misunderstood the ledger, and the flag lets an owner see that. "Pound" on its own is not treated as a currency, because it is also a unit of weight.
+
+## D-027 · Mandatory facts are shown in the verifier's words
+
+A model can cite the shortfall and then call it temporary, and that passes a citation check. Code cannot reliably detect minimising language, so we stopped trying to. Every mandatory fact, cited or not, is shown first and word for word in the sentence the facts module wrote. The model's sentence about it is kept beside it as commentary. The model can add context. It cannot replace, soften or overstate the fact, and the verifier's sentence calls a projection a projection.
+
+The cost is some repetition when the model restates the fact well, as it usually does. We accepted that, because the alternative is trusting phrasing we cannot check. Amounts that appear in the verifier's own mandatory sentences count as verified, so a model that repeats a block's "short by" figure is not masked for doing so.
+
+## D-028 · The dry run is driven by the orchestrator, not called by the model
+
+Before its final answer on any action that changes records or moves money, the model's draft is run through the rules without changing anything. If a rule blocks, the model gets the block as a mandatory fact and answers once more. That second answer must be the same kind of action. Without that constraint, the first recording of scenario 9 turned the blocked payment into a chat answer about the block, which hid the block from the receipt.
+
+We chose orchestrator-driven over a tool the model calls when it wants to. A 7B model calls tools unreliably, each extra round costs about 15 seconds, and the dry run must happen every time for the block to be citeable. The cost is a second model call on blocked turns only. A stronger model that plans well with tools would make a model-called dry run worth trying.
+
+Before the dry run existed, every blocked action also carried `MATERIAL_OMISSION`, because the model could not have known about the block. Noise in a flag teaches people to ignore it. Scenario 9 now records one real block and nothing else.
+
+## D-029 · Retries live in the orchestrator, not in LocalClient
+
+The requirements place the two-retry rule inside `LocalClient`. We put it in the orchestrator instead, so that every client gets the same behaviour, including the replay client, whose recordings then include any retries exactly as they happened. The rule itself is unchanged: at most two retries, the parser's errors sent back verbatim, then a visible failure. This is a deliberate departure from the letter of the requirement. If retries had to differ per client, they would move back into the clients.
+
+## D-030 · The allowlist is a short list of patterns over the owner's words
+
+Each turn's allowed action kinds and tools come from the request text alone, through ten readable patterns, before any ledger content is read. A request that matches nothing can only be answered. The turn's schema is built from the allowed kinds, so the model cannot express anything else.
+
+We chose patterns over asking the model to classify the request, because a classifier that reads the request could be steered by text pasted into it, and patterns can be tested line by line. We gave up coverage of unusual phrasings. Such a request falls back to answering only, which fails safe. Payment requests deliberately do not load the cash projection, so a payment answer is not obliged to restate the shortfall every time. The dry run surfaces payroll and tax pressure as blocks when they matter.
+
+## D-031 · Untrusted text is neutralised where facts are built
+
+Counterparty names, invoice descriptions and obligation labels pass through `neutralise` before they enter any fact statement. Doing it there, rather than when the prompt is assembled, matters because mandatory facts are shown in the verifier's own words. An instruction hidden in a vendor name would otherwise appear in a sentence the system vouches for. What was stripped is written to the audit log as `untrusted.neutralised`. The patterns will miss some phrasings, which R-19 records. The rules, the tier gate and the verifier never read the prompt, so containment does not depend on the patterns.
+
+## D-032 · Recordings are matched by a fingerprint of the exact request
+
+A cassette entry is keyed by the SHA-256 of the model name, the messages and the schema. Replay answers only a request it has seen byte for byte. Changing a prompt therefore breaks the recordings, and the tests fail until the turns are recorded again. We preferred that to a looser match that could replay an answer to a different question. Recordings are made by `scripts/record_turn.py` on a fresh copy of the seeded ledger, so the facts in the prompt are exactly the ones a replay sees, and they are stored unedited.

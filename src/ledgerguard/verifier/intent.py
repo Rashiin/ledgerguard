@@ -89,7 +89,7 @@ class Derivation(Strict):
     params: dict[str, str] = Field(default_factory=dict, max_length=8)
 
 
-FactId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_.]{1,60}$")]
+FactId = Annotated[str, Field(pattern=r"^[a-z][A-Za-z0-9_.]{1,60}$")]
 
 
 class Claim(Strict):

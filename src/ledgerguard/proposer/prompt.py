@@ -13,6 +13,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from ledgerguard.domain.enums import ActionKind
+from ledgerguard.facts import Fact
 from ledgerguard.proposer.tools import ToolResult
 
 SYSTEM = """You are the proposer in LedgerGuard, a finance copilot for a small business.
@@ -146,3 +147,25 @@ def messages(
         {"role": "user", "content": request},
         {"role": "user", "content": tool_message(results)},
     ]
+
+
+def retry_message(errors: str) -> str:
+    """The parser's errors, unchanged. The model gets them verbatim and nothing else."""
+    return (
+        "Your output was rejected by the schema check with these errors:\n"
+        + errors
+        + "\nReply with one corrected ActionIntent."
+    )
+
+
+def dry_run_message(blocks: Iterable[Fact]) -> str:
+    payload = [f.as_tool_dict() for f in blocks]
+    return (
+        "The rules were run on your proposed action without changing anything. It is "
+        "blocked. Each block below is a mandatory fact.\n<data>\n"
+        + json.dumps(payload, ensure_ascii=False, indent=1)
+        + "\n</data>\n"
+        "Write your final ActionIntent for the same kind of action. Cite every block by "
+        "its fact_id and explain it to the owner. You may keep the same action or "
+        "propose a smaller one."
+    )

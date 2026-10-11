@@ -153,6 +153,10 @@ class CopilotService:
                 raise ExecutionRefused(text)
         return self._executor.execute(action, Approval(approver, self._clock(), confirmation))
 
+    def note(self, actor: Actor, event_type: str, payload: dict[str, Any]) -> int:
+        """Write an event to the audit log through the Executor."""
+        return self._executor.record(actor, event_type, payload)
+
     def decline(self, intent_id: str, by: Actor, reason: str) -> int:
         return self._executor.decline(intent_id, by, reason)
 

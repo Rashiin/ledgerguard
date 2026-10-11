@@ -1,0 +1,16 @@
+{
+ "cassette": "s01_cash_quarter",
+ "interactions": [
+  {
+   "key": "e6476cc7d2071b634f15fb5584505b9d64e67fda0b84692624cb08875555689a",
+   "model": "qwen2.5-7b-instruct",
+   "response": "{\n  \"claims\": [\n    {\n      \"statement\": \"The projected cash falls below zero in weeks 6 to 8, with the lowest point in week 7, ending 2026-12-06, at -€219,676.22.\",\n      \"fact_id\": \"proj.shortfall\"\n    }\n  ],\n  \"kind\": \"ANSWER_QUERY\",\n  \"payload\": {\n    \"topic\": \"cash for the next quarter\"\n  },\n  \"rationale\": \"The owner asked how the cash is looking for the next quarter, and the tool indicates a projected shortfall.\"\n}",
+   "meta": {
+    "prompt_eval_count": 2575,
+    "eval_count": 134,
+    "done_reason": "stop",
+    "elapsed_ms": 15086
+   }
+  }
+ ]
+}

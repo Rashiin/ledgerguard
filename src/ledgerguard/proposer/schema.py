@@ -23,7 +23,7 @@ MONEY = {"type": "string", "pattern": "^-?[0-9]{1,12}(\\.[0-9]{1,2})?$"}
 FIGURE = {"type": "string", "pattern": "^-?[0-9]{1,12}(\\.[0-9]{1,6})?$"}
 DATE = {"type": "string", "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$"}
 ROW_ID = {"type": "string", "pattern": "^[a-z]{2,4}_[A-Za-z0-9_]{1,40}$"}
-FACT_ID = {"type": "string", "pattern": "^[a-z][a-z0-9_.]{1,60}$"}
+FACT_ID = {"type": "string", "pattern": "^[a-z][A-Za-z0-9_.]{1,60}$"}
 TEXT = {"type": "string", "minLength": 1, "maxLength": 600}
 
 

@@ -44,12 +44,21 @@ def _revenue_concentration(snap: LedgerSnapshot, threshold: Decimal) -> ToolResu
     return ToolResult(facts.REVENUE_CONCENTRATION, facts.revenue_facts(snap, threshold))
 
 
+def _open_invoices(snap: LedgerSnapshot, threshold: Decimal) -> ToolResult:
+    return ToolResult(facts.OPEN_INVOICES, facts.open_invoice_facts(snap))
+
+
 TOOLS: dict[str, Tool] = {
     facts.CASH_PROJECTION: Tool(
         facts.CASH_PROJECTION,
         "Cash on hand and the 13-week projection: each week's closing balance on the full "
         "model and on contracted lines only, any shortfall, and what drives the worst week.",
         _cash_projection,
+    ),
+    facts.OPEN_INVOICES: Tool(
+        facts.OPEN_INVOICES,
+        "Every invoice with money outstanding, both directions, with its status and due date.",
+        _open_invoices,
     ),
     facts.REVENUE_CONCENTRATION: Tool(
         facts.REVENUE_CONCENTRATION,

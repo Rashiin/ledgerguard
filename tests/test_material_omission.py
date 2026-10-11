@@ -311,3 +311,132 @@ def test_receipt_records_the_tools_that_ran(snapshot: LedgerSnapshot, policy: Po
     v = scenario_1_without_the_shortfall(snapshot, policy)
     assert v.receipt.tools_called == [CASH_PROJECTION]
     assert json.loads(v.receipt.model_dump_json())["material_omissions"]
+
+
+# ---- the verifier's sentence carries every mandatory fact
+
+
+def test_a_cited_mandatory_fact_is_shown_in_the_verifiers_words(
+    snapshot: LedgerSnapshot, policy: Policy
+) -> None:
+    softened = "Week 7 dips to -€219,676.22, but this should resolve itself once Brennan pays."
+    v = verify(
+        snapshot,
+        policy,
+        "ANSWER_QUERY",
+        {"topic": "q"},
+        [{"statement": softened, "fact_id": "proj.shortfall"}],
+        CASH,
+    )
+    shown = v.presented["claims"][0]
+    expected = facts_for_turn(
+        snapshot, None, [CASH_PROJECTION], policy.rules.concentration_warning_share
+    )["proj.shortfall"]
+    assert shown["statement"] == expected.statement
+    assert shown["commentary"] == softened
+    assert shown["mandatory"] is True
+    assert "MATERIAL_OMISSION" not in v.receipt.risk_flags
+    assert "projected" in shown["statement"].lower()
+
+
+def test_the_fact_is_stated_once_even_if_cited_twice(
+    snapshot: LedgerSnapshot, policy: Policy
+) -> None:
+    v = verify(
+        snapshot,
+        policy,
+        "ANSWER_QUERY",
+        {"topic": "q"},
+        [
+            {"statement": "Short.", "fact_id": "proj.shortfall"},
+            {"statement": "Still short.", "fact_id": "proj.shortfall"},
+        ],
+        CASH,
+    )
+    assert [c.get("fact_id") for c in v.presented["claims"]].count("proj.shortfall") == 1
+
+
+def test_ordinary_facts_keep_the_models_wording(snapshot: LedgerSnapshot, policy: Policy) -> None:
+    v = verify(
+        snapshot,
+        policy,
+        "ANSWER_QUERY",
+        {"topic": "q"},
+        [
+            {"statement": "Short.", "fact_id": "proj.shortfall"},
+            {"statement": "The quarter ends in the black.", "fact_id": "proj.w13.closing"},
+        ],
+        CASH,
+    )
+    assert v.presented["claims"][1]["statement"] == "The quarter ends in the black."
+    assert "commentary" not in v.presented["claims"][1]
+
+
+# ---- blocks and the dry run
+
+PAY_ALL = TurnContext(tools_called=("check_action",))
+
+
+def _all_open_payables(snapshot: LedgerSnapshot) -> list[str]:
+    return [
+        i.id
+        for i in snapshot.invoices.values()
+        if i.type.value == "payable" and i.status.value in ("sent", "overdue")
+    ]
+
+
+def test_after_a_dry_run_a_cited_block_is_clean(snapshot: LedgerSnapshot, policy: Policy) -> None:
+    claims = [
+        {"statement": f"Blocked by {rule}.", "fact_id": f"block.{rule}"}
+        for rule in ("SufficientBalance", "AmountCeiling", "PayrollProtection", "TaxReserveFloor")
+    ]
+    v = verify(
+        snapshot,
+        policy,
+        "INITIATE_PAYMENT",
+        {"invoice_ids": _all_open_payables(snapshot)},
+        claims,
+        PAY_ALL,
+    )
+    assert v.outcome == "blocked"
+    assert "MATERIAL_OMISSION" not in v.receipt.risk_flags
+    ids = [c["fact_id"] for c in v.presented["claims"]]
+    assert ids[:4] == [
+        "block.SufficientBalance",
+        "block.AmountCeiling",
+        "block.PayrollProtection",
+        "block.TaxReserveFloor",
+    ]
+    payroll = next(c for c in v.presented["claims"] if c["fact_id"] == "block.PayrollProtection")
+    assert payroll["statement"].startswith("This action is blocked by PayrollProtection.")
+    assert payroll["commentary"] == "Blocked by PayrollProtection."
+
+
+def test_without_a_dry_run_a_block_citation_is_removed(
+    snapshot: LedgerSnapshot, policy: Policy
+) -> None:
+    v = verify(
+        snapshot,
+        policy,
+        "RECORD_PAYMENT",
+        {"invoice_id": "inv_0620"},
+        [{"statement": "Locked.", "fact_id": "block.DisputedInvoiceLock"}],
+    )
+    assert "MATERIAL_OMISSION" in v.receipt.risk_flags
+    assert any("no dry run ran this turn" in c["statement"] for c in v.presented["claims"])
+
+
+def test_citing_a_block_that_did_not_happen_is_removed(
+    snapshot: LedgerSnapshot, policy: Policy
+) -> None:
+    v = verify(
+        snapshot,
+        policy,
+        "RECORD_PAYMENT",
+        {"invoice_id": "inv_0412"},
+        [{"statement": "Blocked.", "fact_id": "block.PayrollProtection"}],
+        PAY_ALL,
+    )
+    assert v.outcome == "verified"
+    removed = [c for c in v.presented["claims"] if c["status"] == "removed"]
+    assert "that rule did not block" in removed[0]["statement"]
