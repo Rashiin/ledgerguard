@@ -683,6 +683,8 @@ function TurnView({ turn }: { turn: Turn }) {
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
         <span className="font-mono">{turn.kind}</span>
         <span>·</span>
+        <span>{turn.outcome}</span>
+        <span>·</span>
         <span>{turn.status.replace("_", " ")}</span>
         {turn.receipt.risk_flags.map((f) => (
           <span key={f} className="font-mono">
@@ -724,7 +726,7 @@ function TurnView({ turn }: { turn: Turn }) {
       {turn.rationale && (
         <div className="text-sm text-slate-700">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            Model's rationale
+            The model's own words, checked for figures
           </div>
           <Marked text={turn.rationale} />
         </div>
@@ -790,7 +792,11 @@ function ClaimView({ claim, why }: { claim: Claim; why?: string }) {
   const commentary =
     claim.commentary && claim.commentary.trim() !== claim.statement.trim() ? claim.commentary : null;
   return (
-    <li className={`border-l-4 ${border} rounded-r bg-slate-50/60 py-2 pl-3 pr-2`}>
+    <li
+      className={`border-l-4 ${border} rounded-r py-2 pl-3 pr-2 ${
+        inserted || claim.status === "corrected" ? "bg-amber-50/70" : claim.status === "removed" ? "bg-red-50/70" : "bg-slate-50/60"
+      }`}
+    >
       {inserted && (
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-warn">
           {why

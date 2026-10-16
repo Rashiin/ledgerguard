@@ -45,8 +45,10 @@ export function App() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2">
           <div className="flex items-baseline gap-2">
-            <span className="font-semibold">LedgerGuard</span>
-            <span className="text-xs text-slate-500">{ledger?.business ?? "sandbox ledger"}</span>
+            <span className="font-semibold tracking-tight">LedgerGuard</span>
+            <span className="hidden text-xs text-slate-500 md:inline">
+              The model proposes. Code decides. · {ledger?.business ?? "sandbox ledger"}
+            </span>
           </div>
           <nav className="flex gap-1">
             {SCREENS.map(([key, label]) => (
