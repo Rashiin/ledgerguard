@@ -274,6 +274,12 @@ function Welcome({
         code then recomputes every figure from the ledger, runs the business rules and decides what may
         happen. Every turn shows both: what the model said, and what code did about it.
       </p>
+      <p className="mt-2 max-w-3xl rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+        <span className="font-semibold text-slate-800">Offline demo.</span> Only the model's responses are
+        recorded. The verifier, the rules, the ledger and the audit chain all run live on every replay, so
+        every result here can be reproduced with no API key, no model server and no network. Choose a
+        recorded request below. A question in your own words needs the local model.
+      </p>
       <ol className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-4">
         {flow.map((f, i) => (
           <li key={f.title} className={`relative rounded-md border p-3 ${f.cls}`}>
@@ -337,7 +343,7 @@ function ExchangeView({
       {error && (
         <div className="m-4 rounded border border-block/30 bg-block-soft p-3 text-sm text-block">
           {error.includes("ReplayMiss")
-            ? "No recording exists for this request. In replay mode only the recorded requests can be answered. Nothing was done."
+            ? "No recorded model response for this request, so nothing ran. In the offline demo only the recorded requests have one. Everything after the model's response runs live. To ask anything, run LedgerGuard with a local model. If you approved an action earlier, the ledger has changed and earlier requests no longer match their recordings."
             : error}
         </div>
       )}

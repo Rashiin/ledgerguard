@@ -155,7 +155,11 @@ We expected the same block on both models. That did not happen, because the mode
 
 The incomplete payment is the evidence for human approval. Mistral was asked to pay three invoices and proposed two. That payment is safe by every rule, so no rule could block it, and nothing in the verifier knows what the owner meant. The only check that can catch it is a person reading the exact invoices in the Approval Inbox before typing the confirmation. That is why every change to records needs a person at T2 and every payment needs one at T3: not as a formality on top of the rules, but because some failures are invisible to any rule.
 
-### 6.6 The trust model
+### 6.6 What a replay is
+
+Only the model's responses are recorded. The verifier, the rules, the ledger and the audit chain all run live on every replay. That is why a judge can reproduce every measured result offline, with no API key, no model server and no network. The recorded part is the only part we could not make deterministic. A request that has no recording is refused visibly, and nothing runs. Live runs against the local model use exactly the same code after the model's response.
+
+### 6.7 The trust model
 
 One operator approves everything, and that person is trusted. The system protects the owner from a wrong or manipulated model, from outside text in the ledger and from approving two individually safe actions into an unsafe pair. It does not protect against an operator who approves a harmful action deliberately, against someone with direct access to the database file, or against a compromised host. The sandbox is not a bank, the financing catalogue is synthetic, and the rule engine is tested, not formally verified.
 

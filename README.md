@@ -16,7 +16,13 @@ It was built for FinTechathon 2026, International Track, Topic E.
 | Measurements | [evidence/robustness](evidence/robustness/README.md), [evidence/heldout](evidence/heldout/README.md) and [evidence/model_swap](evidence/model_swap) |
 | Design decisions | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DECISIONS.md](docs/DECISIONS.md) |
 
-The fastest way to see it working is `docker compose up` and http://localhost:8080. Run the read-only scenarios and the fixtures first, then the approval requests, then work through the Approval Inbox.
+The fastest way to see it working is `docker compose up` and http://localhost:8080.
+
+**What is recorded, and what runs live.** Only the model's responses are recorded. The verifier, the rules, the ledger and the audit chain all run live on every replay. That is why a judge can reproduce every measured result offline, with no API key, no model server and no network. The recorded part is the only part we could not make deterministic.
+
+**What to type.** The Console opens with every recorded request listed. Choose one from the list or the "Recorded requests" menu. A question typed in your own words has no recorded model response, so the Console answers "no recorded model response" and nothing runs. That is expected in the offline demo. To ask anything you like, run with a local model as described below.
+
+**The order to follow.** Run the read-only scenarios and the injection fixtures first, then make the requests that need approval, and only then work through the Approval Inbox. Approving changes the ledger, and a request recorded against the fresh ledger no longer matches once it has changed, so it would also answer "no recorded model response". To start again, recreate the container with `docker compose down` and `docker compose up`.
 
 ## Runs offline, on your own hardware
 
@@ -61,7 +67,7 @@ Open http://127.0.0.1:8000 for the UI. `LEDGERGUARD_PORT` changes the port. With
 
 Recordings match the exact request, including the facts drawn from the ledger. Approving an action changes the ledger, so requests recorded on the fresh ledger stop replaying after it. Run the read-only scenarios and the adversarial fixtures first, then make the approval requests, and only then work through the Approval Inbox. `scripts/export_evidence.py` runs the whole demo in that order and writes `evidence/`.
 
-To run the approval scenarios a second time, seed the ledger again first with `uv run python scripts/seed.py --profile nordvik --seed 42`, or recreate the Docker container with `docker compose down` and `docker compose up`. Without that, those requests answer "no recording exists". That is risk R-22 working as designed, not a fault.
+To run the approval scenarios a second time, seed the ledger again first with `uv run python scripts/seed.py --profile nordvik --seed 42`, or recreate the Docker container with `docker compose down` and `docker compose up`. Without that, those requests answer "no recorded model response". That is risk R-22 working as designed, not a fault.
 
 The UI has four screens. The Console streams each turn's steps, marked by whether code, the model or the verifier took them, and shows the verified answer with a Trust Receipt beside it. The Cash-Flow Radar shows the 13-week projection by confidence class, the alerts, the scenario simulator and the financing matcher. The Approval Inbox shows each pending action with the ledger changes approving it would make. The Audit screen walks the hash chain and lists every event.
 
