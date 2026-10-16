@@ -26,7 +26,7 @@ We gave up a single writer in the codebase. The exception is named, a test prove
 | `transaction.invoice_id` and `transaction.payroll_run_id` | Links from a payment to what it settles, so recomputation can walk back to the source row. |
 | `obligation.description` | A label an owner can read on a forecast line. |
 | `financing_product.name` | The product's display name. |
-| `scheduled` and `paid` as payroll statuses | The requirements name the column but not its values. |
+| `scheduled` and `paid` as payroll statuses | Our design specification names the column but not its values. |
 
 Account floors are not a column. They are policy and live in `config/policy.yaml`.
 
@@ -48,7 +48,7 @@ We left out variable spend that has no invoice or obligation row: fuel, utilitie
 
 The seeder runs the application's own projection and solves for the cash on hand, the size of Brennan's refit milestone and, when a seed needs it, a first instalment on the refit stock. It picks values that put weeks 6 to 8 at least €20,000 below zero and every other week at least €18,000 above it. It then sets the opening balance 24 months earlier so the history arrives at that cash. A late equipment purchase grows if the history would otherwise be overdrawn.
 
-The requirements say the planted situations must exist by construction. Week-to-week noise in the generated data is about €100,000, which is as large as any hand-tuned trough, and a fixed design worked for some seeds and failed for others. Solving made every one of the 43 seeds in the last sweep work.
+Our design specification says the planted situations must exist by construction. Week-to-week noise in the generated data is about €100,000, which is as large as any hand-tuned trough, and a fixed design worked for some seeds and failed for others. Solving made every one of the 43 seeds in the last sweep work.
 
 The cost is a refit milestone that is large for the business, €185,000 net for seed 42. We framed it as Brennan's 12-kitchen refit programme. That framing also makes the demo coherent: stock for the refit is paid in week 7 and Brennan pays late, in week 9.
 
@@ -92,29 +92,29 @@ Each event's hash is `sha256(prev_hash ‖ canonical_json(content))`, where cont
 
 The triggers stop changes through any normal connection. The chain detects changes made by someone who drops the triggers, which anyone with file access can do, and the tests tamper exactly that way.
 
-We kept the chain unkeyed, as the requirements define it. A keyed chain would make a consistent rewrite need the key as well as file access. We gave that up for a format anyone can verify with `sha256` and nothing else. The log is therefore tamper-evident with a published head hash, not tamper-proof, and the evidence export publishes the head hash. If the log had to stand alone without an external anchor, we would key it.
+We kept the chain unkeyed, as our design specification defines it. A keyed chain would make a consistent rewrite need the key as well as file access. We gave that up for a format anyone can verify with `sha256` and nothing else. The log is therefore tamper-evident with a published head hash, not tamper-proof, and the evidence export publishes the head hash. If the log had to stand alone without an external anchor, we would key it.
 
 ## D-013 · An endpoint for single source rows
 
-`GET /api/ledger/rows/{table}/{id}` returns one row from an allow-listed table, with decimals as strings. The requirements say every figure must trace back to its rows in one click, and the Trust Receipt cites rows by table and id. This endpoint resolves those citations. It is an addition to the required endpoint list.
+`GET /api/ledger/rows/{table}/{id}` returns one row from an allow-listed table, with decimals as strings. Our design specification says every figure must trace back to its rows in one click, and the Trust Receipt cites rows by table and id. This endpoint resolves those citations. It is an addition to the required endpoint list.
 
 ## D-014 · Stage 1 parses JSON text and requires quoted money
 
 `parse_intent` accepts JSON text only. A bare JSON number with a fraction is refused before Pydantic sees it, and money fields refuse integers, so `"46854.00"` is the only accepted form. Unknown fields anywhere reject the intent. The payload is validated against its kind in a second step so that error locations stay exact, such as `payload.amount`.
 
-A top-level `tier` is the one exception. It is removed and recorded as `MODEL_TIER_IGNORED` instead of rejecting the whole intent. The requirements say the model's tier is ignored, and ignoring something is different from treating it as malformed. If models started using the tier field to probe the system, rejecting it outright would be the stricter choice.
+A top-level `tier` is the one exception. It is removed and recorded as `MODEL_TIER_IGNORED` instead of rejecting the whole intent. Our design specification says the model's tier is ignored, and ignoring something is different from treating it as malformed. If models started using the tier field to probe the system, rejecting it outright would be the stricter choice.
 
 ## D-015 · Payment payloads carry no amounts
 
 `INITIATE_PAYMENT` names invoices and nothing else. The verifier computes what each invoice still owes and seals that into the action. `RECORD_PAYMENT` takes an optional amount between €0.01 and what is owed, and leaving it out means paid in full. When the action runs, the Executor checks again that each invoice still owes exactly the sealed amount and refuses otherwise.
 
-The requirements say the model is never asked for a final monetary figure. Leaving the field out of the schema means the model has nowhere to put one. Part payments to suppliers are not possible in this version. Supporting them would add an amount that a person types during approval, never one the model supplies.
+Our design specification says the model is never asked for a final monetary figure. Leaving the field out of the schema means the model has nowhere to put one. Part payments to suppliers are not possible in this version. Supporting them would add an amount that a person types during approval, never one the model supplies.
 
 ## D-016 · Claims use a closed set of formulas, and uncited claims are stripped
 
 A claimed figure needs a derivation that names one of nine formulas and its operand rows. The verifier recomputes it, and the recomputed value always replaces the model's. A figure with no derivation, or one that cannot be recomputed, is removed while its statement stays. Cited rows must come from a table that can support the formula.
 
-Claims with no citations pass the schema and are replaced in what the user sees by a marker saying the verifier removed them. The requirements say citations must be present and also that uncited assertions are stripped visibly. Rejecting the whole intent for one uncited sentence would hide the verifier's work, so we chose stripping.
+Claims with no citations pass the schema and are replaced in what the user sees by a marker saying the verifier removed them. Our design specification says citations must be present and also that uncited assertions are stripped visibly. Rejecting the whole intent for one uncited sentence would hide the verifier's work, so we chose stripping.
 
 The cost is that each new capability must add its formulas before the model can make claims about it. Phase 5 adds total cost of capital and the analysis ratios.
 
@@ -136,7 +136,7 @@ Judged on contracted-only cash, which goes negative within 13 weeks for any real
 
 When a pending action is approved, the service resolves its payload again and runs every rule on a fresh snapshot of the ledger. If anything now blocks, the intent is closed as rejected with the reasons, and nothing runs. The Executor runs an action only if its intent is on record as verified or pending, and marks it executed in the same transaction, so the same sealed action cannot be replayed. A refusal from a handler marks the intent failed.
 
-Without the re-check, two payments that each pass PayrollProtection could be approved one after the other and together starve payroll. That would reach a blocked outcome through approvals, which the requirements forbid. A test proves the gap is closed. The cost is a second snapshot load at approval time.
+Without the re-check, two payments that each pass PayrollProtection could be approved one after the other and together starve payroll. That would reach a blocked outcome through approvals, which the design forbids. A test proves the gap is closed. The cost is a second snapshot load at approval time.
 
 ## D-020 · Migration 0003 rebuilds tables from written-out definitions
 
@@ -204,7 +204,7 @@ Before the dry run existed, every blocked action also carried `MATERIAL_OMISSION
 
 ## D-029 · Retries live in the orchestrator, not in LocalClient
 
-The requirements first placed the two-retry rule inside `LocalClient`. We put it in the orchestrator instead, so that every client gets the same behaviour, including the replay client, whose recordings then include any retries exactly as they happened. The rule itself is unchanged: at most two retries, the parser's errors sent back verbatim, then a visible failure. The requirements were later updated to match. If retries ever had to differ per client, they would move back into the clients.
+Our design specification first placed the two-retry rule inside `LocalClient`. We put it in the orchestrator instead, so that every client gets the same behaviour, including the replay client, whose recordings then include any retries exactly as they happened. The rule itself is unchanged: at most two retries, the parser's errors sent back verbatim, then a visible failure. The specification was later updated to match. If retries ever had to differ per client, they would move back into the clients.
 
 ## D-030 · The allowlist is a short list of patterns over the owner's words
 
@@ -240,7 +240,7 @@ We chose a fixed set of types over free-form edits to the flows, because each ty
 
 The gap to fund is the deepest projected shortfall, rounded up to the next €1,000, from the first negative week to the last. Each product is offered for as much of the gap as it can cover. An ineligible product is listed with the reason. Total cost is in euros over the real drawdown period. Term loans and merchant advances are costed over their full term, because that is what the business would pay. Ranking weighs cost, coverage, speed, flexibility and collateral, and the owner can change the weights.
 
-The ranking with total costs and the do-nothing line are mandatory on every financing answer, as the requirements ask. We do not combine products, for example a credit line topped up with invoice finance. Combinations are what a real adviser would suggest, but each one multiplies the cases to explain and recompute. If owners asked for blended funding, combinations would be the next addition.
+The ranking with total costs and the do-nothing line are mandatory on every financing answer, as our design specification asks. We do not combine products, for example a credit line topped up with invoice finance. Combinations are what a real adviser would suggest, but each one multiplies the cases to explain and recompute. If owners asked for blended funding, combinations would be the next addition.
 
 ## D-037 · Financial analysis methods
 
@@ -286,7 +286,7 @@ The inbox shows what approving an action would change by running the same handle
 
 ## D-045 · The projection chart draws three lines, not stacked areas
 
-The requirements ask for the confidence classes as distinct stacked bands. The chart draws the closing balance three times, on contracted lines, with expected lines added, and with every line, as three lines on one axis. Closing balances are cumulative, so stacking them as areas would add one balance on top of another and show a total that means nothing. Three lines keep the classes separate, never merged into one number, which is what the requirement is for. If the chart showed weekly flows instead of balances, stacked bars per class would be the right form.
+Our design specification asks for the confidence classes as distinct stacked bands. The chart draws the closing balance three times, on contracted lines, with expected lines added, and with every line, as three lines on one axis. Closing balances are cumulative, so stacking them as areas would add one balance on top of another and show a total that means nothing. Three lines keep the classes separate, never merged into one number, which is what the specification is for. If the chart showed weekly flows instead of balances, stacked bars per class would be the right form.
 
 ## D-046 · Fixture rows live in the demo ledger, out of its figures
 
