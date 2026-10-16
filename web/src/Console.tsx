@@ -118,8 +118,9 @@ export function Console({ onChange }: { onChange: () => void }) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
       <div className="flex min-w-0 flex-col gap-4">
+        {exchanges.length === 0 && <Welcome entries={all} onPlay={play} />}
         {exchanges.length === 0 && (
-          <Card title="Recorded scenarios">
+          <Card title="All recorded scenarios, in demo order">
             <p className="mb-3 text-sm text-slate-600">
               Each request below has a recorded model response, so it runs with no model server.
               The verifier, the rules and the ledger run live.
@@ -236,6 +237,74 @@ export function Console({ onChange }: { onChange: () => void }) {
         )}
       </aside>
     </div>
+  );
+}
+
+// The three requests that show the verifier doing something different each time.
+const START_HERE: { key: string; label: string; what: string; tone: "warn" | "block" }[] = [
+  { key: "s02_week7_why", label: "It puts back what the model left out", what: "Ask why week 7 is so bad", tone: "warn" },
+  { key: "s09_pay_all_suppliers", label: "It stops a payment that would starve payroll", what: "Ask it to pay three supplier invoices", tone: "block" },
+  { key: "s11_open_supplier_invoices", label: "It contains an instruction hidden in an invoice", what: "Ask which supplier invoices are open", tone: "block" },
+];
+
+/** What a judge sees before typing anything. */
+function Welcome({
+  entries,
+  onPlay,
+}: {
+  entries: Entry[];
+  onPlay: (turns: Entry["turns"]) => void;
+}) {
+  const flow = [
+    { title: "You ask", body: "in plain words. Your words alone decide what may happen.", cls: "border-slate-200 bg-white text-slate-800" },
+    { title: "The model proposes", body: "an answer or a typed action. It never touches the ledger.", cls: "border-blue-200 bg-blue-50 text-blue-900" },
+    { title: "Code checks", body: "every figure against the ledger, eight rules, and what must be said.", cls: "border-emerald-200 bg-emerald-50 text-emerald-900" },
+    { title: "The ledger changes", body: "only if allowed, and only after a person approves anything that moves money.", cls: "border-amber-200 bg-amber-50 text-amber-900" },
+  ];
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
+        Sandbox · Nordvik Supply Co. · synthetic data · runs offline
+      </p>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+        A finance copilot whose model is never allowed to act.
+      </h1>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+        A local language model reads your question and proposes an answer or an action. Deterministic
+        code then recomputes every figure from the ledger, runs the business rules and decides what may
+        happen. Every turn shows both: what the model said, and what code did about it.
+      </p>
+      <ol className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-4">
+        {flow.map((f, i) => (
+          <li key={f.title} className={`relative rounded-md border p-3 ${f.cls}`}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider opacity-60">{i + 1}</div>
+            <div className="text-sm font-semibold">{f.title}</div>
+            <div className="mt-0.5 text-xs leading-snug opacity-80">{f.body}</div>
+          </li>
+        ))}
+      </ol>
+      <h2 className="mt-6 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Start here</h2>
+      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+        {START_HERE.map((s) => {
+          const entry = entries.find((e) => e.key === s.key);
+          return (
+            <button
+              key={s.key}
+              type="button"
+              disabled={!entry}
+              onClick={() => entry && onPlay(entry.turns)}
+              className={`group rounded-md border p-3 text-left transition hover:shadow-sm disabled:opacity-40 ${
+                s.tone === "block" ? "border-red-200 hover:border-red-300" : "border-amber-200 hover:border-amber-300"
+              }`}
+            >
+              <div className={`text-sm font-semibold ${s.tone === "block" ? "text-block" : "text-warn"}`}>{s.label}</div>
+              <div className="mt-1 text-xs text-slate-500">{s.what}</div>
+              <div className="mt-2 text-xs font-medium text-accent group-hover:underline">Run it →</div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
