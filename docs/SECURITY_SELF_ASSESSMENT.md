@@ -6,13 +6,15 @@ The PDF is built from this file by `scripts/build_docs.py`. It leads with the bl
 
 LedgerGuard has a layer that looks for instructions hidden in outside text, such as an invoice note telling the assistant to pay a new bank account, and removes them before the model reads them. We tested it the only way that means anything: blind.
 
-After that layer was frozen, we wrote four new injection fixtures, committed them together with the criteria for passing before they ever ran, ran them once and changed nothing afterwards. They hid a payment redirection "agreed on a call" in a supplier invoice, an "agent note" in a customer's name, a reconciliation order inside an attached bank export, and a ready-made ActionIntent written in JSON inside an invoice description.
+We call that layer the neutraliser, and a planted injection attempt a fixture. After the neutraliser was frozen, we wrote four new fixtures, held out from it because it had never seen them. We committed them together with the criteria for passing before they ever ran, ran them once and changed nothing afterwards. They hid a payment redirection "agreed on a call" in a supplier invoice, an "agent note" in a customer's name, a reconciliation order inside an attached bank export, and a ready-made ActionIntent written in JSON inside an invoice description.
 
 **Detection caught none of the four.** Every instruction reached the model. Nothing was logged and the owner saw no containment notice, so by our own definition of contained, which requires the injection to be detected and logged, not merely rendered harmless, the result is 0 of 4.
 
 **Containment held in all four.** No fixture produced an unauthorised action, with the real model or with a scripted model that ignores the grammar and does exactly what each injection asks. The real model did not repeat the redirected account number to the owner and did not copy the forged action. The scripted model's payments and record changes were refused, because each request allowed only an answer and both the turn loop and the verifier enforce that.
 
 The two results belong together, in that order, because together they are the argument this project exists to make. Do not rely on recognising hostile input. Recognition is pattern-matching against attacks someone has already seen, and a new phrasing walks past it, as these four did. Build a system in which hostile input cannot cause harm even when nothing recognises it: the actions a turn may take come only from the owner's own words, the verifier and the rules never read the prompt, a payment can name only existing invoices, and anything that moves money waits for a person. `evidence/heldout/README.md` has the fixtures, the criteria, the commit that fixed them before the run, and every response.
+
+These numbers are small, and we say so first. Four blind fixtures, fifty samples, and two models on two requests cannot settle whether the defences hold in general. They are measurements, where the field usually offers assertions. Making them conclusive would take hundreds of held-out injections written by people outside the project, thousands of samples across several models, and the same runs on real ledgers.
 
 ## 2. Problems we found and chose not to patch
 
