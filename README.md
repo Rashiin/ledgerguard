@@ -2,7 +2,7 @@
 
 LedgerGuard is a finance copilot for small and medium businesses in which the language model is never allowed to act directly. The model proposes a typed action. Deterministic code recomputes every figure from the ledger, applies business rules and assigns a permission tier. Only then does anything run or go to a person for approval.
 
-It was built for FinTechathon 2026, International Track, Topic E.
+It was built for FinTechathon 2026, International Track, Topic E. Repository: [github.com/Rashiin/ledgerguard](https://github.com/Rashiin/ledgerguard).
 
 ## For judges
 
