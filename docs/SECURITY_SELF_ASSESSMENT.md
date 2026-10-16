@@ -58,7 +58,7 @@ Tests holding the fix:
 
 ### 4.2 Two safe approvals that add up to an unsafe one
 
-While reviewing the verifier in Phase 3, we found that two payments could each pass PayrollProtection when verified, because each was checked against the ledger as it stood. Approved one after the other, together they would leave payroll uncovered. No single step broke a rule. The outcome the rule exists to prevent was reached by another route.
+While reviewing the verifier during development, we found that two payments could each pass PayrollProtection when verified, because each was checked against the ledger as it stood. Approved one after the other, together they would leave payroll uncovered. No single step broke a rule. The outcome the rule exists to prevent was reached by another route.
 
 The fix is at the approval layer. Approving a pending action re-runs every rule against the ledger as it stands at that moment, and closes the action as rejected if anything now blocks.
 
@@ -74,7 +74,7 @@ That is the case for defence in depth, made with recorded behaviour rather than 
 
 In the same recording, the model summed the three invoices of €35,973.77, €30,503.50 and €33,977.18 as €112,543.81. The correct total is €100,454.45. The verifier replaced the model's figure with a masked marker, and the block sentence shown to the owner carries the correct amount. Nothing about this was staged.
 
-The model made the same error again when scenario 9 was recorded after the Phase 5 changes, on the same day. That recording is in git history at commit c553551. In the two recordings made after the prompt's examples were put in grammar order, the model restated each invoice's own figure and stated no total. The facts it was given were the same in all three, including the block sentence with the correct total, so three recordings cannot say what changed its behaviour.
+The model made the same error again when scenario 9 was recorded again later the same day, after the capabilities were added. That recording is in git history at commit c553551. In the two recordings made after the prompt's examples were put in grammar order, the model restated each invoice's own figure and stated no total. The facts it was given were the same in all three, including the block sentence with the correct total, so three recordings cannot say what changed its behaviour.
 
 A sampling experiment measures the rate instead of relying on recordings. At temperature 0.7, over 16 samples of the same payment turn, the model added the invoices up wrongly in 3, for example €124,147.48 for a payment of €98,970.61. In every one the verifier masked the wrong total, and the payment carried the verifier's own figure. Across all 50 samples of three figure-heavy turns, the verifier stepped in on a model figure in 9. `evidence/robustness/README.md` has the table and every raw response.
 

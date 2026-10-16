@@ -6,7 +6,7 @@ Everything in this directory is synthetic. No row describes a real business, per
 |---|---|
 | `financing_products.json` | Twelve invented financing products of five kinds. Providers have names like "Synthetic Bank A". The rates and fees are invented and are not offers. |
 | `manifest.json` | Written by `scripts/seed.py`. It lists the ids of the planted situations below, the solved balances and the 13 weekly closing balances. |
-| `llm_cassettes/` | Recorded model responses for `ReplayClient`. They arrive in Phase 4. |
+| `llm_cassettes/` | Recorded model responses for `ReplayClient`. Only the model's responses are recorded. Everything after them runs live. |
 
 ## The sandbox business
 
@@ -21,7 +21,7 @@ Nordvik Supply Co. Ltd is an invented Irish distributor of commercial kitchen eq
 
 The ledger treats Friday 2026-10-16 as today. That date is stored in `business.data_as_of`, and every projection uses it instead of the wall clock, so the demo gives the same answer on any day. Projection week 1 starts on Monday 2026-10-19.
 
-The same seed always produces a byte-identical SQLite file. Amounts are generated as integer cents with no floating-point arithmetic.
+The same seed always produces identical data, and a byte-identical SQLite file on any one platform. Amounts are generated as integer cents with no floating-point arithmetic.
 
 ## Planted situations
 

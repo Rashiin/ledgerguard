@@ -11,7 +11,7 @@ It was built for FinTechathon 2026, International Track, Topic E.
 | Technical documentation | [docs/technical_documentation.pdf](docs/technical_documentation.pdf), built from [the Markdown source](docs/technical_documentation.md) |
 | Security self-assessment and known-risk list | [docs/security_self_assessment.pdf](docs/security_self_assessment.pdf), built from [SECURITY_SELF_ASSESSMENT.md](docs/SECURITY_SELF_ASSESSMENT.md) and [RISK_REGISTER.md](docs/RISK_REGISTER.md) |
 | Presentation deck | [docs/deck.pdf](docs/deck.pdf) |
-| Demo video, 3 min 40 s | [docs/demo.mp4](docs/demo.mp4) |
+| Demo video, 4 min | [docs/demo.mp4](docs/demo.mp4) |
 | Execution evidence | [evidence/](evidence/README.md): every scenario turn, every Trust Receipt, the operator's decisions and the audit chain with its head hash |
 | Measurements | [evidence/robustness](evidence/robustness/README.md), [evidence/heldout](evidence/heldout/README.md) and [evidence/model_swap](evidence/model_swap) |
 | Design decisions | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DECISIONS.md](docs/DECISIONS.md) |
@@ -48,7 +48,7 @@ The Modelfile names both shards. Naming only the first fails with "has 1 shards,
 | `qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf` | 3,993,201,344 | `dfce12e3862a5283ccfb88221b48480e58745165de856439950d0f22590580db` |
 | `qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf` | 689,872,288 | `539cf93f78e887edea1c04e2d7d8cdaca9d01dae9c9025bcb8accbe29df3d72a` |
 
-The model is needed only for live local runs, from Phase 4. The tests, the demo and the Docker image replay recorded model responses with `LLM_CLIENT=replay`. They need no model server, no API key and no network.
+The model is needed only for live local runs. The tests, the demo and the Docker image replay recorded model responses with `LLM_CLIENT=replay`. They need no model server, no API key and no network.
 
 ## Quickstart on your machine
 
@@ -110,7 +110,7 @@ uv run mypy
 docker compose up
 ```
 
-Open http://localhost:8080 for the UI. `LEDGERGUARD_HOST_PORT` changes the host port. The image contains the seeded ledger and starts with `LLM_CLIENT=replay`, so it needs no model server and no network. The Docker path is verified in Phase 7.
+Open http://localhost:8080 for the UI. `LEDGERGUARD_HOST_PORT` changes the host port. The image contains the seeded ledger and starts with `LLM_CLIENT=replay`, so it needs no model server and no network. The image has been run with networking switched off, and it replays every scenario and fixture.
 
 ## Reproducing the results
 
@@ -129,7 +129,7 @@ Every number in the documents comes from a script. The first two need nothing bu
 
 ## The sandbox ledger
 
-All data is synthetic. Nordvik Supply Co. is an invented kitchen-equipment distributor with about €4M revenue, 18 employees, seasonal demand and customers who pay late. The same seed always produces a byte-identical database.
+All data is synthetic. Nordvik Supply Co. is an invented kitchen-equipment distributor with about €4M revenue, 18 employees, seasonal demand and customers who pay late. The same seed always produces identical data, and a byte-identical database file on any one platform.
 
 The situations the demo relies on are planted on purpose and listed in [fixtures/README.md](fixtures/README.md):
 
