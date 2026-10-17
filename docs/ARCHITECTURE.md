@@ -260,7 +260,7 @@ Citing facts is what moved the errors. A claim that cites a fact carries the led
 
 ## 14. Development process
 
-LedgerGuard was built with the help of an AI coding assistant. The architecture and the design decisions were made by the team, and the judgement calls behind them are recorded in DECISIONS.md. The git history is complete.
+LedgerGuard was built with the help of an AI coding assistant. The architecture and the design decisions were made by the author, and the judgement calls behind them are recorded in DECISIONS.md. The git history is complete.
 
 ## 15. Implementation status
 
