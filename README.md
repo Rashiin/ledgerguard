@@ -2,11 +2,18 @@
 
 LedgerGuard is a finance copilot for small and medium businesses in which the language model is never allowed to act directly. The model proposes a typed action. Deterministic code recomputes every figure from the ledger, applies business rules and assigns a permission tier. Only then does anything run or go to a person for approval.
 
-It was built for FinTechathon 2026, International Track, Topic E. Repository: [github.com/Rashiin/ledgerguard](https://github.com/Rashiin/ledgerguard).
+LedgerGuard is a research prototype. Repository: [github.com/Rashiin/ledgerguard](https://github.com/Rashiin/ledgerguard).
 
-## For judges
+## Key findings
 
-| Deliverable | Where |
+* Four injection fixtures written after the detection layer was frozen and run once blind were detected 0 of 4 times and contained 4 of 4 times, with no unauthorised action from the real model or from a scripted model that obeys every injection. [evidence/heldout](evidence/heldout/README.md)
+* When the rules blocked its payment draft, the model answered with a chat reply instead, so no rule had anything to block until the final answer was restricted to the draft's kind of action. [Security self-assessment, section 4.1](docs/SECURITY_SELF_ASSESSMENT.md#41-the-model-answered-around-a-block)
+* The verifier's own correction once made a sentence false by writing one invoice's €35,973.77 into a claim about three invoices, and a correction is now shown as a marker and never written into the model's words. [Technical documentation, section 12](docs/technical_documentation.md#12-when-the-verifier-was-the-source-of-the-error)
+* In 50 answers sampled at temperature 0.7, recomputation found no wrong figure in any claim's figure field, while in 5 samples the model stated wrong figures in its prose and text checking masked every one. [evidence/robustness](evidence/robustness/README.md)
+
+## Where to find things
+
+| What | Where |
 |---|---|
 | Technical documentation | [docs/technical_documentation.pdf](docs/technical_documentation.pdf), built from [the Markdown source](docs/technical_documentation.md) |
 | Security self-assessment and known-risk list | [docs/security_self_assessment.pdf](docs/security_self_assessment.pdf), built from [SECURITY_SELF_ASSESSMENT.md](docs/SECURITY_SELF_ASSESSMENT.md) and [RISK_REGISTER.md](docs/RISK_REGISTER.md) |
@@ -18,7 +25,7 @@ It was built for FinTechathon 2026, International Track, Topic E. Repository: [g
 
 The fastest way to see it working is `docker compose up` and http://localhost:8080.
 
-**What is recorded, and what runs live.** Only the model's responses are recorded. The verifier, the rules, the ledger and the audit chain all run live on every replay. That is why a judge can reproduce every measured result offline, with no API key, no model server and no network. The recorded part is the only part we could not make deterministic.
+**What is recorded, and what runs live.** Only the model's responses are recorded. The verifier, the rules, the ledger and the audit chain all run live on every replay. That is why anyone can reproduce every measured result offline, with no API key, no model server and no network. The recorded part is the only part we could not make deterministic.
 
 **What to type.** The Console opens with every recorded request listed. Choose one from the list or the "Recorded requests" menu. A question typed in your own words has no recorded model response, so the Console answers "no recorded model response" and nothing runs. That is expected in the offline demo. To ask anything you like, run with a local model as described below.
 
@@ -178,4 +185,4 @@ THIRD_PARTY.md          every dependency and its licence
 
 ## Licences
 
-Every dependency and its licence is listed in [THIRD_PARTY.md](THIRD_PARTY.md). All code in this repository was written for this competition.
+Every dependency and its licence is listed in [THIRD_PARTY.md](THIRD_PARTY.md). All code in this repository was written for this project.

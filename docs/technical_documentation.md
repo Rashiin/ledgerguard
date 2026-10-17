@@ -1,6 +1,6 @@
 # LedgerGuard: technical documentation
 
-FinTechathon 2026, International Track, Topic E. An SME finance copilot in which the language model never acts directly.
+A research prototype. An SME finance copilot in which the language model never acts directly.
 
 ## 1. What LedgerGuard does
 
